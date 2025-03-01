@@ -30,23 +30,18 @@ public class Result<T> {
     /**
      * 成功响应
      */
-    public static <T> Result<T> success() {
-        return new Result<T>().setCode(200).setMessage("操作成功");
+    public static <T> Result<T> success(String message) {
+        return new Result<T>().setCode(200).setMessage( message);
     }
 
     /**
-     * 成功响应（带数据）
+     * 成功响应 带消息 和 带数据
      */
-    public static <T> Result<T> success(T data) {
-        return new Result<T>().setCode(200).setMessage("操作成功").setData(data);
-    }
-
-    /**
-     * 成功响应（带消息和数据）
-     */
-    public static <T> Result<T> success(String message, T data) {
+    public static <T> Result<T> success(String message,T data) {
         return new Result<T>().setCode(200).setMessage(message).setData(data);
     }
+
+
 
     /**
      * 失败响应

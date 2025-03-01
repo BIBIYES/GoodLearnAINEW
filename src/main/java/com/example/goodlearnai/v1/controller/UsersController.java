@@ -2,9 +2,14 @@ package com.example.goodlearnai.v1.controller;
 
 
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.UserLogin;
 import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.service.IUsersService;
+import com.example.goodlearnai.v1.service.impl.UsersServiceImpl;
+import com.example.goodlearnai.v1.vo.UserInfo;
 import jakarta.mail.MessagingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,8 +25,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/users")
 public class UsersController {
 
-@Autowired
+    private static final Logger log = LoggerFactory.getLogger(UsersController.class);
+    @Autowired
 private IUsersService iusersService;
+    @Autowired
+    private UsersServiceImpl usersServiceImpl;
+
     // 注册接口
     @PostMapping("/register")
     public Result<String> registerUser(@RequestParam String code,@RequestBody Users user ) throws MessagingException {
@@ -32,5 +41,9 @@ private IUsersService iusersService;
             return Result.error("用户已存在");
         }
         return Result.success("注册成功");
+    }
+    @PostMapping("/login")
+    public Result<UserInfo> loginUser(@RequestBody UserLogin userLogin ) {
+        return iusersService.login(userLogin);
     }
 }

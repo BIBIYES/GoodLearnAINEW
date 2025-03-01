@@ -6,6 +6,13 @@ spring:
     username: root
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
+  devtools:
+    restart:
+      enabled: true
+      # 自定义监控的路径，这里只监控 src/main/java 目录
+      additional-paths: src/main/java
+      # 排除不必要的路径，防止静态资源文件等变化触发重启
+      exclude: static/**,public/**,templates/**,log/**
 
 server:
   port: 8080
@@ -18,3 +25,8 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
   mapper-locations: classpath*:mapper/*.xml
+
+
+jwt:
+  secret: mouse-mouse
+  expirationMs: 86400000

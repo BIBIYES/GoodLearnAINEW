@@ -13,7 +13,16 @@ spring:
       additional-paths: src/main/java
       # 排除不必要的路径，防止静态资源文件等变化触发重启
       exclude: static/**,public/**,templates/**,log/**
-
+  ai:
+    openai:
+      api-key: sk-0b0fe1ba82be4757a25997ea671a7ec0
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat
+  mvc:
+    servlet:
+      path: /api
 server:
   port: 8080
 

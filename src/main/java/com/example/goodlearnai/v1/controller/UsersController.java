@@ -3,7 +3,7 @@ package com.example.goodlearnai.v1.controller;
 
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserLogin;
-import com.example.goodlearnai.v1.entity.Users;
+import com.example.goodlearnai.v1.dto.UserRegister;
 import com.example.goodlearnai.v1.service.IUsersService;
 import com.example.goodlearnai.v1.vo.UserInfo;
 import jakarta.mail.MessagingException;
@@ -29,8 +29,8 @@ public class UsersController {
 
     // 注册接口
     @PostMapping("/register")
-    public Result<String> registerUser(@RequestParam String code, @RequestBody Users user) throws MessagingException {
-        int flag = iusersService.register(user, code);
+    public Result<String> registerUser( @RequestBody UserRegister user) throws MessagingException {
+        int flag = iusersService.register(user);
         if (flag == -1) {
             return Result.error("验证码错误");
         } else if (flag == 0) {

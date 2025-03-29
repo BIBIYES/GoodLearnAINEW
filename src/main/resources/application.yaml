@@ -23,6 +23,12 @@ spring:
   mvc:
     servlet:
       path: /api
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 5000
+
 server:
   port: 8080
 
@@ -38,3 +44,8 @@ mybatis-plus:
 jwt:
   secret: mouse-mouse
   expirationMs: 86400000
+
+logging:
+  level:
+    root: info
+    com.example.goodlearnai: debug

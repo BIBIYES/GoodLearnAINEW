@@ -44,7 +44,7 @@ public class Users implements Serializable {
     /**
      * 密码哈希
      */
-    private String passwordHash;
+    private String password;
 
     /**
      * 角色：学生、老师、管理员

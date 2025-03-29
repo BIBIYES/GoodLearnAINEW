@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserLogin;
+import com.example.goodlearnai.v1.dto.UserRegister;
 import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.entity.VerificationCodes;
 import com.example.goodlearnai.v1.exception.CustomException;
@@ -38,7 +39,14 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
     /*
       用户注册接口
      */
-    public int register(Users user, String code) throws MessagingException {
+    public int register(UserRegister user) throws MessagingException {
+        log.debug("注册用户对象{}",user);
+        String code = user.getCode();
+        if (!iverificationCodesService.checkVerificationCodes(user.getEmail(), code)) {
+            log.warn("验证码问题");
+            System.out.println(code);
+            return -1;
+        }
         LambdaQueryWrapper<Users> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Users::getEmail, user.getEmail());
         // 判断用户是否存在
@@ -46,16 +54,15 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
             log.warn("用户已经存在");
             return 0;
         }
-        if (!iverificationCodesService.checkVerificationCodes(user.getEmail(), code)) {
-            log.warn("验证码问题");
-            System.out.println(code);
-            return -1;
-        }
+
         // md5加密用户的密码
-        user.setPasswordHash(MD5Util.encrypt(user.getPasswordHash()));
+        user.setPassword(MD5Util.encrypt(user.getPassword()));
         log.info("加密用户密码");
         try {
-            saveOrUpdate(user);
+            Users users = new Users();
+            BeanUtil.copyProperties(user, users);
+            log.debug("注册用户{}",users);
+            saveOrUpdate(users);
             log.info("注册成功");
         } catch (Exception e) {
             log.error("注册失败{}", e.getMessage());
@@ -73,7 +80,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         queryWrapper.eq(Users::getEmail, user.getEmail());
         Users one = getOne(queryWrapper);
         if (one != null) {
-            if (MD5Util.verify(user.getPassword(), one.getPasswordHash())) {
+            if (MD5Util.verify(user.getPassword(), one.getPassword())) {
                 UserInfo userInfo = new UserInfo();
                 // 拷贝用户信息
                 BeanUtil.copyProperties(one, userInfo);

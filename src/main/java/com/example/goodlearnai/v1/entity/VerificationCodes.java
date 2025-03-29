@@ -11,7 +11,7 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author author
@@ -45,16 +45,6 @@ public class VerificationCodes implements Serializable {
      * 用途：注册、登录、重置密码
      */
     private String purpose;
-
-    /**
-     * 过期时间
-     */
-    private LocalDateTime expiredAt;
-
-    /**
-     * 是否已使用：1-已使用，0-未使用
-     */
-    private Boolean used;
 
     /**
      * 创建时间

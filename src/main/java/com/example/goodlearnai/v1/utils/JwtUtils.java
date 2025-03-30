@@ -7,7 +7,6 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Base64;
 
 public class JwtUtils {
     // 使用普通字符串作为密钥（必须至少 32 字节）

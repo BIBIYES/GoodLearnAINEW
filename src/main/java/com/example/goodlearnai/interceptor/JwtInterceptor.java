@@ -1,11 +1,11 @@
 package com.example.goodlearnai.interceptor;
 
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.utils.AuthUtil;
 import com.example.goodlearnai.v1.utils.JwtUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.lang.NonNullApi;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -15,7 +15,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public boolean preHandle(HttpServletRequest request,  HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 从请求头中获取 Token
         String token = request.getHeader("Authorization");
 
@@ -35,13 +35,20 @@ public class JwtInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        // 从 Token 中提取用户信息并存储到请求中
+        // 从 Token 中提取用户信息
         Long userId = JwtUtils.getUserIdFromToken(token);
         String role = JwtUtils.getRoleFromToken(token);
 
-        request.setAttribute("userId", userId);
-        request.setAttribute("role", role);
+        // 存储到ThreadLocal中，供下游服务使用
+        AuthUtil.setCurrentUserId(userId);
+        AuthUtil.setCurrentRole(role);
 
         return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        // 请求结束后，清除ThreadLocal中的数据，防止内存泄漏
+        AuthUtil.clear();
     }
 }

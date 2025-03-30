@@ -6,7 +6,6 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserLogin;
 import com.example.goodlearnai.v1.dto.UserRegister;
 import com.example.goodlearnai.v1.entity.Users;
-import com.example.goodlearnai.v1.entity.VerificationCodes;
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.UsersMapper;
 import com.example.goodlearnai.v1.service.IUsersService;
@@ -15,10 +14,9 @@ import com.example.goodlearnai.v1.service.IVerificationCodesService;
 import com.example.goodlearnai.v1.utils.JwtUtils;
 import com.example.goodlearnai.v1.utils.MD5Util;
 import com.example.goodlearnai.v1.vo.UserInfo;
+import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -32,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements IUsersService {
-    @Autowired
+    @Resource
     private IVerificationCodesService iverificationCodesService;
 
     @Override

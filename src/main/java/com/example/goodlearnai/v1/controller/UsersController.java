@@ -6,8 +6,8 @@ import com.example.goodlearnai.v1.dto.UserLogin;
 import com.example.goodlearnai.v1.dto.UserRegister;
 import com.example.goodlearnai.v1.service.IUsersService;
 import com.example.goodlearnai.v1.vo.UserInfo;
+import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class UsersController {
 
 
-    @Autowired
+    @Resource
     private IUsersService iusersService;
 
 

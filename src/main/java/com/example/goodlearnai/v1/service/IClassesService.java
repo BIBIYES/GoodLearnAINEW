@@ -1,5 +1,6 @@
 package com.example.goodlearnai.v1.service;
 
+import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Classes;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -13,5 +14,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IClassesService extends IService<Classes> {
 
-    String addClass(Classes classes);
+    Result<String> addClass(Classes classes);
 }

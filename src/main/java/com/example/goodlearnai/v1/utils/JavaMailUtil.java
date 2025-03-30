@@ -1,6 +1,7 @@
 package com.example.goodlearnai.v1.utils;
 
 
+import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class JavaMailUtil {
 
-    @Autowired
+    @Resource
     private JavaMailSender javaMailSender;
 
     /**

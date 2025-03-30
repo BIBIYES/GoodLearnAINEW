@@ -16,7 +16,7 @@ import lombok.experimental.Accessors;
  * 
  * </p>
  *
- * @author author
+ * @author Mouse
  * @since 2025-03-01
  */
 @Data

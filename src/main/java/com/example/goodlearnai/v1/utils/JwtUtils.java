@@ -8,11 +8,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author Mouse
+ */
 public class JwtUtils {
     // 使用普通字符串作为密钥（必须至少 32 字节）
     private static final String SECRET_KEY_STRING = "your-256-bit-secret-key-must-be-at-least-32-bytes";
     private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes());
-    private static final long EXPIRATION_MS = 86400000L; // 1 天（单位：毫秒）
+    private static final long EXPIRATION_MS = 86400000L;
 
     /**
      * 生成 JWT 令牌
@@ -24,9 +27,9 @@ public class JwtUtils {
 
         return Jwts.builder()
                 .setClaims(claims)
-                .setIssuedAt(new Date()) // 签发时间
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS)) // 过期时间
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS256) // 使用字符串密钥
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
+                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -63,7 +66,7 @@ public class JwtUtils {
      */
     private static Claims parseToken(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY) // 使用字符串密钥进行解析
+                .setSigningKey(SECRET_KEY)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

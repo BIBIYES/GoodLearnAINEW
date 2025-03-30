@@ -2,6 +2,9 @@ package com.example.goodlearnai.v1.vo;
 
 import lombok.Data;
 
+/**
+ * @author Mouse
+ */
 @Data
 public class UserInfo {
     private Long userId;

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * 前端控制器
  * </p>
  *
- * @author author
+ * @author Mouse
  * @since 2025-02-27
  */
 @RestController
@@ -28,6 +28,13 @@ public class UsersController {
 
 
     // 注册接口
+    /**
+     * 用户注册接口
+     *
+     * @param user 用户注册信息对象
+     * @return 返回注册结果
+     * @throws MessagingException 邮件发送异常
+     */
     @PostMapping("/register")
     public Result<String> registerUser( @RequestBody UserRegister user) throws MessagingException {
         int flag = iusersService.register(user);
@@ -39,6 +46,12 @@ public class UsersController {
         return Result.success("注册成功");
     }
 
+    /**
+     * 用户登录接口
+     *
+     * @param userLogin 用户登录信息对象
+     * @return 返回登录结果
+     */
     @PostMapping("/login")
     public Result<UserInfo> loginUser(@RequestBody UserLogin userLogin) {
         return iusersService.login(userLogin);

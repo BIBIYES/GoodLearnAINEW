@@ -6,13 +6,19 @@ import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
  * <p>
- *  服务类
+ * 服务类
  * </p>
  *
  * @author author
- * @since 2025-03-01
+ * @since 2025 -03-01
  */
 public interface IClassesService extends IService<Classes> {
 
-    Result<String> addClass(Classes classes);
+    /**
+     * 创建一个班级
+     *
+     * @param classes 一个班级的实体类
+     * @return 返回创建成功或者失败
+     */
+    Result<String> createClass(Classes classes);
 }

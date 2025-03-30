@@ -9,6 +9,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * @author Mouse
+ */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
@@ -19,7 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         // 注册拦截器
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/v1/**") // 拦截所有 /v1 下的接口
-                .excludePathPatterns("/v1/users/**", "/v1/verification-codes/**"); // 排除不需要认证的接口
+                .addPathPatterns("/v1/**")
+                .excludePathPatterns("/v1/users/**", "/v1/verification-codes/**");
     }
 }

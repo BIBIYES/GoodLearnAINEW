@@ -4,7 +4,7 @@ package com.example.goodlearnai.v1.utils;
 import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
+
 
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,6 +12,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 
+/**
+ * @author Mouse
+ */
 @Component
 public class JavaMailUtil {
 
@@ -27,7 +30,7 @@ public class JavaMailUtil {
      */
     public void sendSimpleMail(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("mousehaocat@163.com"); // 发件人邮箱
+        message.setFrom("mousehaocat@163.com");
         message.setTo(to);
         message.setSubject(subject);
         message.setText(text);
@@ -45,10 +48,10 @@ public class JavaMailUtil {
     public void sendHtmlMail(String to, String subject, String html) throws MessagingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        helper.setFrom("mousehaocat@163.com"); // 发件人邮箱
+        helper.setFrom("mousehaocat@163.com");
         helper.setTo(to);
         helper.setSubject(subject);
-        helper.setText(html, true); // true 表示发送HTML格式的邮件
+        helper.setText(html, true);
         javaMailSender.send(message);
     }
 }

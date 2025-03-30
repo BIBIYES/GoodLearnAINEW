@@ -1,6 +1,6 @@
 package com.example.goodlearnai.v1.controller;
 
-import com.example.goodlearnai.v1.vo.UserChat;
+import com.example.goodlearnai.v1.dto.UserChat;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -13,6 +13,9 @@ import reactor.core.publisher.Flux;
 
 import java.util.Map;
 
+/**
+ * @author Mouse
+ */
 @Slf4j
 @RestController
 @RequestMapping("/v1/ai")
@@ -24,18 +27,26 @@ public class ChatController {
         this.chatModel = chatModel;
     }
 
+    /**
+     *
+     * @param message 用户提的问题
+     * @return ai相应的消息，不是流式的
+     */
     @GetMapping("/generate")
-    public Map generate(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
+    public Map<Object,Object> generate(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
         return Map.of("generation", this.chatModel.call(message));
     }
 
-    // ai判题
+    /**
+     * ai提问流失响应接口
+     * @param chat 用户提的问题
+     * @return 流式返回ai的响应
+     */
     @PostMapping(value = "/generateStream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ChatResponse> generateStream(@RequestBody UserChat chat) {
         log.info("判断题目是否正确");
         Prompt prompt = new Prompt(new UserMessage(chat.getMsg()));
-        return this.chatModel.stream(prompt)
-                .doOnNext(response -> log.info("Stream Response: {}", response)) // 打印到控制台
-                .doOnError(error -> log.error("Error in stream", error)); // 处理错误日志
+        return this.chatModel.stream(prompt).doOnNext(response -> log.info("Stream Response: {}", response))
+                .doOnError(error -> log.error("Error in stream", error));
     }
 }

@@ -2,6 +2,7 @@ package com.example.goodlearnai.v1.utils;
 
 /**
  * 认证工具类，用于线程本地存储用户信息
+ * @author Mouse
  */
 public class AuthUtil {
 

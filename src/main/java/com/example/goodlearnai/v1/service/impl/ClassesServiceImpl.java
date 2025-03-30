@@ -20,12 +20,12 @@ import org.springframework.stereotype.Service;
 public class ClassesServiceImpl extends ServiceImpl<ClassesMapper, Classes> implements IClassesService {
 
     @Override
-    public Result<String> addClass(Classes classes) {
+    public Result<String> createClass(Classes classes) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         log.debug(String.valueOf(userId));
         log.debug(role);
-        if(!role.equals("teacher")) {
+        if(!"teacher".equals(role)) {
             log.warn("用户暂无权限");
             return Result.error("暂无权限");
         }

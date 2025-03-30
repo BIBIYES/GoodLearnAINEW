@@ -9,13 +9,22 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 
-// 定义一个管理的路径，
+/**
+ * @author Mouse
+ */ // 定义一个管理的路径，
 @ControllerAdvice(basePackages="com.example.goodlearnai.v1.controller")
 public class GlobalExceptionHandler  {
     // 日志
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     //统一异常处理@ExceptionHandler,主要用于Exception  
+    /**
+     * 统一异常处理
+     *
+     * @param request 请求对象
+     * @param e 异常对象
+     * @return 返回结果对象
+     */
     @ExceptionHandler(Exception.class)
     @ResponseBody
     public Result<?> error(HttpServletRequest request, Exception e){
@@ -23,6 +32,13 @@ public class GlobalExceptionHandler  {
         return Result.error("系统出现异常");
     }
     // 自定义处理  
+    /**
+     * 自定义异常处理
+     *
+     * @param request 请求对象
+     * @param e 自定义异常对象
+     * @return 返回结果对象
+     */
     @ExceptionHandler(CustomException.class)
     @ResponseBody
     public Result<?> customError(HttpServletRequest request, CustomException e){

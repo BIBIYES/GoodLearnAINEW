@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 前端控制器
  *
- * @author author
- * @since 2025-02-27
+ * @author Mouse
+ * @since 2025 -02-27
  */
 @RestController
 @RequestMapping("/v1/verification-codes")
@@ -23,6 +23,14 @@ public class    VerificationCodesController {
     @Autowired
     private IVerificationCodesService verificationCodesService;
 
+
+    /**
+     * 发送验证码的接口
+     *
+     * @param verificationCodes 验证码对象
+     * @return 返回结果对象
+     * @throws MessagingException 邮件发送异常
+     */
     @PostMapping("/get")
     public Result<String> getVerificationCodes(@RequestBody VerificationCodes verificationCodes) throws MessagingException {
         int flag = verificationCodesService.sendVerificationCodes(verificationCodes);

@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * MD5加密工具类
+ * @author Mouse
  */
 public class MD5Util {
 

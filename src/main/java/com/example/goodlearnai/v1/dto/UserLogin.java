@@ -3,6 +3,9 @@ package com.example.goodlearnai.v1.dto;
 import lombok.Data;
 import lombok.ToString;
 
+/**
+ * @author Mouse
+ */
 @ToString
 @Data
 /*

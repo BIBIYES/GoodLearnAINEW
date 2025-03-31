@@ -1,4 +1,4 @@
-package com.example.goodlearnai.interceptor;
+package com.example.goodlearnai.v1.interceptor;
 
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.utils.AuthUtil;

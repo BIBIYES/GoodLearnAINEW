@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 前端控制器
- *
+ * 有关于验证码的控制器
  * @author Mouse
  * @since 2025 -02-27
  */

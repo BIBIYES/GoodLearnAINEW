@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
  * 前端控制器
  * </p>
  *
+ * 班级的控制
  * @author Mouse
  * @since 2025 -03-01
  */

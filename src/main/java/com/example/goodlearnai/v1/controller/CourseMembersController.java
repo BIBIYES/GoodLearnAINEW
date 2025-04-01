@@ -3,7 +3,7 @@ package com.example.goodlearnai.v1.controller;
 
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.CourseMembers;
-import com.example.goodlearnai.v1.service.IClassMembersService;
+import com.example.goodlearnai.v1.service.ICourseMembersService;
 import com.example.goodlearnai.v1.vo.StudentOwnCourses;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +24,7 @@ import java.util.List;
 @RequestMapping("/v1/course-members")
 public class CourseMembersController {
     @Resource
-    private IClassMembersService iclassMembersService;
+    private ICourseMembersService iclassMembersService;
 
     /**
      * 学生加入课程

@@ -4,6 +4,7 @@ package com.example.goodlearnai.v1.controller;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserLogin;
 import com.example.goodlearnai.v1.dto.UserRegister;
+import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.service.IUsersService;
 import com.example.goodlearnai.v1.vo.UserInfo;
 import jakarta.annotation.Resource;
@@ -56,5 +57,10 @@ public class UsersController {
     @PostMapping("/login")
     public Result<UserInfo> loginUser(@RequestBody UserLogin userLogin) {
         return iusersService.login(userLogin);
+    }
+
+    @PostMapping("/add-teacher")
+    public Result<String> addTeacher(@RequestBody Users users) {
+        return iusersService.addTeacher(users);
     }
 }

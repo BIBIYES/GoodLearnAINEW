@@ -11,6 +11,7 @@ import com.example.goodlearnai.v1.mapper.UsersMapper;
 import com.example.goodlearnai.v1.service.IUsersService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.service.IVerificationCodesService;
+import com.example.goodlearnai.v1.utils.AuthUtil;
 import com.example.goodlearnai.v1.utils.JwtUtils;
 import com.example.goodlearnai.v1.utils.MD5Util;
 import com.example.goodlearnai.v1.vo.UserInfo;
@@ -36,9 +37,8 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
     @Override
     /*
       用户注册接口
-     */
-    public int register(UserRegister user) throws MessagingException {
-        log.debug("注册用户对象{}",user);
+     */ public int register(UserRegister user) throws MessagingException {
+        log.debug("注册用户对象{}", user);
         String code = user.getCode();
         if (!iverificationCodesService.checkVerificationCodes(user.getEmail(), code)) {
             log.warn("验证码问题");
@@ -59,7 +59,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         try {
             Users users = new Users();
             BeanUtil.copyProperties(user, users);
-            log.debug("注册用户{}",users);
+            log.debug("注册用户{}", users);
             saveOrUpdate(users);
             log.info("注册成功");
         } catch (Exception e) {
@@ -83,12 +83,27 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
                 // 拷贝用户信息
                 BeanUtil.copyProperties(one, userInfo);
                 // 添加token
-                userInfo.setJwtToken(JwtUtils.generateToken(one.getUserId(),one.getRole()));
+                userInfo.setJwtToken(JwtUtils.generateToken(one.getUserId(), one.getRole()));
                 return Result.success("用户登录成功", userInfo);
             }
             log.warn("密码验证错误");
         }
         log.warn("用户不存在");
         return Result.error("用户名或密码错误");
+    }
+
+    @Override
+    public Result<String> addTeacher(Users users) {
+
+        String role = AuthUtil.getCurrentRole();
+        if (!"admin".equals(role)) {
+            return Result.error("权限不足");
+        }
+        users.setPassword(MD5Util.encrypt(users.getPassword()));
+        boolean flag = save(users);
+        if (flag) {
+            return Result.success("教师添加成功");
+        }
+        return Result.error("失败了");
     }
 }

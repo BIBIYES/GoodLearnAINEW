@@ -15,7 +15,7 @@ import java.util.List;
  * @author Mouse
  * @since 2025-03-31
  */
-public interface IClassMembersService extends IService<CourseMembers> {
+public interface ICourseMembersService extends IService<CourseMembers> {
 
     Result<String> intoClass(CourseMembers courseMembers );
 

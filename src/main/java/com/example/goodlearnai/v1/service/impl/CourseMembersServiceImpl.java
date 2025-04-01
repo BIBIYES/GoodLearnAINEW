@@ -5,7 +5,7 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.CourseMembers;
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.CourseMembersMapper;
-import com.example.goodlearnai.v1.service.IClassMembersService;
+import com.example.goodlearnai.v1.service.ICourseMembersService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import com.example.goodlearnai.v1.vo.StudentOwnCourses;
@@ -27,7 +27,7 @@ import java.util.List;
  */
 @Service
 @Slf4j
-public class ClassMembersServiceImpl extends ServiceImpl<CourseMembersMapper, CourseMembers> implements IClassMembersService {
+public class CourseMembersServiceImpl extends ServiceImpl<CourseMembersMapper, CourseMembers> implements ICourseMembersService {
 
     @Resource
     private

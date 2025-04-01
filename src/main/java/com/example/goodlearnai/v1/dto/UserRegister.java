@@ -17,4 +17,13 @@ public class UserRegister {
     private String role;
     // 验证码
     private String code;
+    /**
+     * 学生自己的学号
+     */
+    private Long schoolNumber;
+
+    /**
+     * 学校的外键
+     */
+    private Integer schoolId;
 }

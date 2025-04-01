@@ -9,6 +9,8 @@ import lombok.Data;
 public class UserInfo {
     private Long userId;
     private String username;
+    private String email;
+    private String school;
     private String role;
     private String jwtToken;
     private String avatar;

@@ -3,8 +3,6 @@ package com.example.goodlearnai.v1.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-
-import java.io.Serial;
 import java.time.LocalDateTime;
 import java.io.Serializable;
 import lombok.Data;
@@ -16,8 +14,8 @@ import lombok.experimental.Accessors;
  * 
  * </p>
  *
- * @author Mouse
- * @since 2025-02-27
+ * @author author
+ * @since 2025-04-01
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -25,7 +23,6 @@ import lombok.experimental.Accessors;
 @TableName("users")
 public class Users implements Serializable {
 
-    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -78,6 +75,16 @@ public class Users implements Serializable {
      * 状态：1-正常，0-禁用
      */
     private Boolean status;
+
+    /**
+     * 学生自己的学号
+     */
+    private Long schoolNumber;
+
+    /**
+     * 学校的外键
+     */
+    private Integer schoolId;
 
 
 }

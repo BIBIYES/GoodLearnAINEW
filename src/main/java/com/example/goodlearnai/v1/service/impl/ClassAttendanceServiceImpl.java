@@ -77,13 +77,6 @@ public class ClassAttendanceServiceImpl extends ServiceImpl<ClassAttendanceMappe
             throw new CustomException("发起签到时发生未知异常");
         }
     }
-    
-    @Autowired
-    private IStudentAttendanceRecordService studentAttendanceRecordService;
-    
-    @Override
-    public Result<String> studentCheckIn(StudentAttendance studentAttendance) {
-        // 调用StudentAttendanceRecordService中的签到方法
-        return studentAttendanceRecordService.studentCheckIn(studentAttendance);
-    }
+
+
 }

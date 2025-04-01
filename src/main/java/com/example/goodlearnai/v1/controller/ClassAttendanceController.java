@@ -32,9 +32,5 @@ public class ClassAttendanceController {
         return classAttendanceService.initiateCheckIn(classAttendance);
     }
     
-    //学生签到
-    @PostMapping("/student-check-in/{attendanceId}")
-    public Result<String> studentCheckIn(@PathVariable StudentAttendance studentAttendance) {
-        return classAttendanceService.studentCheckIn(studentAttendance);
-    }
+
 }

@@ -19,5 +19,4 @@ public interface IClassAttendanceService extends IService<ClassAttendance> {
     // 发起签到
     Result<String> initiateCheckIn(ClassAttendance classAttendance);
 
-    Result<String> studentCheckIn(StudentAttendance studentAttendance);
 }

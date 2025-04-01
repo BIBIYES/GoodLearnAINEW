@@ -5,11 +5,12 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.ClassAttendance;
 
 import com.example.goodlearnai.v1.entity.Course;
-import com.example.goodlearnai.v1.entity.CourseMembers;
+
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.ClassAttendanceMapper;
 
 import com.example.goodlearnai.v1.mapper.CourseMapper;
+
 import com.example.goodlearnai.v1.service.IClassAttendanceService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.service.IStudentAttendanceRecordService;
@@ -36,8 +37,7 @@ public class ClassAttendanceServiceImpl extends ServiceImpl<ClassAttendanceMappe
     @Autowired
     private CourseMapper courseMapper;
     
-    @Autowired
-    private CourseMembers classMembersMapper;
+
 
     @Override
     public Result<String> initiateCheckIn(ClassAttendance classAttendance) {

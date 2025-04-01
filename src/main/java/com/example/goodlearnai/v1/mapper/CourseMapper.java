@@ -1,6 +1,6 @@
 package com.example.goodlearnai.v1.mapper;
 
-import com.example.goodlearnai.v1.entity.Classes;
+import com.example.goodlearnai.v1.entity.Course;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author author
  * @since 2025-03-01
  */
-public interface ClassesMapper extends BaseMapper<Classes> {
+public interface CourseMapper extends BaseMapper<Course> {
 
 }

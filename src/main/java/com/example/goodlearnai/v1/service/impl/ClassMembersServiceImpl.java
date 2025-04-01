@@ -8,10 +8,14 @@ import com.example.goodlearnai.v1.mapper.CourseMembersMapper;
 import com.example.goodlearnai.v1.service.IClassMembersService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
+import com.example.goodlearnai.v1.vo.StudentOwnCourses;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * <p>
@@ -25,6 +29,9 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ClassMembersServiceImpl extends ServiceImpl<CourseMembersMapper, CourseMembers> implements IClassMembersService {
 
+    @Resource
+    private
+    CourseMembersMapper courseMembersMapper;
     @Override
     public Result<String> intoClass(CourseMembers courseMembers) {
         Long userId = AuthUtil.getCurrentUserId();
@@ -51,6 +58,20 @@ public class ClassMembersServiceImpl extends ServiceImpl<CourseMembersMapper, Co
         catch (Exception e) {
             log.error("加入班级发生未知异常", e);
             throw new CustomException("加入班级未知异常");
+        }
+    }
+
+    @Override
+    public Result<List<StudentOwnCourses>> getStudentOwnCourses() {
+        Long userId = AuthUtil.getCurrentUserId();
+
+        // 从 Mapper 中获取数据
+        List<StudentOwnCourses> list = courseMembersMapper.getStudentCourses(userId);
+
+        if (list != null && !list.isEmpty()) {
+            return Result.success("获取课程成功！",list);
+        } else {
+            return Result.error("暂无加入的课程");
         }
     }
 

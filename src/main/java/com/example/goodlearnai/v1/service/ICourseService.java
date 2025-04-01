@@ -5,6 +5,7 @@ import com.example.goodlearnai.v1.entity.Course;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 
+
 /**
  * <p>
  * 服务类
@@ -32,6 +33,7 @@ public interface ICourseService extends IService<Course> {
      * @return 返回成功或者失败
      */
     Result<String> setMonitor(Course course, Long monitor);
+
 
 
 }

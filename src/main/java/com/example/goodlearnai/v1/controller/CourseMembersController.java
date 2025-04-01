@@ -4,12 +4,11 @@ package com.example.goodlearnai.v1.controller;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.CourseMembers;
 import com.example.goodlearnai.v1.service.IClassMembersService;
+import com.example.goodlearnai.v1.vo.StudentOwnCourses;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
-import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 /**
  * <p>
@@ -36,5 +35,10 @@ public class CourseMembersController {
     @PostMapping("/into-course")
     public Result<String> intoClass(@RequestBody CourseMembers courseMembers) {
         return iclassMembersService.intoClass(courseMembers);
+    }
+
+    @GetMapping("/get-student-own-courses")
+    public Result<List<StudentOwnCourses>> getStudentOwnCourses(){
+        return iclassMembersService.getStudentOwnCourses();
     }
 }

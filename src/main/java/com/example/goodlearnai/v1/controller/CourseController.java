@@ -6,9 +6,12 @@ import com.example.goodlearnai.v1.entity.Course;
 
 import com.example.goodlearnai.v1.service.ICourseService;
 
+
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+
 
 /**
  * <p>
@@ -53,5 +56,6 @@ private ICourseService iCourseService;
     public Result<String> setMonitor(@RequestParam Long monitor,@RequestBody Course course) {
         return iCourseService.setMonitor(course,monitor);
     }
+
 
 }

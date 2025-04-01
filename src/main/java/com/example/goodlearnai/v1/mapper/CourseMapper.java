@@ -3,6 +3,7 @@ package com.example.goodlearnai.v1.mapper;
 import com.example.goodlearnai.v1.entity.Course;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+
 /**
  * <p>
  *  Mapper 接口

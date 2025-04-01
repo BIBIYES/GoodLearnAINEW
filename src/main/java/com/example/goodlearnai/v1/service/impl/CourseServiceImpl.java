@@ -7,18 +7,23 @@ import com.example.goodlearnai.v1.mapper.CourseMapper;
 import com.example.goodlearnai.v1.service.ICourseService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
+
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
- * @author author
- * @since 2025-03-01
+ * @author Mouse
+ * @since 2025 -03-01
  */
 @Service
+@Slf4j
 public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> implements ICourseService {
+@Resource
 
     @Override
     public Result<String> createClass(Course course) {
@@ -43,6 +48,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     public Result<String> setMonitor(Course course, Long monitor) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
+        log.info(role);
 
         if(!"teacher".equals(role)) {
             log.warn("用户暂无权限");
@@ -62,4 +68,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }
 
     }
+
+
 }

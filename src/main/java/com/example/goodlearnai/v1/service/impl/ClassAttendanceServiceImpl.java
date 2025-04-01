@@ -3,11 +3,13 @@ package com.example.goodlearnai.v1.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.ClassAttendance;
-import com.example.goodlearnai.v1.entity.Classes;
+
+import com.example.goodlearnai.v1.entity.Course;
+import com.example.goodlearnai.v1.entity.CourseMembers;
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.ClassAttendanceMapper;
-import com.example.goodlearnai.v1.mapper.ClassMembersMapper;
-import com.example.goodlearnai.v1.mapper.ClassesMapper;
+
+import com.example.goodlearnai.v1.mapper.CourseMapper;
 import com.example.goodlearnai.v1.service.IClassAttendanceService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.service.IStudentAttendanceRecordService;
@@ -32,10 +34,10 @@ import java.time.LocalDateTime;
 public class ClassAttendanceServiceImpl extends ServiceImpl<ClassAttendanceMapper, ClassAttendance> implements IClassAttendanceService {
 
     @Autowired
-    private ClassesMapper classesMapper;
+    private CourseMapper courseMapper;
     
     @Autowired
-    private ClassMembersMapper classMembersMapper;
+    private CourseMembers classMembersMapper;
 
     @Override
     public Result<String> initiateCheckIn(ClassAttendance classAttendance) {
@@ -49,12 +51,12 @@ public class ClassAttendanceServiceImpl extends ServiceImpl<ClassAttendanceMappe
         }
         
         // 判断老师是否是本班的老师
-        LambdaQueryWrapper<Classes> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Classes::getTeacherId, userId)
-                .eq(Classes::getClassId, classAttendance.getClassId());
-        Classes classes = classesMapper.selectOne(wrapper);
+        LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Course::getTeacherId, userId)
+                .eq(Course::getCourseId, classAttendance.getClassId());
+        Course course = courseMapper.selectOne(wrapper);
         
-        if (classes == null) {
+        if (course == null) {
             log.warn("用户不是该班级的老师: userId={}, classId={}", userId, classAttendance.getClassId());
             return Result.error("您不是该班级的老师，无法发起签到");
         }

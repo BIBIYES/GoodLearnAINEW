@@ -3,7 +3,6 @@ package com.example.goodlearnai.v1.service;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.ClassAttendance;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.goodlearnai.v1.entity.Classes;
 import com.example.goodlearnai.v1.vo.StudentAttendance;
 
 /**

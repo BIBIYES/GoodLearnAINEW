@@ -3,8 +3,7 @@ package com.example.goodlearnai.v1.controller;
 
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.ClassAttendance;
-import com.example.goodlearnai.v1.entity.Classes;
-import com.example.goodlearnai.v1.service.IClassAttendanceService;
+
 import com.example.goodlearnai.v1.service.impl.ClassAttendanceServiceImpl;
 import com.example.goodlearnai.v1.vo.StudentAttendance;
 import org.springframework.beans.factory.annotation.Autowired;

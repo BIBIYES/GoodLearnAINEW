@@ -3,11 +3,13 @@ package com.example.goodlearnai.v1.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.ClassAttendance;
-import com.example.goodlearnai.v1.entity.ClassMembers;
+
+import com.example.goodlearnai.v1.entity.CourseMembers;
 import com.example.goodlearnai.v1.entity.StudentAttendanceRecord;
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.ClassAttendanceMapper;
-import com.example.goodlearnai.v1.mapper.ClassMembersMapper;
+
+import com.example.goodlearnai.v1.mapper.CourseMembersMapper;
 import com.example.goodlearnai.v1.mapper.StudentAttendanceRecordMapper;
 import com.example.goodlearnai.v1.service.IStudentAttendanceRecordService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -34,61 +36,61 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
 
     @Autowired
     private ClassAttendanceMapper classAttendanceMapper;
-    
+
     @Autowired
-    private ClassMembersMapper classMembersMapper;
-    
+    private CourseMembersMapper courseMembersMapper;
+
     @Override
     public Result<String> studentCheckIn(StudentAttendance studentAttendance) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
-        
+
         // 判断是否为学生角色
         if (!"student".equals(role)) {
             log.warn("用户暂无权限签到: userId={}", userId);
             return Result.error("暂无权限签到");
         }
-        
+
         // 查询签到记录
         ClassAttendance classAttendance = classAttendanceMapper.selectById(studentAttendance.getAttendanceId());
         if (classAttendance == null) {
             log.warn("签到记录不存在: attendanceId={}", studentAttendance.getAttendanceId());
             return Result.error("签到记录不存在");
         }
-        
+
         // 检查签到是否已结束
         if (!classAttendance.getStatus()) {
             log.warn("签到已结束: attendanceId={}", studentAttendance.getAttendanceId());
             return Result.error("签到已结束");
         }
-        
+
         // 如果是PIN码签到，验证PIN码
         if ("PIN".equalsIgnoreCase(classAttendance.getType())) {
             if (!StringUtils.hasText(studentAttendance.getPinCode()) || !studentAttendance.getPinCode().equals(classAttendance.getPinCode())) {
-                log.warn("PIN码错误: attendanceId={}, inputPin={}, correctPin={}", 
+                log.warn("PIN码错误: attendanceId={}, inputPin={}, correctPin={}",
                         studentAttendance.getAttendanceId(), studentAttendance.getPinCode(), classAttendance.getPinCode());
                 return Result.error("PIN码错误");
             }
         }
-        
+
         // 检查学生是否属于该班级
-        LambdaQueryWrapper<ClassMembers> memberWrapper = new LambdaQueryWrapper<>();
-        memberWrapper.eq(ClassMembers::getClassId, classAttendance.getClassId())
-                .eq(ClassMembers::getUserId, userId);
-        ClassMembers member = classMembersMapper.selectOne(memberWrapper);
-        
+        LambdaQueryWrapper<CourseMembers> memberWrapper = new LambdaQueryWrapper<>();
+        memberWrapper.eq(CourseMembers::getCourseId, classAttendance.getClassId())
+                .eq(CourseMembers::getUserId, userId);
+        CourseMembers member = courseMembersMapper.selectOne(memberWrapper);
+
         if (member == null) {
             log.warn("学生不属于该班级: userId={}, classId={}", userId, classAttendance.getClassId());
             return Result.error("您不是该班级的学生，无法签到");
         }
-        
+
         // 检查是否已经签到
         StudentAttendanceRecord existRecord = getStudentAttendanceRecord(studentAttendance.getAttendanceId(), userId);
         if (existRecord != null && existRecord.getStatus()) {
             log.info("学生已签到: userId={}, attendanceId={}", userId, studentAttendance.getAttendanceId());
             return Result.error("您已签到，请勿重复签到");
         }
-        
+
         try {
             // 创建或更新签到记录
             StudentAttendanceRecord record;

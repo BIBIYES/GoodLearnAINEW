@@ -16,56 +16,46 @@ import lombok.experimental.Accessors;
  * 
  * </p>
  *
- * @author Mouse
- * @since 2025-03-31
+ * @author mouse
+ * @since 2025-04-01
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("classes")
-public class Classes implements Serializable {
+@TableName("course_members")
+public class CourseMembers implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     /**
+     * 记录ID
+     */
+    @TableId(value = "members_id", type = IdType.AUTO)
+    private Long membersId;
+
+    /**
      * 班级ID
      */
-    @TableId(value = "class_id", type = IdType.ASSIGN_ID)
-    private Long classId;
+    private Long courseId;
 
     /**
-     * 班级名称
+     * 用户ID
      */
-    private String className;
+    private Long userId;
 
     /**
-     * 老师ID
+     * 加入时间
      */
-    private Long teacherId;
+    private LocalDateTime joinTime;
 
     /**
-     * 学委ID
+     * 学分
      */
-    private Long monitorId;
+    private Integer credits;
 
     /**
-     * 班级描述
-     */
-    private String description;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updatedAt;
-
-    /**
-     * 状态：1-正常，0-禁用
+     * 状态：1-正常，0-移除
      */
     private Boolean status;
 

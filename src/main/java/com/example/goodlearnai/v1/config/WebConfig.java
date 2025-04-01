@@ -23,6 +23,6 @@ public class WebConfig implements WebMvcConfigurer {
         // 注册拦截器
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/v1/**")
-                .excludePathPatterns("/v1/users/**", "/v1/verification-codes/**");
+                .excludePathPatterns("/v1/users/**", "/v1/verification-codes/**","/v1/schools/get-schools");
     }
 }

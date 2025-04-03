@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @since 2025-03-31
  */
 @RestController
-@RequestMapping("/v1/class-attendance")
-public class ClassAttendanceController {
+@RequestMapping("/v1/course-attendance")
+public class CourseAttendanceController {
 
     @Autowired
     private CourseAttendanceServiceImpl classAttendanceService;

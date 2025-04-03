@@ -2,7 +2,7 @@ package com.example.goodlearnai.v1.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.example.goodlearnai.v1.entity.CourseMembers;
-import com.example.goodlearnai.v1.vo.StudentOwnCourses;
+import com.example.goodlearnai.v1.vo.UserCoursesView;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
@@ -23,9 +23,11 @@ public interface CourseMembersMapper extends BaseMapper<CourseMembers> {
      * @return 课程列表
      */
     @Select("SELECT course_id as courseId, class_name as className, description, " +
-            "teacher_name as teacherName, monitor_name as monitorName, " +
-            "join_time as joinTime, credits, course_status as courseStatus " +
+            "teacher_name as teacherName, teacher_email as teacherEmail, " +
+            "teacher_avatar as teacherAvatar, monitor_name as monitorName, " +
+            "join_time as joinTime, credits, course_status as courseStatus, " +
+            "member_count as memberCount " +
             "FROM user_courses_view WHERE user_id = #{userId}")
-    List<StudentOwnCourses> getStudentCourses(@Param("userId") Long userId);
+    List<UserCoursesView> getStudentCourses(@Param("userId") Long userId);
 
 }

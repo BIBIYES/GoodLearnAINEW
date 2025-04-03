@@ -16,13 +16,13 @@ import lombok.experimental.Accessors;
  * 
  * </p>
  *
- * @author DSfeiji
- * @since 2025-03-31
+ * @author mouse
+ * @since 2025-04-03
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("class_attendance")
+@TableName("course_attendance")
 public class CourseAttendance implements Serializable {
 
     @Serial

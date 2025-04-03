@@ -4,7 +4,7 @@ package com.example.goodlearnai.v1.controller;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.CourseMembers;
 import com.example.goodlearnai.v1.service.ICourseMembersService;
-import com.example.goodlearnai.v1.vo.StudentOwnCourses;
+import com.example.goodlearnai.v1.vo.UserCoursesView;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,7 +38,7 @@ public class CourseMembersController {
     }
 
     @GetMapping("/get-student-own-courses")
-    public Result<List<StudentOwnCourses>> getStudentOwnCourses(){
+    public Result<List<UserCoursesView>> getStudentOwnCourses(){
         return iclassMembersService.getStudentOwnCourses();
     }
 }

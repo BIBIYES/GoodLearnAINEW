@@ -5,10 +5,11 @@ import com.example.goodlearnai.v1.mapper.VerificationCodesMapper;
 import com.example.goodlearnai.v1.service.IVerificationCodesService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.JavaMailUtil;
+import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
+
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -31,11 +32,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class VerificationCodesServiceImpl extends ServiceImpl<VerificationCodesMapper, VerificationCodes> implements IVerificationCodesService {
 
-    @Autowired
+    @Resource
     private JavaMailUtil javaMailUtil;
+    @Resource
+    private RedisTemplate<String, String> redisTemplate;
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
 
     // Redis键前缀，用于区分不同类型的验证码
     private static final String VERIFICATION_CODE_PREFIX = "verification:code:";
@@ -107,7 +108,6 @@ public class VerificationCodesServiceImpl extends ServiceImpl<VerificationCodesM
         log.warn("验证码不匹配");
         return false;
     }
-
 
 
     /**

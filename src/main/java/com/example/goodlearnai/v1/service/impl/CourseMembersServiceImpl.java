@@ -8,7 +8,7 @@ import com.example.goodlearnai.v1.mapper.CourseMembersMapper;
 import com.example.goodlearnai.v1.service.ICourseMembersService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
-import com.example.goodlearnai.v1.vo.StudentOwnCourses;
+import com.example.goodlearnai.v1.vo.UserCoursesView;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -62,11 +62,11 @@ public class CourseMembersServiceImpl extends ServiceImpl<CourseMembersMapper, C
     }
 
     @Override
-    public Result<List<StudentOwnCourses>> getStudentOwnCourses() {
+    public Result<List<UserCoursesView>> getStudentOwnCourses() {
         Long userId = AuthUtil.getCurrentUserId();
 
         // 从 Mapper 中获取数据
-        List<StudentOwnCourses> list = courseMembersMapper.getStudentCourses(userId);
+        List<UserCoursesView> list = courseMembersMapper.getStudentCourses(userId);
 
         if (list != null && !list.isEmpty()) {
             return Result.success("获取课程成功！",list);

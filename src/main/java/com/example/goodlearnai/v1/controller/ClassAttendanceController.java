@@ -2,10 +2,9 @@ package com.example.goodlearnai.v1.controller;
 
 
 import com.example.goodlearnai.v1.common.Result;
-import com.example.goodlearnai.v1.entity.ClassAttendance;
+import com.example.goodlearnai.v1.entity.CourseAttendance;
 
-import com.example.goodlearnai.v1.service.impl.ClassAttendanceServiceImpl;
-import com.example.goodlearnai.v1.vo.StudentAttendance;
+import com.example.goodlearnai.v1.service.impl.CourseAttendanceServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,12 +22,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class ClassAttendanceController {
 
     @Autowired
-    private ClassAttendanceServiceImpl classAttendanceService;
+    private CourseAttendanceServiceImpl classAttendanceService;
 
     //发起签到
     @PostMapping("/initiate-check-in")
-    public Result<String> initiateCheckIn(@RequestBody ClassAttendance classAttendance) {
-        return classAttendanceService.initiateCheckIn(classAttendance);
+    public Result<String> initiateCheckIn(@RequestBody CourseAttendance courseAttendance) {
+        return classAttendanceService.initiateCheckIn(courseAttendance);
     }
     
 

@@ -1,9 +1,8 @@
 package com.example.goodlearnai.v1.service;
 
 import com.example.goodlearnai.v1.common.Result;
-import com.example.goodlearnai.v1.entity.ClassAttendance;
+import com.example.goodlearnai.v1.entity.CourseAttendance;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.goodlearnai.v1.vo.StudentAttendance;
 
 /**
  * <p>
@@ -13,9 +12,9 @@ import com.example.goodlearnai.v1.vo.StudentAttendance;
  * @author DSfeiji
  * @since 2025-03-31
  */
-public interface IClassAttendanceService extends IService<ClassAttendance> {
+public interface ICourseAttendanceService extends IService<CourseAttendance> {
     
     // 发起签到
-    Result<String> initiateCheckIn(ClassAttendance classAttendance);
+    Result<String> initiateCheckIn(CourseAttendance courseAttendance);
 
 }

@@ -2,20 +2,18 @@ package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.goodlearnai.v1.common.Result;
-import com.example.goodlearnai.v1.entity.ClassAttendance;
+import com.example.goodlearnai.v1.entity.CourseAttendance;
 
 import com.example.goodlearnai.v1.entity.Course;
 
 import com.example.goodlearnai.v1.exception.CustomException;
-import com.example.goodlearnai.v1.mapper.ClassAttendanceMapper;
+import com.example.goodlearnai.v1.mapper.CourseAttendanceMapper;
 
 import com.example.goodlearnai.v1.mapper.CourseMapper;
 
-import com.example.goodlearnai.v1.service.IClassAttendanceService;
+import com.example.goodlearnai.v1.service.ICourseAttendanceService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.goodlearnai.v1.service.IStudentAttendanceRecordService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
-import com.example.goodlearnai.v1.vo.StudentAttendance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,7 +30,7 @@ import java.time.LocalDateTime;
  */
 @Service
 @Slf4j
-public class ClassAttendanceServiceImpl extends ServiceImpl<ClassAttendanceMapper, ClassAttendance> implements IClassAttendanceService {
+public class CourseAttendanceServiceImpl extends ServiceImpl<CourseAttendanceMapper, CourseAttendance> implements ICourseAttendanceService {
 
     @Autowired
     private CourseMapper courseMapper;
@@ -40,7 +38,7 @@ public class ClassAttendanceServiceImpl extends ServiceImpl<ClassAttendanceMappe
 
 
     @Override
-    public Result<String> initiateCheckIn(ClassAttendance classAttendance) {
+    public Result<String> initiateCheckIn(CourseAttendance courseAttendance) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         
@@ -53,22 +51,22 @@ public class ClassAttendanceServiceImpl extends ServiceImpl<ClassAttendanceMappe
         // 判断老师是否是本班的老师
         LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Course::getTeacherId, userId)
-                .eq(Course::getCourseId, classAttendance.getClassId());
+                .eq(Course::getCourseId, courseAttendance.getClassId());
         Course course = courseMapper.selectOne(wrapper);
         
         if (course == null) {
-            log.warn("用户不是该班级的老师: userId={}, classId={}", userId, classAttendance.getClassId());
+            log.warn("用户不是该班级的老师: userId={}, classId={}", userId, courseAttendance.getClassId());
             return Result.error("您不是该班级的老师，无法发起签到");
         }
         
         try {
             // 设置签到信息
-            classAttendance.setCreatedBy(userId);
-            classAttendance.setCreatedAt(LocalDateTime.now());
-            classAttendance.setStatus(true);
+            courseAttendance.setCreatedBy(userId);
+            courseAttendance.setCreatedAt(LocalDateTime.now());
+            courseAttendance.setStatus(true);
             
             // 保存签到记录
-            boolean saved = save(classAttendance);
+            boolean saved = save(courseAttendance);
             if (!saved) {
                 return Result.error("签到发起失败");
             }

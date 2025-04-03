@@ -116,11 +116,15 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
         }
     }
     
+
     @Override
     public StudentAttendanceRecord getStudentAttendanceRecord(Integer attendanceId, Long userId) {
+        // 创建LambdaQueryWrapper对象，用于构建查询条件
         LambdaQueryWrapper<StudentAttendanceRecord> wrapper = new LambdaQueryWrapper<>();
+        // 设置查询条件：根据考勤ID和用户ID进行精确匹配
         wrapper.eq(StudentAttendanceRecord::getAttendanceId, attendanceId)
                 .eq(StudentAttendanceRecord::getUserId, userId);
+        // 调用getOne方法，根据构建的查询条件从数据库中获取一条学生考勤记录
         return getOne(wrapper);
     }
 }

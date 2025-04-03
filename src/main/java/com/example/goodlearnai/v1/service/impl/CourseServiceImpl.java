@@ -32,7 +32,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         log.debug(role);
         if (!"teacher".equals(role)) {
-            log.warn("用户暂无权限");
+            log.warn("用户暂无权限{}",role);
             return Result.error("暂无权限");
         }
         course.setTeacherId(userId);
@@ -42,6 +42,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         } else {
             return Result.error("创建失败");
         }
+
+
     }
 
     @Override

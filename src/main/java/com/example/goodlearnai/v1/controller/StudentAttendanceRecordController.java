@@ -3,13 +3,9 @@ package com.example.goodlearnai.v1.controller;
 
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.service.IStudentAttendanceRecordService;
-import com.example.goodlearnai.v1.service.impl.ClassAttendanceServiceImpl;
 import com.example.goodlearnai.v1.vo.StudentAttendance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * <p>
@@ -20,13 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-04-01
  */
 @RestController
-@RequestMapping("/student-attendance-record")
+@RequestMapping("/v1/student-attendance-record")
 public class StudentAttendanceRecordController {
     @Autowired
     private IStudentAttendanceRecordService studentAttendanceRecordService;
     //学生签到
-    @PostMapping("/student-check-in/{attendanceId}")
-    public Result<String> studentCheckIn(@PathVariable StudentAttendance studentAttendance) {
+    @PostMapping("/student-check-in")
+    public Result<String> studentCheckIn(@RequestBody StudentAttendance studentAttendance) {
         return studentAttendanceRecordService.studentCheckIn(studentAttendance);
     }
 }

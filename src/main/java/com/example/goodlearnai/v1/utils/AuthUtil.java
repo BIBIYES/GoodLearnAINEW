@@ -48,4 +48,10 @@ public class AuthUtil {
         currentUserId.remove();
         currentRole.remove();
     }
+    public static boolean isTeacher(){
+        return "teacher".equals(currentRole.get());
+    }
+    public static boolean isStudent(){
+        return "student".equals(currentRole.get());
+    }
 }

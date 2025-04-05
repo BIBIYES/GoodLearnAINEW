@@ -48,7 +48,7 @@ public class JavaMailUtil {
     public void sendHtmlMail(String to, String subject, String html) throws MessagingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        helper.setFrom("mousehaocat@163.com");
+        helper.setFrom("3203727672@qq.com");
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(html, true);

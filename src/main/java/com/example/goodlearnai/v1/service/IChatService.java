@@ -1,8 +1,11 @@
 package com.example.goodlearnai.v1.service;
 
+import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserChat;
 import com.example.goodlearnai.v1.entity.Chat;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -15,4 +18,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IChatService extends IService<Chat> {
 
     boolean chat(UserChat chat);
+
+    Result<List<Chat>> getChatHistory();
 }

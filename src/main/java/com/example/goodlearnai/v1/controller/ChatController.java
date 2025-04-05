@@ -1,6 +1,8 @@
 package com.example.goodlearnai.v1.controller;
 
+import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserChat;
+import com.example.goodlearnai.v1.entity.Chat;
 import com.example.goodlearnai.v1.service.IChatService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,5 +57,14 @@ public class ChatController {
         boolean flag = ichatService.chat(chat);
         return flag ? this.chatModel.stream(new Prompt(new UserMessage(chat.getMsg()))) : null;
 
+    }
+
+    /**
+     * 获取我自己的聊天历史
+     *
+     */
+    @GetMapping("/getChatHistory")
+    public Result<List<Chat>> getChatHistory(){
+        return ichatService.getChatHistory();
     }
 }

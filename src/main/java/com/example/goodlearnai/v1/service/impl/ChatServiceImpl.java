@@ -1,5 +1,7 @@
 package com.example.goodlearnai.v1.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserChat;
 import com.example.goodlearnai.v1.entity.Chat;
 import com.example.goodlearnai.v1.mapper.ChatMapper;
@@ -11,6 +13,8 @@ import com.example.goodlearnai.v1.utils.AuthUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * <p>
@@ -51,5 +55,17 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
         }
         log.info("添加到会话历史纪录{}", userChat.getMsg());
         return iChatHistoryService.addChatHistory(userChat);
+    }
+
+    @Override
+    public Result<List<Chat>> getChatHistory() {
+
+        LambdaQueryWrapper<Chat> chatLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        chatLambdaQueryWrapper.eq(Chat::getUserId, AuthUtil.getCurrentUserId());
+        List<Chat> chatList = list(chatLambdaQueryWrapper);
+        if (chatList.isEmpty()) {
+            return Result.success("暂无会话");
+        }
+        return Result.success("获取历史会话成功", chatList);
     }
 }

@@ -1,9 +1,13 @@
 package com.example.goodlearnai.v1.controller;
 
 
-import org.springframework.web.bind.annotation.RequestMapping;
+import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.entity.ChatHistory;
+import com.example.goodlearnai.v1.service.IChatHistoryService;
+import jakarta.annotation.Resource;
+import org.springframework.web.bind.annotation.*;
 
-import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 /**
  * <p>
@@ -14,7 +18,17 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-04-05
  */
 @RestController
-@RequestMapping("/chat-history")
+@RequestMapping("/v1/chat-history")
 public class ChatHistoryController {
-
+    @Resource
+    private IChatHistoryService ichatHistoryService;
+    @GetMapping("/{sessionId}")
+    public Result<List<ChatHistory>> getChatHistoryBySessionId(@PathVariable String sessionId) {
+        return ichatHistoryService.getChatHistoryBySessionId(sessionId);
+    }
+    @PostMapping("/add-history-message")
+    public Result<String> addChatHistory(@RequestBody ChatHistory chatHistory) {
+        boolean flag =  ichatHistoryService.addChatHistory(chatHistory);
+        return flag ? Result.success("添加成功") : Result.error("添加失败");
+    }
 }

@@ -1,8 +1,11 @@
 package com.example.goodlearnai.v1.service;
 
+import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserChat;
 import com.example.goodlearnai.v1.entity.ChatHistory;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -15,5 +18,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IChatHistoryService extends IService<ChatHistory> {
 
 
-    boolean addChatHistory(UserChat userChat);
+    boolean addChatHistory(ChatHistory chatHistory);
+
+    Result<List<ChatHistory>> getChatHistoryBySessionId(String sessionId);
 }

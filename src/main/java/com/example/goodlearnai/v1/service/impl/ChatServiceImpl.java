@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserChat;
 import com.example.goodlearnai.v1.entity.Chat;
+import com.example.goodlearnai.v1.entity.ChatHistory;
 import com.example.goodlearnai.v1.mapper.ChatMapper;
 import com.example.goodlearnai.v1.service.IChatHistoryService;
 import com.example.goodlearnai.v1.service.IChatService;
@@ -54,7 +55,12 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
             }
         }
         log.info("添加到会话历史纪录{}", userChat.getMsg());
-        return iChatHistoryService.addChatHistory(userChat);
+        ChatHistory chatHistory = new ChatHistory();
+        chatHistory.setContent(userChat.getMsg());
+        chatHistory.setSessionId(userChat.getSessionId());
+        chatHistory.setRole(userChat.getRole());
+        chatHistory.setUserId(AuthUtil.getCurrentUserId());
+        return iChatHistoryService.addChatHistory(chatHistory);
     }
 
     @Override

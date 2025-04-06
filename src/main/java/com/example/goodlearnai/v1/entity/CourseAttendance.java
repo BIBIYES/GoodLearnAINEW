@@ -37,7 +37,7 @@ public class CourseAttendance implements Serializable {
     /**
      * 班级ID
      */
-    private Long classId;
+    private Long courseId;
 
     /**
      * 签到类型：按钮签到、PIN码签到

@@ -51,11 +51,11 @@ public class CourseAttendanceServiceImpl extends ServiceImpl<CourseAttendanceMap
         // 判断老师是否是本班的老师
         LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Course::getTeacherId, userId)
-                .eq(Course::getCourseId, courseAttendance.getClassId());
+                .eq(Course::getCourseId, courseAttendance.getCourseId());
         Course course = courseMapper.selectOne(wrapper);
         
         if (course == null) {
-            log.warn("用户不是该班级的老师: userId={}, classId={}", userId, courseAttendance.getClassId());
+            log.warn("用户不是该班级的老师: userId={}, classId={}", userId, courseAttendance.getCourseId());
             return Result.error("您不是该班级的老师，无法发起签到");
         }
         

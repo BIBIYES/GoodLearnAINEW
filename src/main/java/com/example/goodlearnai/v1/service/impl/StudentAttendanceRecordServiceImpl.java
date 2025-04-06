@@ -75,12 +75,12 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
 
         // 检查学生是否属于该班级
         LambdaQueryWrapper<CourseMembers> memberWrapper = new LambdaQueryWrapper<>();
-        memberWrapper.eq(CourseMembers::getCourseId, courseAttendance.getClassId())
+        memberWrapper.eq(CourseMembers::getCourseId, courseAttendance.getCourseId())
                 .eq(CourseMembers::getUserId, userId);
         CourseMembers member = courseMembersMapper.selectOne(memberWrapper);
 
         if (member == null) {
-            log.warn("学生不属于该班级: userId={}, classId={}", userId, courseAttendance.getClassId());
+            log.warn("学生不属于该班级: userId={}, classId={}", userId, courseAttendance.getCourseId());
             return Result.error("您不是该班级的学生，无法签到");
         }
 
@@ -98,7 +98,7 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
                 record = new StudentAttendanceRecord();
                 record.setAttendanceId(studentAttendance.getAttendanceId());
                 record.setUserId(userId);
-                record.setClassId(courseAttendance.getClassId());
+                record.setClassId(courseAttendance.getCourseId());
             } else {
                 record = existRecord;
             }

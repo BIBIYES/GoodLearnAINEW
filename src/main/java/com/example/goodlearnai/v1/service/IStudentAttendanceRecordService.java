@@ -4,6 +4,7 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.StudentAttendanceRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.vo.StudentAttendance;
+import com.example.goodlearnai.v1.vo.UpdateAttendanceStatusRequest;
 
 /**
  * <p>
@@ -29,4 +30,11 @@ public interface IStudentAttendanceRecordService extends IService<StudentAttenda
      * @return 签到记录
      */
     StudentAttendanceRecord getStudentAttendanceRecord(Integer attendanceId, Long userId);
+    
+    /**
+     * 教师修改学生签到状态
+     * @param request 包含签到记录ID、学生ID和新的签到状态
+     * @return 修改结果
+     */
+    Result<String> updateAttendanceStatus(UpdateAttendanceStatusRequest request);
 }

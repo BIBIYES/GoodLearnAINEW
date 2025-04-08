@@ -3,18 +3,19 @@ package com.example.goodlearnai.v1.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.CourseAttendance;
-
+import com.example.goodlearnai.v1.entity.Course;
 import com.example.goodlearnai.v1.entity.CourseMembers;
 import com.example.goodlearnai.v1.entity.StudentAttendanceRecord;
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.CourseAttendanceMapper;
-
+import com.example.goodlearnai.v1.mapper.CourseMapper;
 import com.example.goodlearnai.v1.mapper.CourseMembersMapper;
 import com.example.goodlearnai.v1.mapper.StudentAttendanceRecordMapper;
 import com.example.goodlearnai.v1.service.IStudentAttendanceRecordService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import com.example.goodlearnai.v1.vo.StudentAttendance;
+import com.example.goodlearnai.v1.vo.UpdateAttendanceStatusRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,9 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
 
     @Autowired
     private CourseMembersMapper courseMembersMapper;
+    
+    @Autowired
+    private CourseMapper courseMapper;
 
     @Override
     public Result<String> studentCheckIn(StudentAttendance studentAttendance) {
@@ -65,7 +69,7 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
         }
 
         // 如果是PIN码签到，验证PIN码
-        if ("PIN".equalsIgnoreCase(courseAttendance.getType())) {
+        if (studentAttendance.getPinCode()!=null) {
             if (!StringUtils.hasText(studentAttendance.getPinCode()) || !studentAttendance.getPinCode().equals(courseAttendance.getPinCode())) {
                 log.warn("PIN码错误: attendanceId={}, inputPin={}, correctPin={}",
                         studentAttendance.getAttendanceId(), studentAttendance.getPinCode(), courseAttendance.getPinCode());
@@ -126,5 +130,87 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
                 .eq(StudentAttendanceRecord::getUserId, userId);
         // 调用getOne方法，根据构建的查询条件从数据库中获取一条学生考勤记录
         return getOne(wrapper);
+    }
+    
+    @Override
+    public Result<String> updateAttendanceStatus(UpdateAttendanceStatusRequest request) {
+        Long currentUserId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        
+        // 判断是否为教师角色
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限修改签到状态: userId={}", currentUserId);
+            return Result.error("暂无权限修改签到状态");
+        }
+        
+        // 获取签到记录
+        StudentAttendanceRecord record = getStudentAttendanceRecord(request.getAttendanceId(), request.getUserId());
+        if (record == null) {
+            log.warn("签到记录不存在: attendanceId={}, userId={}", request.getAttendanceId(), request.getUserId());
+            return Result.error("签到记录不存在");
+        }
+        
+        // 获取签到活动信息
+        CourseAttendance courseAttendance = courseAttendanceMapper.selectById(request.getAttendanceId());
+        if (courseAttendance == null) {
+            log.warn("签到活动不存在: attendanceId={}", request.getAttendanceId());
+            return Result.error("签到活动不存在");
+        }
+        
+        // 判断教师是否是本班的教师
+        LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Course::getTeacherId, currentUserId)
+                .eq(Course::getCourseId, courseAttendance.getCourseId());
+        Course course = courseMapper.selectOne(wrapper);
+        
+        if (course == null) {
+            log.warn("用户不是该班级的教师: userId={}, courseId={}", currentUserId, courseAttendance.getCourseId());
+            return Result.error("您不是该班级的教师，无法修改签到状态");
+        }
+        
+        // 如果不是教师本人修改为已签到状态，则拒绝操作
+        if (request.getStatus() == 1 && !record.getStatus()) {
+            log.warn("教师尝试将未签到状态修改为已签到: userId={}, attendanceId={}, studentId={}", 
+                    currentUserId, request.getAttendanceId(), request.getUserId());
+            return Result.error("教师不能将未签到状态修改为已签到，只能由学生本人签到");
+        }
+        
+        try {
+            // 更新签到状态
+            // 0 - 未签到, 1 - 已签到, 2 - 病假, 3 - 事假, 4 - 公假
+            switch (request.getStatus()) {
+                case 0 -> {
+                    record.setStatus(false);
+                    record.setRemark("未签到" + (request.getRemark() != null ? ": " + request.getRemark() : ""));
+                }
+                case 1 -> {
+                    record.setStatus(true);
+                    record.setRemark("已签到" + (request.getRemark() != null ? ": " + request.getRemark() : ""));
+                }
+                case 2 -> {
+                    record.setStatus(true);
+                    record.setRemark("病假" + (request.getRemark() != null ? ": " + request.getRemark() : ""));
+                }
+                case 3 -> {
+                    record.setStatus(true);
+                    record.setRemark("事假" + (request.getRemark() != null ? ": " + request.getRemark() : ""));
+                }
+                case 4 -> {
+                    record.setStatus(true);
+                    record.setRemark("公假" + (request.getRemark() != null ? ": " + request.getRemark() : ""));
+                }
+                default -> {
+                    return Result.error("无效的签到状态");
+                }
+            }
+            
+            // 保存更新
+            updateById(record);
+            
+            return Result.success("签到状态修改成功");
+        } catch (Exception e) {
+            log.error("修改签到状态时发生异常", e);
+            throw new CustomException("修改签到状态时发生未知异常");
+        }
     }
 }

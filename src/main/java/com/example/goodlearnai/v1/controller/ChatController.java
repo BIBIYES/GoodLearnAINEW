@@ -1,6 +1,10 @@
 package com.example.goodlearnai.v1.controller;
 
+import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserChat;
+import com.example.goodlearnai.v1.entity.Chat;
+import com.example.goodlearnai.v1.service.IChatService;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -11,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,6 +32,8 @@ public class ChatController {
     public ChatController(OpenAiChatModel chatModel) {
         this.chatModel = chatModel;
     }
+    @Resource
+    private IChatService ichatService;
 
     /**
      *
@@ -45,9 +52,19 @@ public class ChatController {
      */
     @PostMapping(value = "/generateStream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ChatResponse> generateStream(@RequestBody UserChat chat) {
-        log.info("判断题目是否正确");
-        Prompt prompt = new Prompt(new UserMessage(chat.getMsg()));
-        return this.chatModel.stream(prompt).doOnNext(response -> log.info("Stream Response: {}", response))
-                .doOnError(error -> log.error("Error in stream", error));
+        log.info("ai接口被调用");
+        log.debug("UserChat{}",chat);
+        boolean flag = ichatService.chat(chat);
+        return flag ? this.chatModel.stream(new Prompt(new UserMessage(chat.getMsg()))) : null;
+
+    }
+
+    /**
+     * 获取我自己的聊天历史
+     *
+     */
+    @GetMapping("/getChatHistory")
+    public Result<List<Chat>> getChatHistory(){
+        return ichatService.getChatHistory();
     }
 }

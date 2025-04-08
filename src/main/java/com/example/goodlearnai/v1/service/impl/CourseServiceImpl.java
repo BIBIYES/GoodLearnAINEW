@@ -3,6 +3,7 @@ package com.example.goodlearnai.v1.service.impl;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
+import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.CourseMapper;
 import com.example.goodlearnai.v1.service.ICourseService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,6 +11,7 @@ import com.example.goodlearnai.v1.utils.AuthUtil;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -23,6 +25,9 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> implements ICourseService {
+
+    @Autowired
+    private CourseMapper courseMapper;
 
 
     @Override
@@ -65,6 +70,36 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
             return Result.error("学委设置失败，可能是权限不足或班级不存在");
         }
 
+    }
+
+    @Override
+    public Result<String> stopCourse(Course course) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        if (!"teacher".equals(role)){
+            log.warn("用户暂无权限{}",role);
+            return Result.error("暂无权限");
+        }
+        LambdaUpdateWrapper<Course> wrapper = new LambdaUpdateWrapper<Course>()
+                .eq(Course::getCourseId, course.getCourseId())
+                .eq(Course::getTeacherId, userId);
+        Course course1 = courseMapper.selectOne(wrapper);
+        if (course1 == null){
+            return Result.error("您不是该班级的老师，无法结束课程");
+        }
+        try {
+            // 设置课程状态为false，表示已结束
+            course.setStatus(false);
+            boolean updated = updateById(course);
+            if (updated) {
+                return Result.success("课程已结束");
+            } else {
+                return Result.error("课程结束失败");
+            }
+        } catch (Exception e) {
+            log.error("课程结束时发生异常", e);
+            throw new CustomException("课程结束时发生未知异常");
+        }
     }
 
 

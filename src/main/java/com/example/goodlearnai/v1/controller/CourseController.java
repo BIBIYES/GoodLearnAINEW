@@ -57,5 +57,10 @@ private ICourseService iCourseService;
         return iCourseService.setMonitor(course,monitor);
     }
 
+    @PostMapping("/stopCourse")
+    public Result<String> stopCourse(@RequestBody Course course) {
+        return iCourseService.stopCourse(course);
+    }
+
 
 }

@@ -34,6 +34,7 @@ public interface ICourseService extends IService<Course> {
      */
     Result<String> setMonitor(Course course, Long monitor);
 
+    Result<String> stopCourse(Course course);
 
 
 }

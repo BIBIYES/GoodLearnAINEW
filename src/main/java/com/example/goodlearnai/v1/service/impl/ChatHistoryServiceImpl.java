@@ -25,6 +25,7 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
 
     @Override
     public boolean addChatHistory(ChatHistory chatHistory) {
+        chatHistory.setUserId(AuthUtil.getCurrentUserId());
         return save(chatHistory);
     }
 

@@ -20,4 +20,7 @@ public interface IChatService extends IService<Chat> {
     boolean chat(UserChat chat);
 
     Result<List<Chat>> getChatHistory();
+
+    Result<String> updateSessionName(Chat chat);
+
 }

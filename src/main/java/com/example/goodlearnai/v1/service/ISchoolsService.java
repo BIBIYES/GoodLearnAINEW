@@ -17,4 +17,6 @@ import java.util.List;
 public interface ISchoolsService extends IService<Schools> {
 
     Result<List<Schools>> getSchools();
+
+    Result<List<Schools>> addSchools(Schools schools);
 }

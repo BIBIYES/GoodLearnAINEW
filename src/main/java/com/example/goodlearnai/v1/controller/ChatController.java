@@ -68,4 +68,12 @@ public class ChatController {
     public Result<List<Chat>> getChatHistory(){
         return ichatService.getChatHistory();
     }
+
+    /**
+     *修改AI会话标题
+     */
+    @PutMapping("/update-session-name")
+    public Result<String> updateSessionName(@RequestBody Chat chat ){
+        return ichatService.updateSessionName(chat);
+    }
 }

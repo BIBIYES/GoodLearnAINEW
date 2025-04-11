@@ -74,4 +74,14 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
         }
         return Result.success("获取历史会话成功", chatList);
     }
+
+    @Override
+    public Result<String> updateSessionName(Chat chat) {
+        log.debug("修改会话名称{}",chat);
+        boolean flag = updateById(chat);
+        if(flag){
+            return Result.success("修改成功");
+        }
+        return Result.error("修改失败");
+    }
 }

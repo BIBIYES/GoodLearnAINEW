@@ -5,10 +5,7 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Schools;
 import com.example.goodlearnai.v1.service.ISchoolsService;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,5 +26,13 @@ public class SchoolsController {
     @GetMapping("/get-schools")
     public Result<List<Schools>> getSchools() {
         return iSchoolsService.getSchools();
+    }
+
+    /**
+     * 管理员添加学校
+     */
+    @PostMapping("/add-schools")
+    public Result<List<Schools>> addSchools(@RequestBody Schools schools) {
+        return iSchoolsService.addSchools(schools);
     }
 }

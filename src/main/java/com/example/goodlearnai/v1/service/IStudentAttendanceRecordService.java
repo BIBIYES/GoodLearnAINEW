@@ -3,8 +3,11 @@ package com.example.goodlearnai.v1.service;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.StudentAttendanceRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.example.goodlearnai.v1.vo.StudentAttendance;
-import com.example.goodlearnai.v1.vo.UpdateAttendanceStatusRequest;
+import com.example.goodlearnai.v1.dto.StudentAttendance;
+import com.example.goodlearnai.v1.dto.UpdateAttendanceStatusRequest;
+import com.example.goodlearnai.v1.vo.ViewAttendanceDetails;
+
+import java.util.List;
 
 /**
  * <p>
@@ -37,4 +40,7 @@ public interface IStudentAttendanceRecordService extends IService<StudentAttenda
      * @return 修改结果
      */
     Result<String> updateAttendanceStatus(UpdateAttendanceStatusRequest request);
+
+    // 获取签到详细信息
+    Result<List<ViewAttendanceDetails>> getAttendanceDetail(Integer attendanceId);
 }

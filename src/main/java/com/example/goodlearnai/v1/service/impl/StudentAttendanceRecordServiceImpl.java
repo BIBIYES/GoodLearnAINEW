@@ -14,14 +14,16 @@ import com.example.goodlearnai.v1.mapper.StudentAttendanceRecordMapper;
 import com.example.goodlearnai.v1.service.IStudentAttendanceRecordService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
-import com.example.goodlearnai.v1.vo.StudentAttendance;
-import com.example.goodlearnai.v1.vo.UpdateAttendanceStatusRequest;
+import com.example.goodlearnai.v1.dto.StudentAttendance;
+import com.example.goodlearnai.v1.dto.UpdateAttendanceStatusRequest;
+import com.example.goodlearnai.v1.vo.ViewAttendanceDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -43,6 +45,9 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
     
     @Autowired
     private CourseMapper courseMapper;
+
+    @Autowired
+    private StudentAttendanceRecordMapper studentAttendanceRecordMapper;
 
     @Override
     public Result<String> studentCheckIn(StudentAttendance studentAttendance) {
@@ -211,6 +216,16 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
         } catch (Exception e) {
             log.error("修改签到状态时发生异常", e);
             throw new CustomException("修改签到状态时发生未知异常");
+        }
+    }
+
+    @Override
+    public Result<List<ViewAttendanceDetails>> getAttendanceDetail(Integer attendanceId) {
+        List<ViewAttendanceDetails> list = studentAttendanceRecordMapper.getAttendanceDetail(attendanceId);
+        if (list != null && !list.isEmpty()){
+            return Result.success("获取考勤详情成功！",list);
+        }else {
+            return Result.error("暂无考勤详情");
         }
     }
 }

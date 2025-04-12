@@ -3,10 +3,13 @@ package com.example.goodlearnai.v1.controller;
 
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.service.IStudentAttendanceRecordService;
-import com.example.goodlearnai.v1.vo.StudentAttendance;
-import com.example.goodlearnai.v1.vo.UpdateAttendanceStatusRequest;
+import com.example.goodlearnai.v1.dto.StudentAttendance;
+import com.example.goodlearnai.v1.dto.UpdateAttendanceStatusRequest;
+import com.example.goodlearnai.v1.vo.ViewAttendanceDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * <p>
@@ -38,5 +41,11 @@ public class StudentAttendanceRecordController {
     @PutMapping("/update-attendance-status")
     public Result<String> updateAttendanceStatus(@RequestBody UpdateAttendanceStatusRequest request) {
         return studentAttendanceRecordService.updateAttendanceStatus(request);
+    }
+
+    //获取单个签到表中的所有信息
+    @GetMapping("/get-attendance-detail/{attendanceId}")
+    public Result<List<ViewAttendanceDetails>> getAttendanceDetail(@PathVariable Integer attendanceId) {
+        return studentAttendanceRecordService.getAttendanceDetail(attendanceId);
     }
 }

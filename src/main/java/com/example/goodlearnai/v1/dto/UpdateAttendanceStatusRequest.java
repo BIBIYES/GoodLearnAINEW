@@ -1,4 +1,4 @@
-package com.example.goodlearnai.v1.vo;
+package com.example.goodlearnai.v1.dto;
 
 import lombok.Data;
 

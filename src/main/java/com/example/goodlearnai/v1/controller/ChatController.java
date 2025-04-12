@@ -70,7 +70,7 @@ public class ChatController {
     }
 
     /**
-     *
+     *修改AI会话标题
      */
     @PutMapping("/update-session-name")
     public Result<String> updateSessionName(@RequestBody Chat chat ){

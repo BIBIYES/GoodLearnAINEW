@@ -18,5 +18,5 @@ public interface ISchoolsService extends IService<Schools> {
 
     Result<List<Schools>> getSchools();
 
-    Result<List<Schools>> addSchools(Schools schools);
+    Result<String> addSchools(Schools schools);
 }

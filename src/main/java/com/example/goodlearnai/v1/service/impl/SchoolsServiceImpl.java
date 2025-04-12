@@ -36,7 +36,7 @@ public class SchoolsServiceImpl extends ServiceImpl<SchoolsMapper, Schools> impl
      * 超级管理员添加学校
      */
     @Override
-    public Result<List<Schools>> addSchools(Schools schools) {
+    public Result<String> addSchools(Schools schools) {
         String role = AuthUtil.getCurrentRole();
         log.debug("当前用户角色为：{}", role);
         log.debug("当前用户：{}", AuthUtil.getCurrentUserId());

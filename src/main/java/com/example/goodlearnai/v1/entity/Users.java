@@ -50,7 +50,7 @@ public class  Users implements Serializable {
     private String password;
 
     /**
-     * 角色：学生、老师、管理员
+     * 角色：学生、老师、学校管理员admin、超级管理员root
      */
     private String role;
 

@@ -33,7 +33,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
 
     @Override
     public boolean chat(UserChat userChat) {
-        if (userChat.getMsg().isEmpty()) {
+        if (userChat.getContent().isEmpty()) {
             log.warn("空消息");
             return false;
         }
@@ -54,9 +54,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
                 return false;
             }
         }
-        log.info("添加到会话历史纪录{}", userChat.getMsg());
+        log.info("添加到会话历史纪录{}", userChat.getContent());
         ChatHistory chatHistory = new ChatHistory();
-        chatHistory.setContent(userChat.getMsg());
+        chatHistory.setContent(userChat.getContent());
         chatHistory.setSessionId(userChat.getSessionId());
         chatHistory.setRole(userChat.getRole());
         chatHistory.setUserId(AuthUtil.getCurrentUserId());
@@ -73,5 +73,15 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
             return Result.success("暂无会话");
         }
         return Result.success("获取历史会话成功", chatList);
+    }
+
+    @Override
+    public Result<String> updateSessionName(Chat chat) {
+        log.debug("修改会话名称{}",chat);
+        boolean flag = updateById(chat);
+        if(flag){
+            return Result.success("修改成功");
+        }
+        return Result.error("修改失败");
     }
 }

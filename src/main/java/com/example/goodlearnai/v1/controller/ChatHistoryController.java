@@ -26,6 +26,7 @@ public class ChatHistoryController {
     public Result<List<ChatHistory>> getChatHistoryBySessionId(@PathVariable String sessionId) {
         return ichatHistoryService.getChatHistoryBySessionId(sessionId);
     }
+//     添加对话消息到数据库
     @PostMapping("/add-history-message")
     public Result<String> addChatHistory(@RequestBody ChatHistory chatHistory) {
         boolean flag =  ichatHistoryService.addChatHistory(chatHistory);

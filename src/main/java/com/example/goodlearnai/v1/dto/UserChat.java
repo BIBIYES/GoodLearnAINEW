@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class UserChat {
     String sessionId;
-    String msg;
+    String content;
     String role;
     String sessionName;
 }

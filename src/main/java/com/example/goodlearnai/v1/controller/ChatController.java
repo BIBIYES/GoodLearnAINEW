@@ -54,8 +54,9 @@ public class ChatController {
     public Flux<ChatResponse> generateStream(@RequestBody UserChat chat) {
         log.info("ai接口被调用");
         log.debug("UserChat{}",chat);
+        // 调用后台服务，在后台服务器中，会对数据进行一系列判断是否合法身份校验等等
         boolean flag = ichatService.chat(chat);
-        return flag ? this.chatModel.stream(new Prompt(new UserMessage(chat.getMsg()))) : null;
+        return flag ? this.chatModel.stream(new Prompt(new UserMessage(chat.getContent()))) : null;
 
     }
 
@@ -66,5 +67,13 @@ public class ChatController {
     @GetMapping("/getChatHistory")
     public Result<List<Chat>> getChatHistory(){
         return ichatService.getChatHistory();
+    }
+
+    /**
+     *修改AI会话标题
+     */
+    @PutMapping("/update-session-name")
+    public Result<String> updateSessionName(@RequestBody Chat chat ){
+        return ichatService.updateSessionName(chat);
     }
 }

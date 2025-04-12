@@ -2,11 +2,13 @@ package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.entity.AttendanceView;
 import com.example.goodlearnai.v1.entity.CourseAttendance;
 
 import com.example.goodlearnai.v1.entity.Course;
 
 import com.example.goodlearnai.v1.exception.CustomException;
+import com.example.goodlearnai.v1.mapper.AttendanceViewMapper;
 import com.example.goodlearnai.v1.mapper.CourseAttendanceMapper;
 
 import com.example.goodlearnai.v1.mapper.CourseMapper;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -34,6 +37,10 @@ public class CourseAttendanceServiceImpl extends ServiceImpl<CourseAttendanceMap
 
     @Autowired
     private CourseMapper courseMapper;
+
+    @Autowired
+    private AttendanceViewMapper attendanceViewMapper;
+
     
 
 
@@ -78,5 +85,75 @@ public class CourseAttendanceServiceImpl extends ServiceImpl<CourseAttendanceMap
         }
     }
 
+    @Override
+    public Result<AttendanceView> getAttendanceDetail(Integer attendanceId) {
+        try {
+            // 获取当前用户信息
+            Long userId = AuthUtil.getCurrentUserId();
+            String role = AuthUtil.getCurrentRole();
+
+            // 查询签到详细信息
+            LambdaQueryWrapper<AttendanceView> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(AttendanceView::getAttendanceId, attendanceId);
+
+            AttendanceView attendanceView = attendanceViewMapper.selectOne(wrapper);
+            if (attendanceView == null) {
+                return Result.error("未找到签到信息");
+            }
+
+            // 权限验证
+            if ("teacher".equals(role)) {
+                // 教师只能查看自己班级的签到信息
+                if (!userId.equals(attendanceView.getTeacherId())) {
+                    return Result.error("您不是该班级的老师，无法查看签到信息");
+                }
+            } else {
+                // 学生只能查看自己所在班级的签到信息
+                if (!userId.equals(attendanceView.getStudentId())) {
+                    return Result.error("您不是该班级的学生，无法查看签到信息");
+                }
+            }
+
+            return Result.success("查询成功", attendanceView);
+        } catch (Exception e) {
+            log.error("获取签到详细信息时发生异常", e);
+            throw new CustomException("获取签到详细信息时发生未知异常");
+        }
+    }
+
+    @Override
+    public Result<List<CourseAttendance>> getAttendanceInfo(Long courseId) {
+        try {
+            // 获取当前用户信息
+            Long userId = AuthUtil.getCurrentUserId();
+            String role = AuthUtil.getCurrentRole();
+
+            // 如果是老师，需要验证是否是该班级的老师
+            if ("teacher".equals(role)) {
+                LambdaQueryWrapper<Course> courseWrapper = new LambdaQueryWrapper<>();
+                courseWrapper.eq(Course::getTeacherId, userId)
+                            .eq(Course::getCourseId, courseId);
+                Course course = courseMapper.selectOne(courseWrapper);
+                if (course == null) {
+                    return Result.error("您不是该班级的老师，无法查看签到信息");
+                }
+            }
+
+            // 查询签到信息
+            LambdaQueryWrapper<CourseAttendance> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(CourseAttendance::getCourseId, courseId)
+                   .orderByDesc(CourseAttendance::getCreatedAt);
+
+            List<CourseAttendance> attendanceList = list(wrapper);
+            if (attendanceList == null || attendanceList.isEmpty()) {
+                return Result.error("未找到签到信息");
+            }
+
+            return Result.success("查询成功", attendanceList);
+        } catch (Exception e) {
+            log.error("获取签到信息时发生异常", e);
+            throw new CustomException("获取签到信息时发生未知异常");
+        }
+    }
 
 }

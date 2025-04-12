@@ -69,8 +69,9 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         return 1;
     }
 
-    /*
-    用户登录
+
+    /**
+     * 用户登陆
      */
     @Override
     public Result<UserInfo> login(UserLogin user) {
@@ -96,7 +97,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
     public Result<String> addTeacher(Users users) {
 
         String role = AuthUtil.getCurrentRole();
-        if (!"admin".equals(role)) {
+        if (!"admin".equals(role)&&!"root".equals(role)) {
             return Result.error("权限不足");
         }
         users.setPassword(MD5Util.encrypt(users.getPassword()));

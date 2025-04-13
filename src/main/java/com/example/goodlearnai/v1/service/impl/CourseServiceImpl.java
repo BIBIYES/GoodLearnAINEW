@@ -1,5 +1,6 @@
 package com.example.goodlearnai.v1.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
@@ -13,6 +14,8 @@ import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * <p>
@@ -102,5 +105,20 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }
     }
 
+    /**
+     * 获取创建的课程
+     */
+    public Result<String> getClass(Course course) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        if (!"teacher".equals(role)){
+            log.warn("用户暂无权限{}",role);
+            return Result.error("暂无权限");
+        }
+        LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<Course>()
+                .eq(Course::getTeacherId, userId);
+        List<Course> courses = courseMapper.selectList(wrapper);
+        return Result.success("获取成功", courses.toString());
+    }
 
 }

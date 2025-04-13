@@ -62,5 +62,13 @@ private ICourseService iCourseService;
         return iCourseService.stopCourse(course);
     }
 
+    /**
+     * 老师获取添加的课程
+     */
+    @GetMapping("/get-class")
+    public Result<String> getClass(@RequestBody Course course) {
+        return iCourseService.getClass(course);
+    }
+
 
 }

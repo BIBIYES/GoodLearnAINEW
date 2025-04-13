@@ -36,5 +36,5 @@ public interface ICourseService extends IService<Course> {
 
     Result<String> stopCourse(Course course);
 
-
+    Result<String> getClass(Course course);
 }

@@ -1,5 +1,6 @@
 package com.example.goodlearnai.v1.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
@@ -13,6 +14,8 @@ import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * <p>
@@ -102,5 +105,41 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }
     }
 
+    /**
+     * 获取创建的课程
+     */
+    @Override
+    public Result<List<Course>> getCourse(Course course) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        log.debug("当前用户ID为: {}", userId);
+        if (!"teacher".equals(role)){
+            return Result.error("暂无权限");
+        }
+        LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<Course>()
+                .eq(Course::getTeacherId, userId);
+        List<Course> courses = courseMapper.selectList(wrapper);
+        return Result.success("获取成功", courses);
+    }
 
+    /**
+     * 老师编辑课程，课程名
+     */
+    @Override
+    public Result<String> compileCourse(Course course) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        log.debug("当前教师ID为: {}", userId);
+        if (!"teacher".equals(role)) {
+            return Result.error("暂无权限");
+        }
+
+
+        boolean updated = updateById(course);
+        if (updated) {
+            return Result.success("课程编辑成功");
+        } else {
+            return Result.error("课程编辑失败");
+        }
+    }
 }

@@ -38,4 +38,6 @@ public interface ICourseService extends IService<Course> {
     Result<String> stopCourse(Course course);
 
     Result<List<Course>> getCourse(Course course);
+
+    Result<List<Course>> compileCourse(Course course);
 }

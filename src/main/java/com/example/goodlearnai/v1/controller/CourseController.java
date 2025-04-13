@@ -71,5 +71,13 @@ private ICourseService iCourseService;
         return iCourseService.getCourse(course);
     }
 
+    /**
+     * 老师编辑课程
+     */
+    @PutMapping("/compile-course")
+    public Result<List<Course>> compileCourse(@RequestBody Course course) {
+        return iCourseService.compileCourse(course);
+    }
+
 
 }

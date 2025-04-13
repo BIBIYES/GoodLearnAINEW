@@ -114,7 +114,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         String role = AuthUtil.getCurrentRole();
         log.debug("当前用户ID为: {}", userId);
         if (!"teacher".equals(role)){
-            log.warn("用户暂无权限{}",role);
             return Result.error("暂无权限");
         }
         LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<Course>()
@@ -123,4 +122,24 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         return Result.success("获取成功", courses);
     }
 
+    /**
+     * 老师编辑课程，课程名
+     */
+    @Override
+    public Result<List<Course>> compileCourse(Course course) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        log.debug("当前教师ID为: {}", userId);
+        if (!"teacher".equals(role)) {
+            return Result.error("暂无权限");
+        }
+
+
+        boolean updated = updateById(course);
+        if (updated) {
+            return Result.success("课程编辑成功");
+        } else {
+            return Result.error("课程编辑失败");
+        }
+    }
 }

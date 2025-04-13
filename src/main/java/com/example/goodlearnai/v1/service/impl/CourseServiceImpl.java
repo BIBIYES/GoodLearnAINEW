@@ -108,6 +108,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     /**
      * 获取创建的课程
      */
+    @Override
     public Result<String> getClass(Course course) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();

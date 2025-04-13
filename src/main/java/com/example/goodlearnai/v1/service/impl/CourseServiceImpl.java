@@ -126,7 +126,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
      * 老师编辑课程，课程名
      */
     @Override
-    public Result<List<Course>> compileCourse(Course course) {
+    public Result<String> compileCourse(Course course) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         log.debug("当前教师ID为: {}", userId);

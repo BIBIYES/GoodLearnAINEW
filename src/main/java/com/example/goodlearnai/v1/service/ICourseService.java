@@ -39,5 +39,5 @@ public interface ICourseService extends IService<Course> {
 
     Result<List<Course>> getCourse(Course course);
 
-    Result<List<Course>> compileCourse(Course course);
+    Result<String> compileCourse(Course course);
 }

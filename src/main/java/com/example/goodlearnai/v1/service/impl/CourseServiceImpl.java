@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.example.goodlearnai.v1.utils.JwtUtils.getUserIdFromToken;
+
 /**
  * <p>
  * 服务实现类
@@ -109,9 +111,10 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
      * 获取创建的课程
      */
     @Override
-    public Result<String> getClass(Course course) {
+    public Result<List<Course>> getCourse(Course course) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
+        log.debug("当前用户ID为: {}", userId);
         if (!"teacher".equals(role)){
             log.warn("用户暂无权限{}",role);
             return Result.error("暂无权限");
@@ -119,7 +122,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<Course>()
                 .eq(Course::getTeacherId, userId);
         List<Course> courses = courseMapper.selectList(wrapper);
-        return Result.success("获取成功", courses.toString());
+        return Result.success("获取成功", courses);
     }
 
 }

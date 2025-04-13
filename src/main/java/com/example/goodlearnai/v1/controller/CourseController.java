@@ -11,6 +11,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 
 /**
@@ -65,9 +66,9 @@ private ICourseService iCourseService;
     /**
      * 老师获取添加的课程
      */
-    @GetMapping("/get-class")
-    public Result<String> getClass(@RequestBody Course course) {
-        return iCourseService.getClass(course);
+    @GetMapping("/get-course")
+    public Result<List<Course>> getCourse( Course course) {
+        return iCourseService.getCourse(course);
     }
 
 

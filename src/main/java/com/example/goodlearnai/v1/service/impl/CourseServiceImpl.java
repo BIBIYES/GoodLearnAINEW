@@ -17,8 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.example.goodlearnai.v1.utils.JwtUtils.getUserIdFromToken;
-
 /**
  * <p>
  * 服务实现类

@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.List;
+
 /**
  * <p>
  *  前端控制器
@@ -38,5 +40,9 @@ public class CourseAttendanceController {
         return classAttendanceService.stopCheckIn(courseAttendance);
     }
 
-
+    //获取班级所有的签到表
+    @GetMapping("/get-attendance-info/{courseId}")
+    public Result<List<CourseAttendance>> getAttendanceInfo(@PathVariable Long courseId) {
+        return classAttendanceService.getAttendanceInfo(courseId);
+    }
 }

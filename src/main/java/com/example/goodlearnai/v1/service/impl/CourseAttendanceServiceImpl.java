@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -92,6 +93,41 @@ public class CourseAttendanceServiceImpl extends ServiceImpl<CourseAttendanceMap
         }
         else{
             return Result.error("发生异常");
+        }
+    }
+
+    @Override
+    public Result<List<CourseAttendance>> getAttendanceInfo(Long courseId) {
+        try {
+            // 获取当前用户信息
+            Long userId = AuthUtil.getCurrentUserId();
+            String role = AuthUtil.getCurrentRole();
+
+            // 如果是老师，需要验证是否是该班级的老师
+            if ("teacher".equals(role)) {
+                LambdaQueryWrapper<Course> courseWrapper = new LambdaQueryWrapper<>();
+                courseWrapper.eq(Course::getTeacherId, userId)
+                        .eq(Course::getCourseId, courseId);
+                Course course = courseMapper.selectOne(courseWrapper);
+                if (course == null) {
+                    return Result.error("您不是该班级的老师，无法查看签到信息");
+                }
+            }
+
+            // 查询签到信息
+            LambdaQueryWrapper<CourseAttendance> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(CourseAttendance::getCourseId, courseId)
+                    .orderByDesc(CourseAttendance::getCreatedAt);
+
+            List<CourseAttendance> attendanceList = list(wrapper);
+            if (attendanceList == null || attendanceList.isEmpty()) {
+                return Result.error("未找到签到信息");
+            }
+
+            return Result.success("查询成功", attendanceList);
+        } catch (Exception e) {
+            log.error("获取签到信息时发生异常", e);
+            throw new CustomException("获取签到信息时发生未知异常");
         }
     }
 

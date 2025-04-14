@@ -74,7 +74,7 @@ public class StudentAttendanceRecordServiceImpl extends ServiceImpl<StudentAtten
         }
 
         // 如果是PIN码签到，验证PIN码
-        if (studentAttendance.getPinCode()!=null) {
+        if (courseAttendance.getType().equals("pin")) {
             if (!StringUtils.hasText(studentAttendance.getPinCode()) || !studentAttendance.getPinCode().equals(courseAttendance.getPinCode())) {
                 log.warn("PIN码错误: attendanceId={}, inputPin={}, correctPin={}",
                         studentAttendance.getAttendanceId(), studentAttendance.getPinCode(), courseAttendance.getPinCode());

@@ -35,6 +35,11 @@ public class CourseMembers implements Serializable {
     private Long membersId;
 
     /**
+     * 加入课程的密码
+     */
+    private Integer membersPassword;
+
+    /**
      * 班级ID
      */
     private Long courseId;
@@ -58,6 +63,5 @@ public class CourseMembers implements Serializable {
      * 状态：1-正常，0-移除
      */
     private Boolean status;
-
 
 }

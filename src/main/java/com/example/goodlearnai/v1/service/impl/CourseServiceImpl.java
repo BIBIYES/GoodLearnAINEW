@@ -32,6 +32,9 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     @Autowired
     private CourseMapper courseMapper;
 
+    /**
+     * 老师创建课程（班级）
+     */
 
     @Override
     public Result<String> createClass(Course course) {
@@ -54,6 +57,10 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     }
 
+    /**
+     * 老师设置学委
+     */
+
     @Override
     public Result<String> setMonitor(Course course, Long monitor) {
         Long userId = AuthUtil.getCurrentUserId();
@@ -75,6 +82,9 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     }
 
+    /**
+     * 老师结束课程
+     */
     @Override
     public Result<String> stopCourse(Course course) {
         Long userId = AuthUtil.getCurrentUserId();

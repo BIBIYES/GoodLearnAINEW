@@ -32,10 +32,16 @@ public class CourseMembersServiceImpl extends ServiceImpl<CourseMembersMapper, C
     @Resource
     private
     CourseMembersMapper courseMembersMapper;
+
+    /**
+     *学生加入班级
+     */
     @Override
     public Result<String> intoClass(CourseMembers courseMembers) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
+        int memberspassword = courseMembers.getMembersPassword();
+
         if(!"student".equals(role)) {
             log.warn("用户暂无权限");
             return Result.error("暂无权限");
@@ -43,6 +49,15 @@ public class CourseMembersServiceImpl extends ServiceImpl<CourseMembersMapper, C
         try {
             courseMembers.setUserId(userId);
             boolean flag = save(courseMembers);
+
+           //根据学生输入的课程id查找到当前课程的密码
+            int password = courseMembersMapper.selectCoursePassword(courseMembers.getCourseId());
+            //学生输入密码然后判断
+            if (password!=memberspassword) {
+                log.warn("用户输入的密码错误: userId={}, password={},memberspassword{}", userId, password,memberspassword);
+                return Result.error("密码错误,请重新输入");
+            }
+
             if (!flag) {
                 return Result.error("加入班级失败");
             }
@@ -61,6 +76,9 @@ public class CourseMembersServiceImpl extends ServiceImpl<CourseMembersMapper, C
         }
     }
 
+    /**
+     *学生获取加入的课程
+     */
     @Override
     public Result<List<UserCoursesView>> getStudentOwnCourses() {
         Long userId = AuthUtil.getCurrentUserId();

@@ -58,6 +58,9 @@ private ICourseService iCourseService;
         return iCourseService.setMonitor(course,monitor);
     }
 
+    /**
+     * 老师停止课程
+     */
     @PostMapping("/stopCourse")
     public Result<String> stopCourse(@RequestBody Course course) {
         return iCourseService.stopCourse(course);

@@ -37,6 +37,10 @@ public class CourseMembersController {
         return iclassMembersService.intoClass(courseMembers);
     }
 
+
+    /**
+     * 学生获取加入的课程
+     */
     @GetMapping("/get-student-own-courses")
     public Result<List<UserCoursesView>> getStudentOwnCourses(){
         return iclassMembersService.getStudentOwnCourses();

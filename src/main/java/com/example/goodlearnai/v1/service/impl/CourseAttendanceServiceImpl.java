@@ -2,6 +2,7 @@ package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.CourseAttendanceDto;
 import com.example.goodlearnai.v1.entity.CourseAttendance;
 
 import com.example.goodlearnai.v1.entity.Course;
@@ -15,11 +16,13 @@ import com.example.goodlearnai.v1.service.ICourseAttendanceService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -97,7 +100,7 @@ public class CourseAttendanceServiceImpl extends ServiceImpl<CourseAttendanceMap
     }
 
     @Override
-    public Result<List<CourseAttendance>> getAttendanceInfo(Long courseId) {
+    public Result<List<CourseAttendanceDto>> getAttendanceInfo(Long courseId) {
         try {
             // 获取当前用户信息
             Long userId = AuthUtil.getCurrentUserId();
@@ -118,18 +121,23 @@ public class CourseAttendanceServiceImpl extends ServiceImpl<CourseAttendanceMap
             LambdaQueryWrapper<CourseAttendance> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(CourseAttendance::getCourseId, courseId)
                     .orderByDesc(CourseAttendance::getCreatedAt);
-
             List<CourseAttendance> attendanceList = list(wrapper);
-            if (attendanceList == null || attendanceList.isEmpty()) {
+            
+            List<CourseAttendanceDto> attendanceDtoList = attendanceList.stream()
+                .map(attendance -> {
+                    CourseAttendanceDto dto = new CourseAttendanceDto();
+                    BeanUtils.copyProperties(attendance, dto);
+                    return dto;
+                }).collect(Collectors.toList());
+
+            if (attendanceDtoList == null || attendanceList.isEmpty()) {
                 return Result.error("未找到签到信息");
             }
 
-            return Result.success("查询成功", attendanceList);
+            return Result.success("查询成功", attendanceDtoList);
         } catch (Exception e) {
             log.error("获取签到信息时发生异常", e);
             throw new CustomException("获取签到信息时发生未知异常");
         }
     }
-
-
 }

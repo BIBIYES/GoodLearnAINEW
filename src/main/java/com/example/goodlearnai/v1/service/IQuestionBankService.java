@@ -16,7 +16,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IQuestionBankService extends IService<QuestionBank> {
     Result<String> createQuestionBank(QuestionBank questionBank);
 
-    Result<String> deleteQuestionBank(QuestionBank questionBank);
+    Result<String> deleteQuestionBank(Long bankId);
 
     Result<String> updateQuestionBank(QuestionBank questionBank);
 

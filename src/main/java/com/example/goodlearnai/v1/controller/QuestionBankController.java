@@ -35,13 +35,13 @@ public class QuestionBankController {
         return questionBankService.createQuestionBank(questionBank);
     }
 
-    @PostMapping("/delete")
-    public Result<String> deleteQuestionBank(@Valid @RequestBody QuestionBank questionBank) {
-        if (questionBank.getBankId() == null) {
+    @PostMapping("/delete/{bankId}")
+    public Result<String> deleteQuestionBank(@PathVariable Long bankId) {
+        if (bankId == null) {
             return Result.error("题库ID不能为空");
         }
-        log.info("删除题库请求: bankId={}", questionBank.getBankId());
-        return questionBankService.deleteQuestionBank(questionBank);
+        log.info("删除题库请求: bankId={}", bankId);
+        return questionBankService.deleteQuestionBank(bankId);
     }
 
     @PostMapping("/update")

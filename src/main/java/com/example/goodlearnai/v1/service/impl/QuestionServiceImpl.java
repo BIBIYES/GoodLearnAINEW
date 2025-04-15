@@ -142,20 +142,22 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         // 创建分页对象
         Page<Question> page = new Page<>(current, size);
         
+        // 如果没有提供内容关键词，直接返回空的分页对象
+        if (!StringUtils.hasText(content)) {
+            log.info("未提供搜索关键词，返回空结果: 当前页={}, 每页大小={}", current, size);
+            return Result.success("请输入搜索关键词", new Page<>());
+        }
+
         // 构建查询条件
         LambdaQueryWrapper<Question> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Question::getStatus, true)
                 .inSql(Question::getBankId, 
-                    "SELECT bank_id FROM question_bank WHERE teacher_id = " + userId + " AND status = 1");
+                    "SELECT bank_id FROM question_bank WHERE teacher_id = " + userId + " AND status = 1")
+                .like(Question::getContent, content);
         
         // 如果指定了题库ID，则按题库ID查询
         if (bankId != null) {
             queryWrapper.eq(Question::getBankId, bankId);
-        }
-        
-        // 如果指定了内容关键词，则进行模糊查询
-        if (StringUtils.hasText(content)) {
-            queryWrapper.like(Question::getContent, content);
         }
         
         // 按更新时间降序排序
@@ -164,6 +166,13 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         try {
             // 执行分页查询
             IPage<Question> questionPage = page(page, queryWrapper);
+            
+            // 如果没有查询到数据，返回空的分页对象
+            if (questionPage == null || questionPage.getRecords().isEmpty()) {
+                log.info("未查询到相关题目数据: 当前页={}, 每页大小={}", current, size);
+                return Result.success("未查询到相关数据", new Page<>());
+            }
+            
             log.info("分页查询题目成功: 当前页={}, 每页大小={}, 总记录数={}, 总页数={}", 
                     current, size, questionPage.getTotal(), questionPage.getPages());
             return Result.success("查询成功", questionPage);

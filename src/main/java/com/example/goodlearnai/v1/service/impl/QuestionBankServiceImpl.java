@@ -64,7 +64,7 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
     }
 
     @Override
-    public Result<String> deleteQuestionBank(QuestionBank questionBank) {
+    public Result<String> deleteQuestionBank(Long bankId) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
 
@@ -74,13 +74,9 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         }
 
         // 验证题库是否存在且属于当前教师
-        QuestionBank existingBank = getById(questionBank.getBankId());
+        QuestionBank existingBank = getById(bankId);
         if (existingBank == null) {
             return Result.error("题库不存在");
-        }
-        if (!existingBank.getTeacherId().equals(userId)) {
-            log.warn("用户试图删除非本人创建的题库: userId={}, bankId={}", userId, questionBank.getBankId());
-            return Result.error("只能删除自己创建的题库");
         }
 
         try {
@@ -89,13 +85,13 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
             existingBank.setUpdatedAt(LocalDateTime.now());
             boolean updated = updateById(existingBank);
             if (updated) {
-                log.info("题库删除成功: bankId={}", questionBank.getBankId());
+                log.info("题库删除成功: bankId={}", bankId);
                 return Result.success("题库已删除");
             } else {
                 return Result.error("题库删除失败");
             }
         } catch (Exception e) {
-            log.error("删除题库时发生异常: bankId={}", questionBank.getBankId(), e);
+            log.error("删除题库时发生异常: bankId={}", bankId, e);
             throw new CustomException("删除题库时发生未知异常");
         }
     }
@@ -183,6 +179,13 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
             try {
                 // 执行分页查询
                 IPage<QuestionBank> questionBankPage = page(page, queryWrapper);
+                
+                // 如果没有查询到数据，返回空的分页对象
+                if (questionBankPage == null || questionBankPage.getRecords().isEmpty()) {
+                    log.info("未查询到相关题库数据: 当前页={}, 每页大小={}", current, size);
+                    return Result.success("未查询到相关数据", new Page<>());
+                }
+                
                 log.info("分页查询题库成功: 当前页={}, 每页大小={}, 总记录数={}, 总页数={}",
                         current, size, questionBankPage.getTotal(), questionBankPage.getPages());
                 return Result.success("查询成功", questionBankPage);

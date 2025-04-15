@@ -31,9 +31,5 @@ public interface CourseMembersMapper extends BaseMapper<CourseMembers> {
             "FROM user_courses_view WHERE user_id = #{userId}")
     List<UserCoursesView> getStudentCourses(@Param("userId") Long userId);
 
-    /**
-     * 根据学生输入的课程Id查找对应课程的密码
-     */
-    @Select("SELECT course_password FROM course WHERE course_id = #{courseId}")
-    int selectCoursePassword(@Param("courseId") Long courseId);
+
 }

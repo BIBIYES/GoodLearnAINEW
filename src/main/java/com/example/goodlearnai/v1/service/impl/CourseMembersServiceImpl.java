@@ -48,11 +48,11 @@ public class CourseMembersServiceImpl extends ServiceImpl<CourseMembersMapper, C
             }
             return Result.success("加入班级成功");
         } catch (DuplicateKeyException e) {
-            log.warn("用户尝试重复加入班级: userId={}, classId={}", userId, courseMembers.getCourseId());
+            log.warn("用户尝试重复加入班级: userId={}, courseId={}", userId, courseMembers.getCourseId());
             return Result.error("您已经在这个班级中，请勿重复加入");
         }
         catch (DataIntegrityViolationException e){
-            log.warn("用户尝试加入班级但这个班级可能不存在: userId={}, classId={}", userId, courseMembers.getCourseId());
+            log.warn("用户尝试加入班级但这个班级可能不存在: userId={}, courseId={}", userId, courseMembers.getCourseId());
             return Result.error("该班级可能不存在");
         }
         catch (Exception e) {

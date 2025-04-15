@@ -4,6 +4,7 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
 
 
 /**
@@ -34,6 +35,9 @@ public interface ICourseService extends IService<Course> {
      */
     Result<String> setMonitor(Course course, Long monitor);
 
+    Result<String> stopCourse(Course course);
 
+    Result<List<Course>> getCourse(Course course);
 
+    Result<String> compileCourse(Course course);
 }

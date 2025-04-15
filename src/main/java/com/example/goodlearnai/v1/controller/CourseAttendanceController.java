@@ -2,12 +2,15 @@ package com.example.goodlearnai.v1.controller;
 
 
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.CourseAttendanceDto;
 import com.example.goodlearnai.v1.entity.CourseAttendance;
 
 import com.example.goodlearnai.v1.service.impl.CourseAttendanceServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
 
 /**
  * <p>
@@ -29,6 +32,18 @@ public class CourseAttendanceController {
     public Result<String> initiateCheckIn(@RequestBody CourseAttendance courseAttendance) {
         return classAttendanceService.initiateCheckIn(courseAttendance);
     }
-    
 
+    /**
+     * 停止签到接口
+     */
+    @PutMapping("/stop-check-in")
+    public Result<Boolean> stopCheckIn(@RequestBody CourseAttendance courseAttendance) {
+        return classAttendanceService.stopCheckIn(courseAttendance);
+    }
+
+    //获取班级所有的签到表
+    @GetMapping("/get-attendance-info/{courseId}")
+    public Result<List<CourseAttendanceDto>> getAttendanceInfo(@PathVariable Long courseId) {
+        return classAttendanceService.getAttendanceInfo(courseId);
+    }
 }

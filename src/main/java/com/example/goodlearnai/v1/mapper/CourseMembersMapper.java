@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * <p>
- *  Mapper 接口
+ * Mapper 接口
  * </p>
  *
  * @author author
@@ -19,6 +19,7 @@ import java.util.List;
 public interface CourseMembersMapper extends BaseMapper<CourseMembers> {
     /**
      * 获取学生加入的所有课程
+     *
      * @param userId 用户ID
      * @return 课程列表
      */
@@ -33,6 +34,6 @@ public interface CourseMembersMapper extends BaseMapper<CourseMembers> {
     /**
      * 根据学生输入的课程Id查找对应课程的密码
      */
-  @Select("SELECT course_password FROM course WHERE course_id = #{courseId}")
+    @Select("SELECT course_password FROM course WHERE course_id = #{courseId}")
     int selectCoursePassword(@Param("courseId") Long courseId);
 }

@@ -2,6 +2,7 @@ package com.example.goodlearnai.v1.service;
 
 import com.example.goodlearnai.v1.common.Result;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.example.goodlearnai.v1.dto.StudentIntoCourseDto;
 import com.example.goodlearnai.v1.entity.CourseMembers;
 import com.example.goodlearnai.v1.vo.UserCoursesView;
 
@@ -17,7 +18,7 @@ import java.util.List;
  */
 public interface ICourseMembersService extends IService<CourseMembers> {
 
-    Result<String> intoClass(CourseMembers courseMembers );
+    Result<String> intoCourse(StudentIntoCourseDto studentIntoCourseDto );
 
     Result<List<UserCoursesView>> getStudentOwnCourses();
 }

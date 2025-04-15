@@ -10,6 +10,9 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 
+/**
+ * @author DSfeiji
+ */
 @Data
 public class CourseAttendanceDto implements Serializable {
 

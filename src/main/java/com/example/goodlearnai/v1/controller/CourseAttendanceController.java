@@ -2,6 +2,7 @@ package com.example.goodlearnai.v1.controller;
 
 
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.CourseAttendanceDto;
 import com.example.goodlearnai.v1.entity.CourseAttendance;
 
 import com.example.goodlearnai.v1.service.impl.CourseAttendanceServiceImpl;
@@ -42,7 +43,7 @@ public class CourseAttendanceController {
 
     //获取班级所有的签到表
     @GetMapping("/get-attendance-info/{courseId}")
-    public Result<List<CourseAttendance>> getAttendanceInfo(@PathVariable Long courseId) {
+    public Result<List<CourseAttendanceDto>> getAttendanceInfo(@PathVariable Long courseId) {
         return classAttendanceService.getAttendanceInfo(courseId);
     }
 }

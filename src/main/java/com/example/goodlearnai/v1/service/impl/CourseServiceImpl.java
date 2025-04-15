@@ -1,6 +1,7 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
@@ -140,6 +141,16 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         log.debug("当前教师ID为: {}", userId);
+        QueryWrapper<Course> wrapper = new QueryWrapper<>();
+        wrapper.eq("course_id", course.getCourseId());
+        wrapper.select("teacher_id");
+        Course userId2 = courseMapper.selectOne(wrapper);
+        Long teacherId = userId2.getTeacherId();
+        //获取当前老师的id判断是否为本课程教师
+        if (!userId.equals(teacherId)) {
+            log.warn("userId={},teacherId={}", userId, teacherId);
+            return Result.error("您不是当前课程的老师");
+        }
         if (!"teacher".equals(role)) {
             return Result.error("暂无权限");
         }

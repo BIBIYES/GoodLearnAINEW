@@ -59,5 +59,4 @@ public class CourseMembers implements Serializable {
      */
     private Boolean status;
 
-
 }

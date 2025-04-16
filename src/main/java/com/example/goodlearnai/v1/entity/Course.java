@@ -35,6 +35,11 @@ public class Course implements Serializable {
     private Long courseId;
 
     /**
+     * 班级（课程）密码
+     */
+    private Integer coursePassword;
+
+    /**
      * 班级名称
      */
     private String className;

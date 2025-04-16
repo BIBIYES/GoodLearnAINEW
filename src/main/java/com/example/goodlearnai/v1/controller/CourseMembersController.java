@@ -2,10 +2,11 @@ package com.example.goodlearnai.v1.controller;
 
 
 import com.example.goodlearnai.v1.common.Result;
-import com.example.goodlearnai.v1.entity.CourseMembers;
+import com.example.goodlearnai.v1.dto.StudentIntoCourseDto;
 import com.example.goodlearnai.v1.service.ICourseMembersService;
 import com.example.goodlearnai.v1.vo.UserCoursesView;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,24 +22,31 @@ import java.util.List;
  * @since 2025 -03-31
  */
 @RestController
+@Slf4j
 @RequestMapping("/v1/course-members")
 public class CourseMembersController {
     @Resource
-    private ICourseMembersService iclassMembersService;
+    private ICourseMembersService iCourseMembersService;
 
     /**
      * 学生加入课程
      *
-     * @param courseMembers 班级成员对象
+     * @param studentIntoCourseDto 班级成员对象
      * @return 返回加入成功或者失败
      */
     @PostMapping("/into-course")
-    public Result<String> intoClass(@RequestBody CourseMembers courseMembers) {
-        return iclassMembersService.intoClass(courseMembers);
+    public Result<String> intoCourse(@RequestBody StudentIntoCourseDto studentIntoCourseDto) {
+
+        return iCourseMembersService.intoCourse(studentIntoCourseDto);
     }
 
+
+    /**
+     * 学生获取加入的课程
+     */
     @GetMapping("/get-student-own-courses")
     public Result<List<UserCoursesView>> getStudentOwnCourses(){
-        return iclassMembersService.getStudentOwnCourses();
+
+        return iCourseMembersService.getStudentOwnCourses();
     }
 }

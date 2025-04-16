@@ -2,7 +2,7 @@ spring:
   application:
     name: GoodLearnAI
   datasource:
-    url: jdbc:mysql://10.181.27.97:3306/good_learn_ai_NEW?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://198.23.201.122:3306/good_learn_ai_NEW?useSSL=false&serverTimezone=UTC
     username: root
     password: zzx
     driver-class-name: com.mysql.cj.jdbc.Driver

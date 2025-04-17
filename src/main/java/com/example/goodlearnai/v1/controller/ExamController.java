@@ -29,7 +29,7 @@ public class ExamController {
         return examService.addExam(exam);
     }
 
-    @PostMapping("/delete-exam/{examId}")
+    @PutMapping("/delete-exam/{examId}")
     public Result<String> deleteExam(@PathVariable Long examId) {
         return examService.deleteExam(examId);
     }

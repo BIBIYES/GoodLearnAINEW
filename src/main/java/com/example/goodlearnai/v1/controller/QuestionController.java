@@ -31,7 +31,7 @@ public class QuestionController {
         return questionService.createQuestion(question);
     }
 
-    @PostMapping("/delete/{questionId}")
+    @PutMapping("/delete/{questionId}")
     public Result<String> deleteQuestion(@PathVariable Long questionId) {
         return questionService.deleteQuestion(questionId);
     }

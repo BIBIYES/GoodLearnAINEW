@@ -63,4 +63,9 @@ public class UsersController {
     public Result<String> addTeacher(@RequestBody Users users) {
         return iusersService.addTeacher(users);
     }
+
+    @GetMapping("/start")
+    public Result<String> start() {
+        return Result.success("欢迎使用好助学！！！");
+    }
 }

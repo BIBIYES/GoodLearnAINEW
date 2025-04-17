@@ -61,5 +61,10 @@ public class ExamQuestion implements Serializable {
      */
     private LocalDateTime createdAt;
 
+    /**
+     * 状态码：默认1正常 设置为 0 删除
+     */
+    private Integer status;
+
 
 }

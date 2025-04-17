@@ -1,7 +1,11 @@
 package com.example.goodlearnai.v1.service;
 
+import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.ExamQuestionDto;
 import com.example.goodlearnai.v1.entity.ExamQuestion;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -12,5 +16,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2025-04-16
  */
 public interface IExamQuestionService extends IService<ExamQuestion> {
+    Result<String> createExamQuestion(ExamQuestionDto examQuestionDTO);
 
 }

@@ -53,8 +53,7 @@ public class QuestionController {
     public Result<IPage<Question>> pageQuestions(
             @RequestParam(defaultValue = "1") long current,
             @RequestParam(defaultValue = "10") long size,
-            @RequestParam(required = false) Long bankId,
-            @RequestParam(required = false) String content) {
-        return questionService.pageQuestions(current, size, bankId, content);
+            @RequestParam(required = false) Long bankId) {
+        return questionService.pageQuestions(current, size, bankId);
     }
 }

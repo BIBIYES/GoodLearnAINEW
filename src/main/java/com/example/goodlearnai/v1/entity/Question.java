@@ -37,6 +37,11 @@ public class Question implements Serializable {
     private Long bankId;
 
     /**
+     * 题目标题
+     */
+    private String title;
+
+    /**
      * 题干内容
      */
     private String content;

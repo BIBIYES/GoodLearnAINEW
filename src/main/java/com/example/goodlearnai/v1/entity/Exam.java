@@ -15,7 +15,7 @@ import lombok.experimental.Accessors;
  * </p>
  *
  * @author DSfeiji
- * @since 2025-04-16
+ * @since 2025-04-18
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -57,9 +57,16 @@ public class Exam implements Serializable {
     private LocalDateTime updatedAt;
 
     /**
-     * 状态码：默认1正常 设置为 0 删除
+     * 试卷状态：草稿/已发布/已关闭
      */
-    private Integer status;
-
-
+    private ExamStatus status;
+    
+    /**
+     * 试卷状态枚举
+     */
+    public enum ExamStatus {
+        DRAFT,       // 草稿
+        PUBLISHED,   // 已发布
+        CLOSED       // 已关闭
+    }
 }

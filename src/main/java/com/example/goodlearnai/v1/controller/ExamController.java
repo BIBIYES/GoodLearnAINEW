@@ -53,4 +53,14 @@ public class ExamController {
             @RequestParam(required = false) String examName) {
         return examService.pageExams(current, size, examName);
     }
+    
+    /**
+     * 发布试卷
+     * @param examId 试卷ID
+     * @return 发布结果
+     */
+    @PutMapping("/publish-exam/{examId}")
+    public Result<String> publishExam(@PathVariable Long examId) {
+        return examService.publishExam(examId);
+    }
 }

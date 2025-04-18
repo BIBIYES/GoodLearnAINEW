@@ -28,4 +28,11 @@ public interface IExamService extends IService<Exam> {
      * @return 分页结果
      */
     Result<IPage<Exam>> pageExams(long current, long size, String examName);
+    
+    /**
+     * 发布试卷
+     * @param examId 试卷ID
+     * @return 发布结果
+     */
+    Result<String> publishExam(Long examId);
 }

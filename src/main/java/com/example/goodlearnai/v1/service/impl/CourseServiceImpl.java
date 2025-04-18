@@ -3,6 +3,8 @@ package com.example.goodlearnai.v1.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
 import com.example.goodlearnai.v1.exception.CustomException;
@@ -16,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 /**
  * <p>
@@ -120,17 +121,25 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
      * 获取创建的课程
      */
     @Override
-    public Result<List<Course>> getCourse(Course course) {
+    public Result<IPage<Course>> getCourse(Course course ,long current, long size) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         log.debug("当前用户ID为: {}", userId);
-        if (!"teacher".equals(role)){
+        if (!"teacher".equals(role)) {
             return Result.error("暂无权限");
         }
+        // 分页对象，传入当前页码和每页数量
+        Page<Course> page = new Page<>(current, size);
+        // 查询条件
         LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<Course>()
                 .eq(Course::getTeacherId, userId);
-        List<Course> courses = courseMapper.selectList(wrapper);
-        return Result.success("获取成功", courses);
+
+        // 分页查询
+        IPage<Course> coursePage = page(page, wrapper);
+        if (coursePage == null || coursePage.getRecords().isEmpty()) {
+            return Result.success("未查询到相关数据", new Page<>());
+        }
+        return Result.success("获取成功", coursePage);
     }
 
     /**

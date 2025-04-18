@@ -1,6 +1,7 @@
 package com.example.goodlearnai.v1.controller;
 
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
 
@@ -11,7 +12,6 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 
 /**
@@ -70,8 +70,10 @@ private ICourseService iCourseService;
      * 老师获取添加的课程
      */
     @GetMapping("/get-course")
-    public Result<List<Course>> getCourse( Course course) {
-        return iCourseService.getCourse(course);
+    public Result<IPage<Course>> getCourse(Course course ,
+                                           @RequestParam(defaultValue = "1") long current,
+                                           @RequestParam(defaultValue = "10") long size) {
+        return iCourseService.getCourse(course,current,size);
     }
 
     /**

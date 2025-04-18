@@ -1,10 +1,9 @@
 package com.example.goodlearnai.v1.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
 import com.baomidou.mybatisplus.extension.service.IService;
-
-import java.util.List;
 
 
 /**
@@ -37,7 +36,7 @@ public interface ICourseService extends IService<Course> {
 
     Result<String> stopCourse(Course course);
 
-    Result<List<Course>> getCourse(Course course);
+    Result<IPage<Course>> getCourse(Course course ,long current, long size);
 
     Result<String> compileCourse(Course course);
 }

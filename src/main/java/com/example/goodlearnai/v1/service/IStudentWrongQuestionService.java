@@ -23,13 +23,5 @@ public interface IStudentWrongQuestionService extends IService<StudentWrongQuest
      * @return 分页错题记录
      */
     Result<IPage<StudentWrongQuestion>> pageStudentWrongQuestions(Long userId, long current, long size);
-    
-    /**
-     * 分页查询学生的错题详情
-     * @param userId 学生ID
-     * @param current 当前页
-     * @param size 每页大小
-     * @return 分页错题详情
-     */
-    Result<IPage<WrongQuestionDetailDto>> pageWrongQuestionDetails(Long userId, long current, long size);
+
 }

@@ -45,25 +45,7 @@ public class StudentWrongQuestionController {
             return Result.error("分页查询学生错题记录异常: " + e.getMessage());
         }
     }
-    
-    /**
-     * 分页查询当前学生的错题详情（包含题目内容和学生作答）
-     * @param current 当前页
-     * @param size 每页大小
-     * @return 分页错题详情
-     */
-    @GetMapping("/page-details")
-    public Result<IPage<WrongQuestionDetailDto>> pageWrongQuestionDetails(
-            @RequestParam(defaultValue = "1") long current,
-            @RequestParam(defaultValue = "10") long size) {
-        try {
-            Long userId = AuthUtil.getCurrentUserId();
-            return studentWrongQuestionService.pageWrongQuestionDetails(userId, current, size);
-        } catch (Exception e) {
-            log.error("分页查询学生错题详情异常: {}", e.getMessage(), e);
-            return Result.error("分页查询学生错题详情异常: " + e.getMessage());
-        }
-    }
+
 
     /**
      * 分页查询指定学生的错题记录（教师权限）
@@ -91,35 +73,6 @@ public class StudentWrongQuestionController {
         } catch (Exception e) {
             log.error("教师查询学生错题记录异常: {}", e.getMessage(), e);
             return Result.error("查询学生错题记录异常: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * 分页查询指定学生的错题详情（包含题目内容和学生作答）（教师权限）
-     * @param userId 学生ID
-     * @param current 当前页
-     * @param size 每页大小
-     * @return 分页错题详情
-     */
-    @GetMapping("/page-details/{userId}")
-    public Result<IPage<WrongQuestionDetailDto>> pageWrongQuestionDetailsByTeacher(
-            @PathVariable Long userId,
-            @RequestParam(defaultValue = "1") long current,
-            @RequestParam(defaultValue = "10") long size) {
-        try {
-            // 获取当前用户角色
-            String role = AuthUtil.getCurrentRole();
-            
-            // 判断是否为老师角色
-            if (!"teacher".equals(role)) {
-                log.warn("用户暂无权限查询学生错题详情: userId={}", AuthUtil.getCurrentUserId());
-                return Result.error("暂无权限查询学生错题详情");
-            }
-            
-            return studentWrongQuestionService.pageWrongQuestionDetails(userId, current, size);
-        } catch (Exception e) {
-            log.error("教师查询学生错题详情异常: {}", e.getMessage(), e);
-            return Result.error("查询学生错题详情异常: " + e.getMessage());
         }
     }
 }

@@ -46,7 +46,6 @@ public class QuestionController {
      * @param current 当前页码
      * @param size 每页大小
      * @param bankId 题库ID（可选）
-     * @param content 题目内容关键词（可选，用于模糊搜索）
      * @return 分页结果
      */
     @GetMapping("/page")

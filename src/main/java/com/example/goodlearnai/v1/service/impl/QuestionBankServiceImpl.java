@@ -16,6 +16,9 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author DSfeiji
+ */
 @Slf4j
 @Service
 public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, QuestionBank> implements IQuestionBankService {
@@ -135,7 +138,6 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
             // 更新题库信息
             questionBank.setTeacherId(existingBank.getTeacherId());
             questionBank.setUpdatedAt(LocalDateTime.now());
-            questionBank.setStatus(true);
             boolean updated = updateById(questionBank);
             if (updated) {
                 log.info("题库更新成功: bankId={}", questionBank.getBankId());

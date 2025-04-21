@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * <p>
- *  Mapper 接口
+ * Mapper 接口
  * </p>
  *
  * @author author
@@ -19,6 +19,7 @@ import java.util.List;
 public interface CourseMembersMapper extends BaseMapper<CourseMembers> {
     /**
      * 获取学生加入的所有课程
+     *
      * @param userId 用户ID
      * @return 课程列表
      */
@@ -29,5 +30,6 @@ public interface CourseMembersMapper extends BaseMapper<CourseMembers> {
             "member_count as memberCount " +
             "FROM user_courses_view WHERE user_id = #{userId}")
     List<UserCoursesView> getStudentCourses(@Param("userId") Long userId);
+
 
 }

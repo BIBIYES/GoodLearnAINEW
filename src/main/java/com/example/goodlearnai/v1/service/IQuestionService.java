@@ -28,5 +28,5 @@ public interface IQuestionService extends IService<Question> {
      * @param content 题目内容关键词（可选，用于模糊搜索）
      * @return 分页结果
      */
-    Result<IPage<Question>> pageQuestions(long current, long size, Long bankId, String content);
+    Result<IPage<Question>> pageQuestions(long current, long size, Long bankId);
 }

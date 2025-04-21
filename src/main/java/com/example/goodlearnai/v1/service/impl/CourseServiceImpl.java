@@ -1,7 +1,10 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
 import com.example.goodlearnai.v1.exception.CustomException;
@@ -15,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 /**
  * <p>
@@ -32,6 +34,9 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     @Autowired
     private CourseMapper courseMapper;
 
+    /**
+     * 老师创建课程（班级）
+     */
 
     @Override
     public Result<String> createClass(Course course) {
@@ -54,6 +59,10 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     }
 
+    /**
+     * 老师设置学委
+     */
+
     @Override
     public Result<String> setMonitor(Course course, Long monitor) {
         Long userId = AuthUtil.getCurrentUserId();
@@ -75,6 +84,9 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     }
 
+    /**
+     * 老师结束课程
+     */
     @Override
     public Result<String> stopCourse(Course course) {
         Long userId = AuthUtil.getCurrentUserId();
@@ -109,17 +121,25 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
      * 获取创建的课程
      */
     @Override
-    public Result<List<Course>> getCourse(Course course) {
+    public Result<IPage<Course>> getCourse(Course course ,long current, long size) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         log.debug("当前用户ID为: {}", userId);
-        if (!"teacher".equals(role)){
+        if (!"teacher".equals(role)) {
             return Result.error("暂无权限");
         }
+        // 分页对象，传入当前页码和每页数量
+        Page<Course> page = new Page<>(current, size);
+        // 查询条件
         LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<Course>()
                 .eq(Course::getTeacherId, userId);
-        List<Course> courses = courseMapper.selectList(wrapper);
-        return Result.success("获取成功", courses);
+
+        // 分页查询
+        IPage<Course> coursePage = page(page, wrapper);
+        if (coursePage == null || coursePage.getRecords().isEmpty()) {
+            return Result.success("未查询到相关数据", new Page<>());
+        }
+        return Result.success("获取成功", coursePage);
     }
 
     /**
@@ -130,6 +150,16 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         log.debug("当前教师ID为: {}", userId);
+        QueryWrapper<Course> wrapper = new QueryWrapper<>();
+        wrapper.eq("course_id", course.getCourseId());
+        wrapper.select("teacher_id");
+        Course userId2 = courseMapper.selectOne(wrapper);
+        Long teacherId = userId2.getTeacherId();
+        //获取当前老师的id判断是否为本课程教师
+        if (!userId.equals(teacherId)) {
+            log.warn("userId={},teacherId={}", userId, teacherId);
+            return Result.error("您不是当前课程的老师");
+        }
         if (!"teacher".equals(role)) {
             return Result.error("暂无权限");
         }

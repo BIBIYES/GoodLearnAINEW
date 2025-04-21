@@ -130,7 +130,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
     }
 
     @Override
-    public Result<IPage<Question>> pageQuestions(long current, long size, Long bankId, String content) {
+    public Result<IPage<Question>> pageQuestions(long current, long size, Long bankId) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
 
@@ -141,19 +141,13 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
 
         // 创建分页对象
         Page<Question> page = new Page<>(current, size);
-        
-        // 如果没有提供内容关键词，直接返回空的分页对象
-        if (!StringUtils.hasText(content)) {
-            log.info("未提供搜索关键词，返回空结果: 当前页={}, 每页大小={}", current, size);
-            return Result.success("请输入搜索关键词", new Page<>());
-        }
+
 
         // 构建查询条件
         LambdaQueryWrapper<Question> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Question::getStatus, true)
                 .inSql(Question::getBankId, 
-                    "SELECT bank_id FROM question_bank WHERE teacher_id = " + userId + " AND status = 1")
-                .like(Question::getContent, content);
+                    "SELECT bank_id FROM question_bank WHERE teacher_id = " + userId + " AND status = 1");
         
         // 如果指定了题库ID，则按题库ID查询
         if (bankId != null) {

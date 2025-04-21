@@ -31,7 +31,7 @@ public class QuestionController {
         return questionService.createQuestion(question);
     }
 
-    @PostMapping("/delete/{questionId}")
+    @PutMapping("/delete/{questionId}")
     public Result<String> deleteQuestion(@PathVariable Long questionId) {
         return questionService.deleteQuestion(questionId);
     }
@@ -46,15 +46,13 @@ public class QuestionController {
      * @param current 当前页码
      * @param size 每页大小
      * @param bankId 题库ID（可选）
-     * @param content 题目内容关键词（可选，用于模糊搜索）
      * @return 分页结果
      */
     @GetMapping("/page")
     public Result<IPage<Question>> pageQuestions(
             @RequestParam(defaultValue = "1") long current,
             @RequestParam(defaultValue = "10") long size,
-            @RequestParam(required = false) Long bankId,
-            @RequestParam(required = false) String content) {
-        return questionService.pageQuestions(current, size, bankId, content);
+            @RequestParam(required = false) Long bankId) {
+        return questionService.pageQuestions(current, size, bankId);
     }
 }

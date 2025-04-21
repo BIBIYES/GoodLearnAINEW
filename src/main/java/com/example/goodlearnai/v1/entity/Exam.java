@@ -3,8 +3,6 @@ package com.example.goodlearnai.v1.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-
-import java.io.Serial;
 import java.time.LocalDateTime;
 import java.io.Serializable;
 import lombok.Data;
@@ -13,49 +11,38 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 
+ * 试卷表
  * </p>
  *
- * @author mouse
- * @since 2025-04-01
+ * @author DSfeiji
+ * @since 2025-04-18
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("course")
-public class Course implements Serializable {
+@TableName("exam")
+public class Exam implements Serializable {
 
-    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
-     * 班级ID
+     * 试卷ID
      */
-    @TableId(value = "course_id", type = IdType.AUTO)
-    private Long courseId;
+    @TableId(value = "exam_id", type = IdType.AUTO)
+    private Long examId;
 
     /**
-     * 班级（课程）密码
+     * 试卷名称
      */
-    private Integer coursePassword;
+    private String examName;
 
     /**
-     * 班级名称
-     */
-    private String className;
-
-    /**
-     * 老师ID
+     * 创建教师ID
      */
     private Long teacherId;
 
     /**
-     * 学委ID
-     */
-    private Long monitorId;
-
-    /**
-     * 班级描述
+     * 试卷描述
      */
     private String description;
 
@@ -70,9 +57,16 @@ public class Course implements Serializable {
     private LocalDateTime updatedAt;
 
     /**
-     * 状态：1-正常，0-禁用
+     * 试卷状态：草稿/已发布/已关闭
      */
-    private Boolean status;
-
-
+    private ExamStatus status;
+    
+    /**
+     * 试卷状态枚举
+     */
+    public enum ExamStatus {
+        DRAFT,       // 草稿
+        PUBLISHED,   // 已发布
+        CLOSED       // 已关闭
+    }
 }

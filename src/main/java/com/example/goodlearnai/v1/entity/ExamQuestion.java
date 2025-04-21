@@ -3,8 +3,6 @@ package com.example.goodlearnai.v1.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-
-import java.io.Serial;
 import java.time.LocalDateTime;
 import java.io.Serializable;
 import lombok.Data;
@@ -13,51 +11,50 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 
+ * 试卷题目表（存储题目快照）
  * </p>
  *
- * @author mouse
- * @since 2025-04-01
+ * @author DSfeiji
+ * @since 2025-04-16
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("course")
-public class Course implements Serializable {
+@TableName("exam_question")
+public class ExamQuestion implements Serializable {
 
-    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
-     * 班级ID
+     * 试卷题目ID
      */
-    @TableId(value = "course_id", type = IdType.AUTO)
-    private Long courseId;
+    @TableId(value = "eq_id", type = IdType.AUTO)
+    private Long eqId;
 
     /**
-     * 班级（课程）密码
+     * 关联的试卷ID
      */
-    private Integer coursePassword;
+    private Long examId;
 
     /**
-     * 班级名称
+     * 题目内容的快照
      */
-    private String className;
+    private String questionContent;
 
     /**
-     * 老师ID
+     * 参考答案的快照
      */
-    private Long teacherId;
+    private String referenceAnswer;
 
     /**
-     * 学委ID
+     * 难度
      */
-    private Long monitorId;
+    private String difficulty;
 
     /**
-     * 班级描述
+     * 原题库题目ID（可选，用于追溯）
      */
-    private String description;
+    private Long originalQuestionId;
 
     /**
      * 创建时间
@@ -65,14 +62,9 @@ public class Course implements Serializable {
     private LocalDateTime createdAt;
 
     /**
-     * 更新时间
+     * 状态码：默认1正常 设置为 0 删除
      */
-    private LocalDateTime updatedAt;
-
-    /**
-     * 状态：1-正常，0-禁用
-     */
-    private Boolean status;
+    private Integer status;
 
 
 }

@@ -3,8 +3,6 @@ package com.example.goodlearnai.v1.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-
-import java.io.Serial;
 import java.time.LocalDateTime;
 import java.io.Serializable;
 import lombok.Data;
@@ -13,50 +11,49 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 
+ * 学生错题汇总表：记录错题信息
  * </p>
  *
- * @author mouse
- * @since 2025-04-01
+ * @author DSfeiji
+ * @since 2025-04-19
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("course_members")
-public class CourseMembers implements Serializable {
+@TableName("student_wrong_question")
+public class StudentWrongQuestion implements Serializable {
 
-    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
-     * 记录ID
+     * 错题记录ID
      */
-    @TableId(value = "members_id", type = IdType.AUTO)
-    private Long membersId;
+    @TableId(value = "wrong_id", type = IdType.AUTO)
+    private Long wrongId;
 
     /**
-     * 班级ID
-     */
-    private Long courseId;
-
-    /**
-     * 用户ID
+     * 学生ID，关联 users.user_id
      */
     private Long userId;
 
     /**
-     * 加入时间
+     * 试卷题目ID，关联 exam_question.eq_id
      */
-    private LocalDateTime joinTime;
+    private Long eqId;
 
     /**
-     * 学分
+     * 错题内容
      */
-    private Integer credits;
+    private String questionContent;
 
     /**
-     * 状态：1-正常，0-移除
+     * 错误答案
      */
-    private Boolean status;
+    private String wrongAnswer;
+
+    /**
+     * 正确答案
+     */
+    private String questionAnswer;
 
 }

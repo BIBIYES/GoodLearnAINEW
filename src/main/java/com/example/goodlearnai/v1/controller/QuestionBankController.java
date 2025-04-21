@@ -35,7 +35,7 @@ public class QuestionBankController {
         return questionBankService.createQuestionBank(questionBank);
     }
 
-    @PostMapping("/delete/{bankId}")
+    @PutMapping("/delete/{bankId}")
     public Result<String> deleteQuestionBank(@PathVariable Long bankId) {
         if (bankId == null) {
             return Result.error("题库ID不能为空");

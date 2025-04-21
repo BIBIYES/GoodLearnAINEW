@@ -3,21 +3,23 @@ package com.example.goodlearnai.v1.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.AnswerValidationRequest;
+import com.example.goodlearnai.v1.dto.AnswerValidationResponse;
 import com.example.goodlearnai.v1.dto.ExamQuestionAnswerDto;
 import com.example.goodlearnai.v1.entity.ExamQuestion;
-import com.example.goodlearnai.v1.entity.Question;
 import com.example.goodlearnai.v1.entity.StudentAnswer;
 import com.example.goodlearnai.v1.entity.StudentWrongQuestion;
 import com.example.goodlearnai.v1.mapper.ExamQuestionMapper;
 import com.example.goodlearnai.v1.mapper.StudentAnswerMapper;
 import com.example.goodlearnai.v1.service.IStudentAnswerService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.service.IStudentWrongQuestionService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +46,9 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
 
     @Autowired
     private ExamQuestionMapper examQuestionMapper;
+    
+    @Autowired
+    private OpenAiChatModel openAiChatModel;
 
     @Override
     @Transactional
@@ -72,10 +77,6 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
         }
     }
 
-    /**
-     * 更新错题记录
-     * @param studentAnswer 学生答题记录
-     */
     private void updateWrongQuestion(StudentAnswer studentAnswer) {
         try {
             // 查询是否已存在该学生该题目的错题记录
@@ -113,11 +114,6 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
         }
     }
     
-    /**
-     * 获取试卷中的所有题目及用户作答情况
-     * @param examId 试卷ID
-     * @return 题目及作答情况列表
-     */
     @Override
     public Result<List<ExamQuestionAnswerDto>> getExamQuestionsWithAnswers(Long examId) {
         Long userId = AuthUtil.getCurrentUserId();
@@ -186,4 +182,45 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             return Result.error("查询试卷题目及作答情况异常: " + e.getMessage());
         }
     }
-}
+    
+    @Override
+    public Result<AnswerValidationResponse> validateAnswerWithAI(AnswerValidationRequest request) {
+        try {
+            if (request.getQuestionContent() == null || request.getQuestionContent().isEmpty()) {
+                return Result.error("题目内容不能为空");
+            }
+            if (request.getStudentAnswer() == null || request.getStudentAnswer().isEmpty()) {
+                return Result.error("学生答案不能为空");
+            }
+            
+            log.info("开始AI验证学生答案: questionContent={}, studentAnswer={}", 
+                    request.getQuestionContent(), request.getStudentAnswer());
+            
+            // 构建提示词
+            String prompt = "你将收到一个问题和一个学生的答案。你的任务是验证学生的答案是否完全符合题目的正确答案。(用中文)\n\n" +
+                    "如果用户的答案正确输出，表扬用户的一些语句然后输出\n#valid#。\n" +
+                    "如果用户的答案错误输出，解析（解释为什么答案错了），然后输出 \n#invalid#。\n\n" +
+                    "问题：" + request.getQuestionContent() + "\n" +
+                    "参考答案：" + request.getReferenceAnswer() + "\n" +
+                    "学生答案：" + request.getStudentAnswer();
+            
+            // 调用AI服务 - 直接传入提示词字符串
+            Object aiResponseObj = openAiChatModel.call(prompt);
+            String aiResponse = aiResponseObj.toString();
+            
+            log.debug("AI响应结果: {}", aiResponse);
+            
+            // 解析AI响应
+            boolean isCorrect = aiResponse.contains("#valid#");
+            String feedback = aiResponse.replace("#valid#", "").replace("#invalid#", "").trim();
+            
+            AnswerValidationResponse validationResponse = new AnswerValidationResponse(isCorrect, feedback);
+            log.info("AI验证完成: isCorrect={}", isCorrect);
+            
+            return Result.success("验证完成", validationResponse);
+        } catch (Exception e) {
+            log.error("AI验证学生答案异常: {}", e.getMessage(), e);
+            return Result.error("AI验证学生答案异常: " + e.getMessage());
+        }
+    }
+} 

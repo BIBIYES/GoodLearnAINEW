@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.AnswerValidationRequest;
+import com.example.goodlearnai.v1.dto.AnswerValidationResponse;
 import com.example.goodlearnai.v1.entity.StudentAnswer;
 import com.example.goodlearnai.v1.service.IStudentAnswerService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
@@ -76,6 +78,33 @@ public class StudentAnswerController {
         } catch (Exception e) {
             log.error("获取试卷题目及作答情况异常: {}", e.getMessage(), e);
             return Result.error("获取试卷题目及作答情况异常: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 使用AI验证学生答案
+     * @param request 包含题目内容、参考答案和学生答案的请求
+     * @return AI验证结果，包括是否正确和反馈信息
+     */
+    @PostMapping("/validate-answer")
+    public Result<AnswerValidationResponse> validateAnswerWithAI(@RequestBody AnswerValidationRequest request) {
+        try {
+            // 参数校验
+            if (request == null) {
+                return Result.error("请求参数不能为空");
+            }
+            if (request.getQuestionContent() == null || request.getQuestionContent().isEmpty()) {
+                return Result.error("题目内容不能为空");
+            }
+            if (request.getStudentAnswer() == null || request.getStudentAnswer().isEmpty()) {
+                return Result.error("学生答案不能为空");
+            }
+            
+            log.info("收到答案验证请求");
+            return studentAnswerService.validateAnswerWithAI(request);
+        } catch (Exception e) {
+            log.error("验证学生答案异常: {}", e.getMessage(), e);
+            return Result.error("验证学生答案异常: " + e.getMessage());
         }
     }
 }

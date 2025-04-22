@@ -226,11 +226,8 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     }
 
     @Override
-    public Result<AnswerValidationResponse> summarizeExamWithAI(Exam exam) {
+    public Result<String> summarizeExamWithAI(Long examId) {
         try {
-            // 获取试卷id
-            Long examId = exam.getExamId();
-
             // 根据id查找试卷中的所有题目
             LambdaQueryWrapper<ExamQuestion> examQuestions = new LambdaQueryWrapper<>();
             examQuestions.eq(ExamQuestion::getExamId, examId)
@@ -271,13 +268,7 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             String aiResponse = aiResponseObj.toString();
             log.debug("AI响应结果: {}", aiResponse);
 
-            // 解析AI响应
-            boolean isCorrect = aiResponse.contains("#valid#");
-            String feedback = aiResponse.replace("#valid#", "").replace("#invalid#", "").trim();
-
-            AnswerValidationResponse validationResponse = new AnswerValidationResponse(isCorrect, feedback);
-            log.info("AI总结完成: isCorrect={}", isCorrect);
-            return Result.success("验证完成", validationResponse);
+            return Result.success("AI总结成功", aiResponse);
         } catch (Exception e) {
             log.error("AI总结异常: {}", e.getMessage(), e);
             return Result.error("AI总结异常: " + e.getMessage());

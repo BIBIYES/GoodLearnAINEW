@@ -45,5 +45,5 @@ public interface IStudentAnswerService extends IService<StudentAnswer> {
     /**
      * 使用AI总结试卷完成情况
      */
-    Result<AnswerValidationResponse> summarizeExamWithAI(Exam exam);
+    Result<String> summarizeExamWithAI(Long examId);
 }

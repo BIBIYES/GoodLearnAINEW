@@ -114,14 +114,14 @@ public class StudentAnswerController {
     /**
      * 使用AI总结试卷完成情况
      */
-    @PostMapping("/summarize-exam")
-    public Result<AnswerValidationResponse> summarizeExamWithAI(@RequestBody Exam exam) {
+    @PostMapping("/summarize-exam/{examId}")
+    public Result<String> summarizeExamWithAI(@PathVariable Long examId) {
         try {
             log.info("收到试卷总结请求");
-            return studentAnswerService.summarizeExamWithAI(exam);
+            return studentAnswerService.summarizeExamWithAI(examId);
         } catch (Exception e) {
             log.error("试卷总结异常: {}", e.getMessage(), e);
             return Result.error("试卷总结异常: " + e.getMessage());
         }
-        }
+    }
 }

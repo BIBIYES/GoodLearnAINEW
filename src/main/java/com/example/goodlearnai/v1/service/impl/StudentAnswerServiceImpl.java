@@ -1,16 +1,13 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.AnswerValidationRequest;
 import com.example.goodlearnai.v1.dto.AnswerValidationResponse;
 import com.example.goodlearnai.v1.dto.ExamQuestionAnswerDto;
-import com.example.goodlearnai.v1.entity.ExamQuestion;
-import com.example.goodlearnai.v1.entity.StudentAnswer;
-import com.example.goodlearnai.v1.entity.StudentWrongQuestion;
+import com.example.goodlearnai.v1.entity.*;
 import com.example.goodlearnai.v1.mapper.ExamQuestionMapper;
 import com.example.goodlearnai.v1.mapper.StudentAnswerMapper;
 import com.example.goodlearnai.v1.service.IStudentAnswerService;
@@ -28,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -43,6 +41,9 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
 
     @Autowired
     private IStudentWrongQuestionService studentWrongQuestionService;
+
+    @Autowired
+    private StudentAnswerMapper studentAnswerMapper;
 
     @Autowired
     private ExamQuestionMapper examQuestionMapper;
@@ -221,6 +222,65 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
         } catch (Exception e) {
             log.error("AI验证学生答案异常: {}", e.getMessage(), e);
             return Result.error("AI验证学生答案异常: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<AnswerValidationResponse> summarizeExamWithAI(Exam exam) {
+        try {
+            // 获取试卷id
+            Long examId = exam.getExamId();
+
+            // 根据id查找试卷中的所有题目
+            LambdaQueryWrapper<ExamQuestion> examQuestions = new LambdaQueryWrapper<>();
+            examQuestions.eq(ExamQuestion::getExamId, examId)
+                    .eq(ExamQuestion::getStatus, 1)
+                    .orderByAsc(ExamQuestion::getEqId);
+            List<ExamQuestion> questionList = examQuestionMapper.selectList(examQuestions);
+
+            // 获取题目id列表
+            List<Long> questionIdList = questionList.stream()
+                    .map(ExamQuestion::getEqId)
+                    .collect(Collectors.toList());
+
+            // 查出这些题目的错误记录
+            QueryWrapper<StudentAnswer> answerQuery = new QueryWrapper<>();
+            answerQuery.in("eq_id", questionIdList)
+                    .eq("is_correct", false);
+            List<StudentAnswer> studentAnswers = studentAnswerMapper.selectList(answerQuery);
+
+            StringBuilder sb = new StringBuilder();
+            for (StudentAnswer studentAnswer : studentAnswers) {
+                // 根据题目id查studentanswer中学生的答案
+                ExamQuestion question = examQuestionMapper.selectById(studentAnswer.getEqId());
+                sb.append("题目：").append(question.getQuestionContent()).append("\n");
+                sb.append("参考答案：").append(question.getReferenceAnswer()).append("\n");
+                sb.append("学生答案：").append(studentAnswer.getAnswerText()).append("\n");
+            }
+
+            //构建提示词以markdown的形式
+            String prompt = "你是一个老师，负责检查学生试卷中的错题，你会收到学生做出的一些错误的问题并总结这一试卷的完成情况，请按照以下格式markdown格式输出\n\n" +
+                    "## 错误分析\n" +
+                    "分析学生大多数属于什么类型的错误\n\n" +
+                    "## 改进建议\n" +
+                    "提供解决规避错误的方法，和训练方式，哪些知识点需要巩固"+
+                    sb
+                    ;
+              // 调用AI服务 - 直接传入提示词字符串
+            Object aiResponseObj = openAiChatModel.call(prompt);
+            String aiResponse = aiResponseObj.toString();
+            log.debug("AI响应结果: {}", aiResponse);
+
+            // 解析AI响应
+            boolean isCorrect = aiResponse.contains("#valid#");
+            String feedback = aiResponse.replace("#valid#", "").replace("#invalid#", "").trim();
+
+            AnswerValidationResponse validationResponse = new AnswerValidationResponse(isCorrect, feedback);
+            log.info("AI总结完成: isCorrect={}", isCorrect);
+            return Result.success("验证完成", validationResponse);
+        } catch (Exception e) {
+            log.error("AI总结异常: {}", e.getMessage(), e);
+            return Result.error("AI总结异常: " + e.getMessage());
         }
     }
 } 

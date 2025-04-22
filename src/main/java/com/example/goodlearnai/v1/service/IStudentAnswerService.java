@@ -1,10 +1,11 @@
 package com.example.goodlearnai.v1.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.AnswerValidationRequest;
 import com.example.goodlearnai.v1.dto.AnswerValidationResponse;
 import com.example.goodlearnai.v1.dto.ExamQuestionAnswerDto;
+import com.example.goodlearnai.v1.entity.Exam;
 import com.example.goodlearnai.v1.entity.StudentAnswer;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -40,4 +41,9 @@ public interface IStudentAnswerService extends IService<StudentAnswer> {
      * @return 验证结果
      */
     Result<AnswerValidationResponse> validateAnswerWithAI(AnswerValidationRequest request);
+
+    /**
+     * 使用AI总结试卷完成情况
+     */
+    Result<AnswerValidationResponse> summarizeExamWithAI(Exam exam);
 }

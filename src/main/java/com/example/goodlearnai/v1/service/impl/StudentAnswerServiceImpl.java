@@ -187,13 +187,6 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     @Override
     public Result<AnswerValidationResponse> validateAnswerWithAI(AnswerValidationRequest request) {
         try {
-            if (request.getQuestionContent() == null || request.getQuestionContent().isEmpty()) {
-                return Result.error("题目内容不能为空");
-            }
-            if (request.getStudentAnswer() == null || request.getStudentAnswer().isEmpty()) {
-                return Result.error("学生答案不能为空");
-            }
-            
             log.info("开始AI验证学生答案: questionContent={}, studentAnswer={}", 
                     request.getQuestionContent(), request.getStudentAnswer());
             

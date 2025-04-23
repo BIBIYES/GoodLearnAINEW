@@ -213,9 +213,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
 
         // 构建查询条件
         LambdaQueryWrapper<Question> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Question::getStatus, true)
-                .inSql(Question::getBankId, 
-                    "SELECT bank_id FROM question_bank WHERE teacher_id = " + userId + " AND status = 1");
+        queryWrapper.eq(Question::getStatus, true);
         
         // 如果指定了题库ID，则按题库ID查询
         if (bankId != null) {

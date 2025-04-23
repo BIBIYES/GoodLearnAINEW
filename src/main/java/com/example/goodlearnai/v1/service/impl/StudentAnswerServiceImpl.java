@@ -254,7 +254,8 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
                     "分析学生大多数属于什么类型的错误\n\n" +
                     "## 改进建议\n" +
                     "提供解决规避错误的方法，和训练方式，哪些知识点需要巩固"+
-                    sb
+                    sb +
+                    "如果没有错题，则鼓励学生做的很好。"
                     ;
               // 调用AI服务 - 直接传入提示词字符串
             Object aiResponseObj = openAiChatModel.call(prompt);

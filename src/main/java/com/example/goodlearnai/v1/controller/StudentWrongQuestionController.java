@@ -75,4 +75,22 @@ public class StudentWrongQuestionController {
             return Result.error("查询学生错题记录异常: " + e.getMessage());
         }
     }
+    
+    /**
+     * 根据错题ID生成类似的题目 - 使用AI技术
+     * 学生可以查看自己的错题生成的类似题目，教师可以查看所有学生的错题生成的类似题目
+     * 
+     * @param wrongQuestionId 错题ID
+     * @return 生成的类似题目列表(JSON格式)
+     */
+    @GetMapping("/generate-similar/{wrongQuestionId}")
+    public Result<String> generateSimilarWrongQuestions(@PathVariable Long wrongQuestionId) {
+        try {
+            log.info("开始生成类似错题: wrongQuestionId={}", wrongQuestionId);
+            return studentWrongQuestionService.generateSimilarWrongQuestions(wrongQuestionId);
+        } catch (Exception e) {
+            log.error("生成类似错题异常: wrongQuestionId={}, error={}", wrongQuestionId, e.getMessage(), e);
+            return Result.error("生成类似错题异常: " + e.getMessage());
+        }
+    }
 }

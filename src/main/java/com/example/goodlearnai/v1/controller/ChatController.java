@@ -4,19 +4,26 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserChat;
 import com.example.goodlearnai.v1.entity.Chat;
 import com.example.goodlearnai.v1.service.IChatService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.modelcontextprotocol.client.McpSyncClient;
+import io.modelcontextprotocol.spec.McpSchema;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * ai的请求控制层
@@ -26,23 +33,27 @@ import java.util.Map;
 @RestController
 @RequestMapping("/v1/ai")
 public class ChatController {
-    private final OpenAiChatModel chatModel;
 
     @Autowired
-    public ChatController(OpenAiChatModel chatModel) {
-        this.chatModel = chatModel;
-    }
+    private ChatModel chatModel;
+
+
     @Resource
     private IChatService ichatService;
+    @Autowired
+    private List<McpSyncClient> mcpSyncClients;
 
     /**
-     *
-     * @param message 用户提的问题
+     * 利用MCP服务查询数据库
      * @return ai相应的消息，不是流式的
      */
     @GetMapping("/generate")
-    public Map<Object,Object> generate(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
-        return Map.of("generation", this.chatModel.call(message));
+    public Map<String, Object> generate(@RequestBody UserChat chat) throws JsonProcessingException {
+        McpSyncClient fileSystem = mcpSyncClients.get(0);
+        McpSchema.ListToolsResult listToolsResult = fileSystem.listTools();
+        System.out.println(listToolsResult.toString());
+        ichatService.chat(chat);
+        return ichatService.McpChat(chat.getContent());
     }
 
     /**
@@ -76,4 +87,6 @@ public class ChatController {
     public Result<String> updateSessionName(@RequestBody Chat chat ){
         return ichatService.updateSessionName(chat);
     }
+
+
 }

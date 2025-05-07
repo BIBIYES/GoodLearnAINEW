@@ -1,23 +1,22 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.AnswerValidationRequest;
+import com.example.goodlearnai.v1.dto.AnswerValidationResponse;
 import com.example.goodlearnai.v1.dto.ExamQuestionAnswerDto;
-import com.example.goodlearnai.v1.entity.ExamQuestion;
-import com.example.goodlearnai.v1.entity.Question;
-import com.example.goodlearnai.v1.entity.StudentAnswer;
-import com.example.goodlearnai.v1.entity.StudentWrongQuestion;
+import com.example.goodlearnai.v1.entity.*;
 import com.example.goodlearnai.v1.mapper.ExamQuestionMapper;
 import com.example.goodlearnai.v1.mapper.StudentAnswerMapper;
 import com.example.goodlearnai.v1.service.IStudentAnswerService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.service.IStudentWrongQuestionService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -43,7 +43,13 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     private IStudentWrongQuestionService studentWrongQuestionService;
 
     @Autowired
+    private StudentAnswerMapper studentAnswerMapper;
+
+    @Autowired
     private ExamQuestionMapper examQuestionMapper;
+    
+    @Autowired
+    private OpenAiChatModel openAiChatModel;
 
     @Override
     @Transactional
@@ -72,10 +78,6 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
         }
     }
 
-    /**
-     * 更新错题记录
-     * @param studentAnswer 学生答题记录
-     */
     private void updateWrongQuestion(StudentAnswer studentAnswer) {
         try {
             // 查询是否已存在该学生该题目的错题记录
@@ -113,11 +115,6 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
         }
     }
     
-    /**
-     * 获取试卷中的所有题目及用户作答情况
-     * @param examId 试卷ID
-     * @return 题目及作答情况列表
-     */
     @Override
     public Result<List<ExamQuestionAnswerDto>> getExamQuestionsWithAnswers(Long examId) {
         Long userId = AuthUtil.getCurrentUserId();
@@ -186,4 +183,89 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             return Result.error("查询试卷题目及作答情况异常: " + e.getMessage());
         }
     }
-}
+    
+    @Override
+    public Result<AnswerValidationResponse> validateAnswerWithAI(AnswerValidationRequest request) {
+        try {
+            log.info("开始AI验证学生答案: questionContent={}, studentAnswer={}", 
+                    request.getQuestionContent(), request.getStudentAnswer());
+            
+            // 构建提示词
+            String prompt = "你将收到一个问题和一个学生的答案。你的任务是验证学生的答案是否完全符合题目的正确答案。(用中文)\n\n" +
+                    "如果用户的答案正确输出，表扬用户的一些语句然后输出\n#valid#。\n" +
+                    "如果用户的答案错误输出，解析（解释为什么答案错了），然后输出 \n#invalid#。\n\n" +
+                    "问题：" + request.getQuestionContent() + "\n" +
+                    "参考答案：" + request.getReferenceAnswer() + "\n" +
+                    "学生答案：" + request.getStudentAnswer();
+            
+            // 调用AI服务 - 直接传入提示词字符串
+            Object aiResponseObj = openAiChatModel.call(prompt);
+            String aiResponse = aiResponseObj.toString();
+            
+            log.debug("AI响应结果: {}", aiResponse);
+            
+            // 解析AI响应
+            boolean isCorrect = aiResponse.contains("#valid#");
+            String feedback = aiResponse.replace("#valid#", "").replace("#invalid#", "").trim();
+            
+            AnswerValidationResponse validationResponse = new AnswerValidationResponse(isCorrect, feedback);
+            log.info("AI验证完成: isCorrect={}", isCorrect);
+            
+            return Result.success("验证完成", validationResponse);
+        } catch (Exception e) {
+            log.error("AI验证学生答案异常: {}", e.getMessage(), e);
+            return Result.error("AI验证学生答案异常: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<String> summarizeExamWithAI(Long examId) {
+        try {
+            // 根据id查找试卷中的所有题目
+            LambdaQueryWrapper<ExamQuestion> examQuestions = new LambdaQueryWrapper<>();
+            examQuestions.eq(ExamQuestion::getExamId, examId)
+                    .eq(ExamQuestion::getStatus, 1)
+                    .orderByAsc(ExamQuestion::getEqId);
+            List<ExamQuestion> questionList = examQuestionMapper.selectList(examQuestions);
+
+            // 获取题目id列表
+            List<Long> questionIdList = questionList.stream()
+                    .map(ExamQuestion::getEqId)
+                    .collect(Collectors.toList());
+
+            // 查出这些题目的错误记录
+            QueryWrapper<StudentAnswer> answerQuery = new QueryWrapper<>();
+            answerQuery.in("eq_id", questionIdList)
+                    .eq("is_correct", false);
+            List<StudentAnswer> studentAnswers = studentAnswerMapper.selectList(answerQuery);
+
+            StringBuilder sb = new StringBuilder();
+            for (StudentAnswer studentAnswer : studentAnswers) {
+                // 根据题目id查studentanswer中学生的答案
+                ExamQuestion question = examQuestionMapper.selectById(studentAnswer.getEqId());
+                sb.append("题目：").append(question.getQuestionContent()).append("\n");
+                sb.append("参考答案：").append(question.getReferenceAnswer()).append("\n");
+                sb.append("学生答案：").append(studentAnswer.getAnswerText()).append("\n");
+            }
+
+            //构建提示词以markdown的形式
+            String prompt = "你是一个老师，负责检查学生试卷中的错题，你会收到学生做出的一些错误的问题并总结这一试卷的完成情况，请按照以下格式markdown格式输出\n\n" +
+                    "## 错误分析\n" +
+                    "分析学生大多数属于什么类型的错误\n\n" +
+                    "## 改进建议\n" +
+                    "提供解决规避错误的方法，和训练方式，哪些知识点需要巩固"+
+                    sb +
+                    "如果没有错题，则鼓励学生做的很好。"
+                    ;
+              // 调用AI服务 - 直接传入提示词字符串
+            Object aiResponseObj = openAiChatModel.call(prompt);
+            String aiResponse = aiResponseObj.toString();
+            log.debug("AI响应结果: {}", aiResponse);
+
+            return Result.success("AI总结成功", aiResponse);
+        } catch (Exception e) {
+            log.error("AI总结异常: {}", e.getMessage(), e);
+            return Result.error("AI总结异常: " + e.getMessage());
+        }
+    }
+} 

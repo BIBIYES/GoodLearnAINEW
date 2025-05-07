@@ -1,9 +1,11 @@
 package com.example.goodlearnai.v1.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Question;
-import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -14,10 +16,33 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2025-04-14
  */
 public interface IQuestionService extends IService<Question> {
+    
+    /**
+     * 创建单个题目
+     * @param question 题目信息
+     * @return 创建结果
+     */
     Result<String> createQuestion(Question question);
+    
+    /**
+     * 批量创建题目
+     * @param questions 题目列表
+     * @return 创建结果
+     */
+    Result<String> batchCreateQuestions(List<Question> questions);
 
+    /**
+     * 删除题目（软删除）
+     * @param questionId 题目ID
+     * @return 删除结果
+     */
     Result<String> deleteQuestion(Long questionId);
 
+    /**
+     * 更新题目
+     * @param question 题目信息
+     * @return 更新结果
+     */
     Result<String> updateQuestion(Question question);
     
     /**
@@ -25,8 +50,9 @@ public interface IQuestionService extends IService<Question> {
      * @param current 当前页码
      * @param size 每页大小
      * @param bankId 题库ID（可选）
-     * @param content 题目内容关键词（可选，用于模糊搜索）
      * @return 分页结果
      */
     Result<IPage<Question>> pageQuestions(long current, long size, Long bankId);
+
+    Result<String> createQuestionByAi(String question);
 }

@@ -10,11 +10,20 @@ import com.example.goodlearnai.v1.mapper.QuestionMapper;
 import com.example.goodlearnai.v1.service.IQuestionService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -27,6 +36,12 @@ import java.time.LocalDateTime;
 @Service
 @Slf4j
 public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> implements IQuestionService {
+
+    @Autowired
+    private OpenAiChatModel openAiChatModel;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     public Result<String> createQuestion(Question question) {
@@ -56,6 +71,59 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         }catch (Exception e){
             log.error("创建失败", e);
             throw new CustomException("创建题目时发生未知异常");
+        }
+    }
+    
+    @Override
+    @Transactional
+    public Result<String> batchCreateQuestions(List<Question> questions) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限批量创建题目: userId = {}", userId);
+            return Result.error("暂无权限创建题目");
+        }
+        
+        if (CollectionUtils.isEmpty(questions)) {
+            log.warn("题目列表为空: userId = {}", userId);
+            return Result.error("题目列表不能为空");
+        }
+        
+        // 校验题目信息
+        List<Question> validQuestions = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        
+        for (int i = 0; i < questions.size(); i++) {
+            Question question = questions.get(i);
+            if (question.getBankId() == null) {
+                log.warn("第{}个题目的题库ID为空: userId = {}", i+1, userId);
+                return Result.error("第" + (i+1) + "个题目的题库ID为空");
+            }
+            if (question.getContent() == null || question.getContent().trim().isEmpty()) {
+                log.warn("第{}个题目的内容为空: userId = {}", i+1, userId);
+                return Result.error("第" + (i+1) + "个题目的内容为空");
+            }
+            
+            // 设置创建信息
+            question.setCreatedAt(now);
+            question.setUpdatedAt(now);
+            question.setStatus(true);
+            validQuestions.add(question);
+        }
+        
+        try {
+            // 批量保存题目
+            boolean success = saveBatch(validQuestions);
+            if (success) {
+                log.info("批量创建题目成功: userId={}, 数量={}", userId, validQuestions.size());
+                return Result.success("批量创建成功，共创建" + validQuestions.size() + "道题目");
+            } else {
+                return Result.error("批量创建失败");
+            }
+        } catch (Exception e) {
+            log.error("批量创建题目异常: userId={}, 数量={}, error={}", userId, validQuestions.size(), e.getMessage(), e);
+            throw new CustomException("批量创建题目时发生未知异常");
         }
     }
 
@@ -145,9 +213,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
 
         // 构建查询条件
         LambdaQueryWrapper<Question> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Question::getStatus, true)
-                .inSql(Question::getBankId, 
-                    "SELECT bank_id FROM question_bank WHERE teacher_id = " + userId + " AND status = 1");
+        queryWrapper.eq(Question::getStatus, true);
         
         // 如果指定了题库ID，则按题库ID查询
         if (bankId != null) {
@@ -174,5 +240,77 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
             log.error("分页查询题目失败", e);
             throw new CustomException("分页查询题目时发生未知异常");
         }
+    }
+
+    @Override
+    @Transactional
+    public Result<String> createQuestionByAi(String requestData) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限使用AI创建题目: userId = {}", userId);
+            return Result.error("暂无权限使用AI创建题目");
+        }
+        try {
+            // 构建提示词
+            String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求生成多个问题。请根据要求生成5道类似问题，并以 JSON 格式返回，每道问题包含以下字段：title（题目标题）、content（题目内容）、difficulty（题目难度），题目难度用1、2、3来表示。\n" +
+                    "\n" +
+                    "用户提供的格式要求如下：\n" +
+                    "[\n" +
+                    "{\n" +
+                    "  \"title\": \"题目标题\",\n" +
+                    "  \"content\": \"题目详情\",\n" +
+                    "  \"difficulty\": \"题目难度\"\n" +
+                    "}\n" +
+                    "]\n"+
+                    "\n" +
+                    "需求：" + requestData;
+
+            // 调用AI服务
+            Object aiResponseObj = openAiChatModel.call(prompt);
+            String aiResponse = aiResponseObj.toString();
+            log.debug("AI响应结果: {}", aiResponse);
+            
+            // 提取JSON部分，避免AI可能在JSON前后添加的说明文字
+            String jsonResponse = extractJsonFromResponse(aiResponse);
+            
+            log.info("AI创建题目成功: userId={}", userId);
+            return Result.success("AI创建题目成功", jsonResponse);
+        }catch (Exception e) {
+            log.error("AI创建题目失败: userId={}", userId, e);
+            return Result.error("AI创建题目失败");
+        }
+    }
+    
+    /**
+     * 从AI响应中提取JSON部分
+     * AI有时会在JSON前后添加说明文字，需要提取出纯JSON
+     * @param response AI的原始响应
+     * @return 提取出的JSON字符串
+     */
+    private String extractJsonFromResponse(String response) {
+        if (response == null || response.trim().isEmpty()) {
+            return "[]";
+        }
+        
+        // 尝试查找JSON数组开始和结束位置
+        int startIndex = response.indexOf('[');
+        int endIndex = response.lastIndexOf(']');
+        
+        if (startIndex >= 0 && endIndex > startIndex) {
+            return response.substring(startIndex, endIndex + 1);
+        }
+        
+        // 如果没有找到数组格式，尝试查找对象格式
+        startIndex = response.indexOf('{');
+        endIndex = response.lastIndexOf('}');
+        
+        if (startIndex >= 0 && endIndex > startIndex) {
+            return response.substring(startIndex, endIndex + 1);
+        }
+        
+        // 如果都没找到，返回原始响应
+        return response;
     }
 }

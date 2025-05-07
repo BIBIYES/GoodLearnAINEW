@@ -4,8 +4,10 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserChat;
 import com.example.goodlearnai.v1.entity.Chat;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -22,5 +24,7 @@ public interface IChatService extends IService<Chat> {
     Result<List<Chat>> getChatHistory();
 
     Result<String> updateSessionName(Chat chat);
+
+    Map<String, Object> McpChat(String message) throws JsonProcessingException;
 
 }

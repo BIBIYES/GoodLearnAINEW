@@ -7,17 +7,22 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
+import com.example.goodlearnai.v1.entity.CourseMembers;
+import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.CourseMapper;
+import com.example.goodlearnai.v1.mapper.CourseMembersMapper;
+import com.example.goodlearnai.v1.mapper.UserMapper;
 import com.example.goodlearnai.v1.service.ICourseService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
-
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -33,6 +38,12 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     @Autowired
     private CourseMapper courseMapper;
+
+    @Autowired
+    private CourseMembersMapper courseMembersMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     /**
      * 老师创建课程（班级）
@@ -171,5 +182,55 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         } else {
             return Result.error("课程编辑失败");
         }
+    }
+
+    
+    @Override
+    public Result<List<Users>> getStudents(Long courseId) {
+        String role = AuthUtil.getCurrentRole();
+        if (!"teacher".equals(role)) {
+            return Result.error("暂无权限");
+        }
+        
+        // 验证课程是否存在且当前用户是否为该课程的教师
+        Course course = getById(courseId);
+        if (course == null) {
+            return Result.error("课程不存在");
+        }
+        
+        Long currentUserId = AuthUtil.getCurrentUserId();
+        if (!currentUserId.equals(course.getTeacherId())) {
+            return Result.error("您不是该课程的教师，无法查看学生信息");
+        }
+
+        // 查询该课程的学生列表
+        QueryWrapper<CourseMembers> wrapper = new QueryWrapper<>();
+        wrapper.eq("course_id", courseId)
+               .eq("status", true);  // 只查询状态正常的学生
+        
+        List<CourseMembers> courseMembers = courseMembersMapper.selectList(wrapper);
+        
+        if (courseMembers.isEmpty()) {
+            return Result.success("该课程暂无学生", List.of());
+        }
+        
+        // 获取学生详细信息
+        List<Users> students = courseMembers.stream()
+            .map(member -> {
+                Users user = new Users();
+                user.setUserId(member.getUserId());
+                // 查询用户详细信息
+                Users userDetails = userMapper.selectById(member.getUserId());
+                if (userDetails != null) {
+                    user.setUsername(userDetails.getUsername());
+                    user.setEmail(userDetails.getEmail());
+                    user.setAvatar(userDetails.getAvatar());
+                    user.setSchoolNumber(userDetails.getSchoolNumber());
+                }
+                return user;
+            })
+            .collect(Collectors.toList());
+        
+        return Result.success("获取学生列表成功", students);
     }
 }

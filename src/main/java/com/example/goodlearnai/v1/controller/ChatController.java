@@ -47,7 +47,7 @@ public class ChatController {
      * 利用MCP服务查询数据库
      * @return ai相应的消息，不是流式的
      */
-    @GetMapping("/generate")
+    @PostMapping("/generate")
     public Map<String, Object> generate(@RequestBody UserChat chat) throws JsonProcessingException {
         McpSyncClient fileSystem = mcpSyncClients.get(0);
         McpSchema.ListToolsResult listToolsResult = fileSystem.listTools();

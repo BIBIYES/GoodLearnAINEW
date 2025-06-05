@@ -294,7 +294,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
             historyBuilder.append(tool).append("\n");
         }
         return historyBuilder
-                .append("以下是工具执行结果，请判断是否解决了用户的问题：\n")
+                .append("以下是工具执行结果，请判断是否解决了用户的问题；若需要分析结果，请判断数据是否足以解决用户的问题：\n")
                 .append(result.toString()).append("\n\n")
                 .append("1. 若已解决，请在开头添加 #valid#，并优化回答后输出答案；\n")
                 .append("2. 若未解决，请在开头添加 #invalid#，并重新给出调用工具，根据之前的信息，直接生成正确的sql语句，让mcp执行")

@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.example.goodlearnai.v1.entity.Users;
 
+import java.util.List;
 
 /**
  * <p>
@@ -39,4 +41,6 @@ public interface ICourseService extends IService<Course> {
     Result<IPage<Course>> getCourse(Course course ,long current, long size);
 
     Result<String> compileCourse(Course course);
+
+    Result<List<Users>> getStudents(Long courseId);
 }

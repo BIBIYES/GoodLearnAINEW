@@ -4,9 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
-import com.example.goodlearnai.v1.dto.WrongQuestionDetailDto;
-import com.example.goodlearnai.v1.entity.ExamQuestion;
-import com.example.goodlearnai.v1.entity.StudentAnswer;
 import com.example.goodlearnai.v1.entity.StudentWrongQuestion;
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.ExamQuestionMapper;
@@ -15,18 +12,11 @@ import com.example.goodlearnai.v1.mapper.StudentWrongQuestionMapper;
 import com.example.goodlearnai.v1.service.IStudentWrongQuestionService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <p>

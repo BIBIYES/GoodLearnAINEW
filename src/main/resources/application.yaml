@@ -15,7 +15,7 @@ spring:
       exclude: static/**,public/**,templates/**,log/**
   ai:
     openai:
-      api-key: sk-0b0fe1ba82be4757a25997ea671a7ec0
+      api-key: sk-a749773bd95c4113bec591a2c54c24a5
       base-url: https://api.deepseek.com
       chat:
         options:

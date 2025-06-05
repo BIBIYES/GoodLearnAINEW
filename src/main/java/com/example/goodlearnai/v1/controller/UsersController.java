@@ -11,6 +11,8 @@ import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * <p>
  * 前端控制器
@@ -67,5 +69,38 @@ public class UsersController {
     @GetMapping("/start")
     public Result<String> start() {
         return Result.success("欢迎使用好助学！！！");
+    }
+
+    /**
+     * 忘记密码，通过邮箱验证重置密码
+     * @return 重置结果
+     */
+    @PostMapping("/forgot-password")
+    public Result<String> forgotPassword(@RequestBody Map<String, String> params) throws MessagingException {
+        String email = params.get("email");
+        String code = params.get("code");
+        String newPassword = params.get("newPassword");
+        
+        if (email == null || code == null || newPassword == null) {
+            return Result.error("参数不完整");
+        }
+        
+        return iusersService.forgotPassword(email, code, newPassword);
+    }
+
+    /**
+     * 修改密码
+     * @return 修改结果
+     */
+    @PostMapping("/change-password")
+    public Result<String> changePassword(@RequestBody Map<String, String> params) {
+        String oldPassword = params.get("oldPassword");
+        String newPassword = params.get("newPassword");
+        
+        if (oldPassword == null || newPassword == null) {
+            return Result.error("参数不完整");
+        }
+        
+        return iusersService.changePassword(oldPassword, newPassword);
     }
 }

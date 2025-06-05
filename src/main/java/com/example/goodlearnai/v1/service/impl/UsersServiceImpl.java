@@ -95,7 +95,6 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
 
     @Override
     public Result<String> addTeacher(Users users) {
-
         String role = AuthUtil.getCurrentRole();
         if (!"admin".equals(role)&&!"root".equals(role)) {
             return Result.error("权限不足");
@@ -106,5 +105,58 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
             return Result.success("教师添加成功");
         }
         return Result.error("失败了");
+    }
+
+    @Override
+    public Result<String> forgotPassword(String email, String code, String newPassword) throws MessagingException {
+        // 验证邮箱验证码
+        if (!iverificationCodesService.checkVerificationCodes(email, code)) {
+            return Result.error("验证码错误或已过期");
+        }
+
+        // 查找用户
+        LambdaQueryWrapper<Users> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Users::getEmail, email);
+        Users user = getOne(queryWrapper);
+        
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        // 更新密码
+        user.setPassword(MD5Util.encrypt(newPassword));
+        boolean updated = updateById(user);
+        
+        if (updated) {
+            return Result.success("密码重置成功");
+        } else {
+            return Result.error("密码重置失败");
+        }
+    }
+
+    @Override
+    public Result<String> changePassword(String oldPassword, String newPassword) {
+        // 获取当前登录用户
+        Long userId = AuthUtil.getCurrentUserId();
+        Users user = getById(userId);
+        
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        // 验证原密码
+        if (!MD5Util.verify(oldPassword, user.getPassword())) {
+            return Result.error("原密码错误");
+        }
+
+        // 更新密码
+        user.setPassword(MD5Util.encrypt(newPassword));
+        boolean updated = updateById(user);
+        
+        if (updated) {
+            return Result.success("密码修改成功");
+        } else {
+            return Result.error("密码修改失败");
+        }
     }
 }

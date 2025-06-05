@@ -114,4 +114,14 @@ public class QuestionController {
         log.info("AI创建题目");
         return questionService.createQuestionByAi(requestData);
     }
+
+
+    /**
+     * 查看单个题目的具体内容
+     */
+    @GetMapping("/{questionId}")
+    public Result<Question> getQuestion(@PathVariable Long questionId) {
+        log.info("查看题目: questionId = {}", questionId);
+        return Result.success("查看题目成功", questionService.getById(questionId));
+    }
 }

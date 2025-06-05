@@ -44,4 +44,21 @@ public interface IUsersService extends IService<Users> {
      * @return the result
      */
     Result<String> addTeacher(Users users);
+
+    /**
+     * 忘记密码，通过邮箱验证重置密码
+     * @param email 用户邮箱
+     * @param code 验证码
+     * @param newPassword 新密码
+     * @return 重置结果
+     */
+    Result<String> forgotPassword(String email, String code, String newPassword) throws MessagingException;
+    
+    /**
+     * 修改密码
+     * @param oldPassword 原密码
+     * @param newPassword 新密码
+     * @return 修改结果
+     */
+    Result<String> changePassword(String oldPassword, String newPassword);
 }

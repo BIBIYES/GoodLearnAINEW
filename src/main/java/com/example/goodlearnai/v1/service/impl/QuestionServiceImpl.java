@@ -198,7 +198,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
     }
 
     @Override
-    public Result<IPage<Question>> pageQuestions(long current, long size, Long bankId) {
+    public Result<IPage<Question>> pageQuestions(long current, long size, Long bankId, String difficulty, String title) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
 
@@ -210,7 +210,6 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         // 创建分页对象
         Page<Question> page = new Page<>(current, size);
 
-
         // 构建查询条件
         LambdaQueryWrapper<Question> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Question::getStatus, true);
@@ -219,7 +218,13 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         if (bankId != null) {
             queryWrapper.eq(Question::getBankId, bankId);
         }
-        
+        if(difficulty != null){
+            queryWrapper.eq(Question::getDifficulty, difficulty);
+        }
+        if(title != null){
+            queryWrapper.like(Question::getTitle, title);
+        }
+
         // 按更新时间降序排序
         queryWrapper.orderByDesc(Question::getUpdatedAt);
         

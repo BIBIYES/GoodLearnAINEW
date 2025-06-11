@@ -61,4 +61,6 @@ public interface IUsersService extends IService<Users> {
      * @return 修改结果
      */
     Result<String> changePassword(String oldPassword, String newPassword);
+
+    Result<UserInfo> getUserInfo();
 }

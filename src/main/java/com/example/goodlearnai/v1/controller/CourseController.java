@@ -4,7 +4,6 @@ package com.example.goodlearnai.v1.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
-import com.example.goodlearnai.v1.entity.Users;
 
 import com.example.goodlearnai.v1.service.ICourseService;
 
@@ -12,8 +11,6 @@ import com.example.goodlearnai.v1.service.ICourseService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 
 
@@ -87,13 +84,5 @@ private ICourseService iCourseService;
         return iCourseService.compileCourse(course);
     }
 
-
-    /**
-     * 获取加入课程的学生
-     */
-    @GetMapping("/get-students/{courseId}")
-    public Result<List<Users>> getStudents(@PathVariable Long courseId){
-        return iCourseService.getStudents(courseId);
-    }
 
 }

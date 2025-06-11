@@ -52,7 +52,7 @@ public interface IQuestionService extends IService<Question> {
      * @param bankId 题库ID（可选）
      * @return 分页结果
      */
-    Result<IPage<Question>> pageQuestions(long current, long size, Long bankId);
+    Result<IPage<Question>> pageQuestions(long current, long size, Long bankId ,String difficulty, String title);
 
     Result<String> createQuestionByAi(String question);
 }

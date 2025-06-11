@@ -90,10 +90,13 @@ public class QuestionController {
     public Result<IPage<Question>> pageQuestions(
             @RequestParam(value = "current", defaultValue = "1") long current,
             @RequestParam(value = "size", defaultValue = "10") long size,
-            @RequestParam(value = "bankId", required = false) Long bankId
+            @RequestParam(value ="bankId",  required = false) Long bankId,
+            @RequestParam(value ="difficulty",  required = false) String difficulty,
+            @RequestParam(value ="title",  required = false) String title
     ) {
-        log.info("分页查询题目列表: current = {}, size = {}, bankId = {}", current, size, bankId);
-        return questionService.pageQuestions(current, size, bankId);
+
+        log.info("分页查询题目列表: current = {}, size = {}, bankId = {} ,difficulty = {}, title = {}", current, size, bankId,difficulty,title);
+        return questionService.pageQuestions(current, size, bankId,  difficulty, title);
     }
 
     /**

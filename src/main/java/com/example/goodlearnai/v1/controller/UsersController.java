@@ -103,4 +103,13 @@ public class UsersController {
         
         return iusersService.changePassword(oldPassword, newPassword);
     }
+
+    /**
+     * 获取用户信息
+     * @return 用户信息
+     */
+    @GetMapping("/info")
+    public Result<UserInfo> getUserInfo() {
+        return iusersService.getUserInfo();
+    }
 }

@@ -159,4 +159,24 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
             return Result.error("密码修改失败");
         }
     }
+
+    @Override
+    public Result<UserInfo> getUserInfo() {
+        Long userId = AuthUtil.getCurrentUserId();
+        
+        if (userId == null) {
+            return Result.error("用户未登录");
+        }
+        
+        Users user = getById(userId);
+        
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+        
+        UserInfo userInfo = new UserInfo();
+        BeanUtil.copyProperties(user, userInfo);
+        
+        return Result.success("获取用户信息成功", userInfo);
+    }
 }

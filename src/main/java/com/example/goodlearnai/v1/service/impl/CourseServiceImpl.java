@@ -161,11 +161,15 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         log.debug("当前教师ID为: {}", userId);
-        QueryWrapper<Course> wrapper = new QueryWrapper<>();
-        wrapper.eq("course_id", course.getCourseId());
-        wrapper.select("teacher_id");
-        Course userId2 = courseMapper.selectOne(wrapper);
-        Long teacherId = userId2.getTeacherId();
+        
+        // 直接使用courseId查询，不需要QueryWrapper
+        Course existingCourse = courseMapper.selectById(course.getCourseId());
+        
+        if (existingCourse == null) {
+            return Result.error("课程不存在");
+        }
+        
+        Long teacherId = existingCourse.getTeacherId();
         //获取当前老师的id判断是否为本课程教师
         if (!userId.equals(teacherId)) {
             log.warn("userId={},teacherId={}", userId, teacherId);
@@ -174,8 +178,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         if (!"teacher".equals(role)) {
             return Result.error("暂无权限");
         }
-
-
+    
         boolean updated = updateById(course);
         if (updated) {
             return Result.success("课程编辑成功");

@@ -192,7 +192,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     
     @Override
-    public Result<List<Users>> getStudents(Long courseId) {
+    public Result<List<Users>> getStudents(Long courseId,  String username) {
         String role = AuthUtil.getCurrentRole();
         if (!"teacher".equals(role)) {
             return Result.error("暂无权限");
@@ -233,11 +233,21 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                     user.setAvatar(userDetails.getAvatar());
                     user.setSchoolNumber(userDetails.getSchoolNumber());
                 }
+
                 return user;
             })
+                .filter(user -> {
+                    if (username != null && !username.isEmpty()) {
+                        return user.getUsername() != null && user.getUsername().contains(username);
+                    }
+                    return true;
+                })
             .collect(Collectors.toList());
-        
-        return Result.success("获取学生列表成功", students);
+        if(students.isEmpty()){
+            return Result.error("获取失败没有这个学生");
+        }
+        else {
+        return Result.success("获取学生列表成功", students);}
     }
 
     // 在CourseServiceImpl类末尾添加以下方法

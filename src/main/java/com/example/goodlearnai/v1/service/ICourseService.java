@@ -43,7 +43,7 @@ public interface ICourseService extends IService<Course> {
 
     Result<String> compileCourse(Course course);
 
-    Result<List<Users>> getStudents(Long courseId);
+    Result<List<Users>> getStudents(Long courseId,  String username);
 
     // 在ICourseService接口中添加新方法，替换原来的getCourseById
     Result<List<CourseDetailVO>> getCourseDetailById(Course course);

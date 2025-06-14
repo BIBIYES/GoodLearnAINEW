@@ -107,7 +107,8 @@ private ICourseService iCourseService;
      * @return 返回学生详细信息列表
      */
     @GetMapping("/get-students/{courseId}")
-    public Result<List<Users>> getStudentsByCourseId(@PathVariable Long courseId) {
-        return iCourseService.getStudents(courseId);
+    public Result<List<Users>> getStudentsByCourseId(@PathVariable Long courseId,
+                                                     @RequestParam(value="username",  required=false)String username){
+        return iCourseService.getStudents(courseId,username);
     }
 }

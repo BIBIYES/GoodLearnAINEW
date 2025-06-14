@@ -8,6 +8,7 @@ import com.example.goodlearnai.v1.entity.Course;
 import com.example.goodlearnai.v1.service.ICourseService;
 
 
+import com.example.goodlearnai.v1.vo.CourseDetailVO;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -87,11 +88,14 @@ private ICourseService iCourseService;
 
 
     /**
-     *根据ID获取课程信息
+     * 根据ID获取课程信息（包含学委信息和班级人数）
+     */
+    // 修改原来的getCourseById方法
+    /**
+     * 根据ID获取课程详细信息（包含学委信息和班级人数）
      */
     @PostMapping("/get-coursems")
-    public Result<List<Course>> getCourseById(@RequestBody Course course) {
-        List<Course>  courseList = iCourseService.getCourseById(course);
-        return Result.success("获取成功",courseList);
+    public Result<List<CourseDetailVO>> getCourseById(@RequestBody Course course) {
+        return iCourseService.getCourseDetailById(course);
     }
 }

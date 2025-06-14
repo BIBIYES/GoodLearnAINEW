@@ -1,5 +1,6 @@
 package com.example.goodlearnai.v1.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -17,10 +18,12 @@ import com.example.goodlearnai.v1.service.ICourseService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 
+import com.example.goodlearnai.v1.vo.CourseDetailVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -237,14 +240,58 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         return Result.success("获取学生列表成功", students);
     }
 
-    /**
-     * 根据id查询课程信息
-     */
+    // 在CourseServiceImpl类末尾添加以下方法
+    
     @Override
-    public List<Course> getCourseById(Course course) {
-        Long courseId = course.getCourseId();
-        QueryWrapper<Course> wrapper = new QueryWrapper<>();
-        wrapper.eq("course_id", courseId);
-        return courseMapper.selectList(wrapper);
+    public Result<List<CourseDetailVO>> getCourseDetailById(Course course) {
+        try {
+            // 根据课程ID查询课程信息
+            LambdaQueryWrapper<Course> courseWrapper = new LambdaQueryWrapper<>();
+            courseWrapper.eq(Course::getCourseId, course.getCourseId());
+            List<Course> courses = list(courseWrapper);
+            
+            if (courses.isEmpty()) {
+                return Result.error("课程不存在");
+            }
+            
+            List<CourseDetailVO> courseDetailList = new ArrayList<>();
+            
+            for (Course courseInfo : courses) {
+                CourseDetailVO courseDetail = new CourseDetailVO();
+                
+                // 复制基本课程信息
+                BeanUtil.copyProperties(courseInfo, courseDetail);
+                
+                // 查询学委信息
+                if (courseInfo.getMonitorId() != null) {
+                    Users monitor = userMapper.selectById(courseInfo.getMonitorId());
+                    if (monitor != null) {
+                        courseDetail.setMonitorName(monitor.getUsername());
+                        courseDetail.setMonitorEmail(monitor.getEmail());
+                    }
+                }
+                
+                // 查询班级总人数
+                QueryWrapper<CourseMembers> memberWrapper = new QueryWrapper<>();
+                memberWrapper.eq("course_id", courseInfo.getCourseId())
+                            .eq("status", true); // 只统计状态正常的学生
+                Long totalStudents = courseMembersMapper.selectCount(memberWrapper);
+                
+                // 如果存在学委，学委也应该算作学生，所以总数加1
+                if (courseInfo.getMonitorId() != null) {
+                    totalStudents += 1;
+                }
+                
+                courseDetail.setTotalStudents(totalStudents.intValue());
+                
+                courseDetailList.add(courseDetail);
+            }
+            
+            return Result.success("获取成功", courseDetailList);
+            
+        } catch (Exception e) {
+            log.error("获取课程详情失败: {}", e.getMessage(), e);
+            return Result.error("获取课程详情失败: " + e.getMessage());
+        }
     }
 }

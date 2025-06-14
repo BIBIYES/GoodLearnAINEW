@@ -233,4 +233,15 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         
         return Result.success("获取学生列表成功", students);
     }
+
+    /**
+     * 根据id查询课程信息
+     */
+    @Override
+    public List<Course> getCourseById(Course course) {
+        Long courseId = course.getCourseId();
+        QueryWrapper<Course> wrapper = new QueryWrapper<>();
+        wrapper.eq("course_id", courseId);
+        return courseMapper.selectList(wrapper);
+    }
 }

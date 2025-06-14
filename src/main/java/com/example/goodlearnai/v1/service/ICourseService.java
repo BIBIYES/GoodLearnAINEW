@@ -43,4 +43,6 @@ public interface ICourseService extends IService<Course> {
     Result<String> compileCourse(Course course);
 
     Result<List<Users>> getStudents(Long courseId);
+
+    List<Course> getCourseById(Course course);
 }

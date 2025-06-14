@@ -12,6 +12,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 
 /**
@@ -85,4 +86,12 @@ private ICourseService iCourseService;
     }
 
 
+    /**
+     *根据ID获取课程信息
+     */
+    @PostMapping("/get-coursems")
+    public Result<List<Course>> getCourseById(@RequestBody Course course) {
+        List<Course>  courseList = iCourseService.getCourseById(course);
+        return Result.success("获取成功",courseList);
+    }
 }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
 
+import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.service.ICourseService;
 
 
@@ -97,5 +98,16 @@ private ICourseService iCourseService;
     @PostMapping("/get-coursems")
     public Result<List<CourseDetailVO>> getCourseById(@RequestBody Course course) {
         return iCourseService.getCourseDetailById(course);
+    }
+
+    /**
+     * 根据课程ID获取加入课程的学生详细信息
+     *
+     * @param courseId 课程ID
+     * @return 返回学生详细信息列表
+     */
+    @GetMapping("/get-students/{courseId}")
+    public Result<List<Users>> getStudentsByCourseId(@PathVariable Long courseId) {
+        return iCourseService.getStudents(courseId);
     }
 }

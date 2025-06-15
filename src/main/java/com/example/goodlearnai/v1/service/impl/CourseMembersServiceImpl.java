@@ -1,6 +1,7 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.example.goodlearnai.v1.common.Result;
 
 import com.example.goodlearnai.v1.dto.StudentIntoCourseDto;
@@ -105,5 +106,63 @@ public class CourseMembersServiceImpl extends ServiceImpl<CourseMembersMapper, C
         }
     }
 
+    /**
+     * 老师为学生增加学分
+     */
+    @Override
+    public Result<String> addCreditsToStudent(Long courseId, Long userId, Integer credits) {
+        // 验证当前用户是否为教师
+        String role = AuthUtil.getCurrentRole();
+        if (!"teacher".equals(role)) {
+            return Result.error("暂无权限，只有教师可以给学生加学分");
+        }
+
+        // 验证课程是否存在且当前用户是否为该课程的教师
+        Course course = courseMapper.selectById(courseId);
+        if (course == null) {
+            return Result.error("课程不存在");
+        }
+
+        Long currentUserId = AuthUtil.getCurrentUserId();
+        if (!currentUserId.equals(course.getTeacherId())) {
+            return Result.error("您不是该课程的教师，无法给学生加学分");
+        }
+
+        // 验证学生是否在该课程中
+        QueryWrapper<CourseMembers> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("course_id", courseId)
+                   .eq("user_id", userId)
+                   .eq("status", true);
+        
+        CourseMembers courseMember = courseMembersMapper.selectOne(queryWrapper);
+        if (courseMember == null) {
+            return Result.error("该学生不在此课程中");
+        }
+
+        // 验证学分数值
+        if (credits == null || credits <= 0) {
+            return Result.error("学分必须大于0");
+        }
+
+        try {
+            // 更新学生学分（累加）
+            UpdateWrapper<CourseMembers> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("course_id", courseId)
+                        .eq("user_id", userId)
+                        .eq("status", true)
+                        .setSql("credits = IFNULL(credits, 0) + " + credits);
+            
+            boolean updated = courseMembersMapper.update(null, updateWrapper) > 0;
+            
+            if (updated) {
+                return Result.success("学分添加成功");
+            } else {
+                return Result.error("学分添加失败");
+            }
+        } catch (Exception e) {
+            log.error("添加学分时发生异常", e);
+            return Result.error("添加学分时发生异常");
+        }
+    }
 
 }

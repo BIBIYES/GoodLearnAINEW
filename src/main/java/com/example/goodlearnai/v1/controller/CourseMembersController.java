@@ -49,4 +49,20 @@ public class CourseMembersController {
 
         return iCourseMembersService.getStudentOwnCourses();
     }
+
+    /**
+     * 老师为学生增加学分
+     *
+     * @param courseId 课程ID
+     * @param userId 学生用户ID
+     * @param credits 要增加的学分
+     * @return 返回操作结果
+     */
+    @PostMapping("/add-credits")
+    public Result<String> addCreditsToStudent(
+            @RequestParam Long courseId,
+            @RequestParam Long userId,
+            @RequestParam Integer credits) {
+        return iCourseMembersService.addCreditsToStudent(courseId, userId, credits);
+    }
 }

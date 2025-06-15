@@ -10,6 +10,7 @@ import com.example.goodlearnai.v1.service.ICourseService;
 
 
 import com.example.goodlearnai.v1.vo.CourseDetailVO;
+import com.example.goodlearnai.v1.vo.StudentCourseVO;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -100,14 +101,8 @@ private ICourseService iCourseService;
         return iCourseService.getCourseDetailById(course);
     }
 
-    /**
-     * 根据课程ID获取加入课程的学生详细信息
-     *
-     * @param courseId 课程ID
-     * @return 返回学生详细信息列表
-     */
     @GetMapping("/get-students/{courseId}")
-    public Result<List<Users>> getStudentsByCourseId(@PathVariable Long courseId,
+    public Result<List<StudentCourseVO>> getStudentsByCourseId(@PathVariable Long courseId,
                                                      @RequestParam(value="username",  required=false)String username){
         return iCourseService.getStudents(courseId,username);
     }

@@ -6,6 +6,7 @@ import com.example.goodlearnai.v1.entity.Course;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.vo.CourseDetailVO;
+import com.example.goodlearnai.v1.vo.StudentCourseVO;
 
 import java.util.List;
 
@@ -43,7 +44,7 @@ public interface ICourseService extends IService<Course> {
 
     Result<String> compileCourse(Course course);
 
-    Result<List<Users>> getStudents(Long courseId,  String username);
+    Result<List<StudentCourseVO>> getStudents(Long courseId,  String username);
 
     // 在ICourseService接口中添加新方法，替换原来的getCourseById
     Result<List<CourseDetailVO>> getCourseDetailById(Course course);

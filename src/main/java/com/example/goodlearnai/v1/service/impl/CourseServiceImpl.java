@@ -19,6 +19,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 
 import com.example.goodlearnai.v1.vo.CourseDetailVO;
+import com.example.goodlearnai.v1.vo.StudentCourseVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -192,7 +193,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     
     @Override
-    public Result<List<Users>> getStudents(Long courseId,  String username) {
+    public Result<List<StudentCourseVO>> getStudents(Long courseId,  String username) {
         String role = AuthUtil.getCurrentRole();
         if (!"teacher".equals(role)) {
             return Result.error("暂无权限");
@@ -209,7 +210,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
             return Result.error("您不是该课程的教师，无法查看学生信息");
         }
 
-        // 查询该课程的学生列表
+        // 查询该课程的学生列表（包含学分信息）
         QueryWrapper<CourseMembers> wrapper = new QueryWrapper<>();
         wrapper.eq("course_id", courseId)
                .eq("status", true);  // 只查询状态正常的学生
@@ -220,34 +221,41 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
             return Result.success("该课程暂无学生", List.of());
         }
         
-        // 获取学生详细信息
-        List<Users> students = courseMembers.stream()
+        // 获取学生详细信息并封装到StudentCourseVO
+        List<StudentCourseVO> students = courseMembers.stream()
             .map(member -> {
-                Users user = new Users();
-                user.setUserId(member.getUserId());
+                StudentCourseVO studentVO = new StudentCourseVO();
+                
                 // 查询用户详细信息
                 Users userDetails = userMapper.selectById(member.getUserId());
                 if (userDetails != null) {
-                    user.setUsername(userDetails.getUsername());
-                    user.setEmail(userDetails.getEmail());
-                    user.setAvatar(userDetails.getAvatar());
-                    user.setSchoolNumber(userDetails.getSchoolNumber());
+                    studentVO.setUserId(userDetails.getUserId());
+                    studentVO.setUsername(userDetails.getUsername());
+                    studentVO.setEmail(userDetails.getEmail());
+                    studentVO.setSchoolNumber(userDetails.getSchoolNumber());
                 }
+                
+                // 设置课程相关信息
+                studentVO.setCredits(member.getCredits());
+                studentVO.setJoinTime(member.getJoinTime());
+                studentVO.setStatus(member.getStatus());
 
-                return user;
+                return studentVO;
             })
-                .filter(user -> {
-                    if (username != null && !username.isEmpty()) {
-                        return user.getUsername() != null && user.getUsername().contains(username);
-                    }
-                    return true;
-                })
+            .filter(student -> {
+                if (username != null && !username.isEmpty()) {
+                    return student.getUsername() != null && student.getUsername().contains(username);
+                }
+                return true;
+            })
             .collect(Collectors.toList());
+            
         if(students.isEmpty()){
             return Result.error("获取失败没有这个学生");
         }
         else {
-        return Result.success("获取学生列表成功", students);}
+            return Result.success("获取学生列表成功", students);
+        }
     }
 
     // 在CourseServiceImpl类末尾添加以下方法

@@ -218,7 +218,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         if (bankId != null) {
             queryWrapper.eq(Question::getBankId, bankId);
         }
-        if(difficulty != null){
+        if(difficulty != null && !difficulty.trim().isEmpty()){
             queryWrapper.eq(Question::getDifficulty, difficulty);
         }
         if(title != null){

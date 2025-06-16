@@ -213,7 +213,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         // 查询该课程的学生列表（包含学分信息）
         QueryWrapper<CourseMembers> wrapper = new QueryWrapper<>();
         wrapper.eq("course_id", courseId)
-               .eq("status", true);  // 只查询状态正常的学生
+               .eq("status", true)  // 只查询状态正常的学生
+                .orderByDesc("credits");
         
         List<CourseMembers> courseMembers = courseMembersMapper.selectList(wrapper);
         

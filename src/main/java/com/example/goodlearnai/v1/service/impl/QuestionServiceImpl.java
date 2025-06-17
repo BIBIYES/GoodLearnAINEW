@@ -19,6 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -247,6 +250,76 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         }
     }
 
+    @Override
+    public SseEmitter createQuestionByAiStream(String requestData) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        
+        SseEmitter emitter = new SseEmitter(300000L); // 5分钟超时
+        
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限使用AI创建题目: userId = {}", userId);
+            try {
+                emitter.send(SseEmitter.event().data("暂无权限使用AI创建题目"));
+                emitter.complete();
+            } catch (IOException e) {
+                emitter.completeWithError(e);
+            }
+            return emitter;
+        }
+        
+        // 异步处理AI请求
+        CompletableFuture.runAsync(() -> {
+            try {
+                // 发送开始信息
+                emitter.send(SseEmitter.event().data("开始生成题目..."));
+                
+                // 构建提示词
+                String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求生成多个问题。请根据要求生成5道类似问题，并以 JSON 格式返回，每道问题包含以下字段：title（题目标题）、content（题目内容）、difficulty（题目难度），题目难度用1、2、3来表示。\n" +
+                        "\n" +
+                        "用户提供的格式要求如下：\n" +
+                        "[\n" +
+                        "{\n" +
+                        "  \"title\": \"题目标题\",\n" +
+                        "  \"content\": \"题目详情\",\n" +
+                        "  \"difficulty\": \"题目难度\"\n" +
+                        "}\n" +
+                        "]\n"+
+                        "\n" +
+                        "需求：" + requestData;
+                
+                // 发送处理中信息
+                emitter.send(SseEmitter.event().data("正在调用AI生成题目..."));
+                
+                // 调用AI服务
+                Object aiResponseObj = openAiChatModel.call(prompt);
+                String aiResponse = aiResponseObj.toString();
+                log.debug("AI响应结果: {}", aiResponse);
+                
+                // 提取JSON部分
+                String jsonResponse = extractJsonFromResponse(aiResponse);
+                
+                // 发送最终结果
+                emitter.send(SseEmitter.event().data("生成完成"));
+                emitter.send(SseEmitter.event().data(jsonResponse));
+                
+                log.info("AI流式创建题目成功: userId={}", userId);
+                emitter.complete();
+                
+            } catch (Exception e) {
+                log.error("AI流式创建题目失败: userId={}", userId, e);
+                try {
+                    emitter.send(SseEmitter.event().data("AI创建题目失败: " + e.getMessage()));
+                    emitter.complete();
+                } catch (IOException ioException) {
+                    emitter.completeWithError(ioException);
+                }
+            }
+        });
+        
+        return emitter;
+    }
+    
     @Override
     @Transactional
     public Result<String> createQuestionByAi(String requestData) {

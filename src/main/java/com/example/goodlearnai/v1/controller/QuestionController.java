@@ -9,7 +9,10 @@ import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -100,7 +103,7 @@ public class QuestionController {
     }
 
     /**
-     * 通过AI创建题目 - 仅生成题目，不保存到数据库
+     * 通过AI创建题目 - 仅生成题目，不保存到数据库（流式接口）
      * 创建流程：
      * 1. 调用此接口生成题目
      * 2. 前端接收返回的题目列表，展示给用户选择
@@ -110,11 +113,22 @@ public class QuestionController {
      *                   - bankId: 题库ID
      *                   - question: 题目要求描述
      *                   - count: 生成题目数量(可选，默认5，最大10)
-     * @return AI生成的题目列表（JSON格式）
+     * @return AI生成的题目列表（流式响应）
+     */
+    @PostMapping(value = "/ai-create-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter createQuestionByAiStream(@RequestBody String requestData) {
+        log.info("AI流式创建题目");
+        return questionService.createQuestionByAiStream(requestData);
+    }
+
+    /**
+     * 通过AI创建题目 - 仅生成题目，不保存到数据库（非流式接口，保持兼容性）
+     * @deprecated 建议使用流式接口 /ai-create-stream
      */
     @PostMapping("/ai-create")
+    @Deprecated
     public Result<String> createQuestionByAi(@RequestBody String requestData) {
-        log.info("AI创建题目");
+        log.info("AI创建题目（非流式）");
         return questionService.createQuestionByAi(requestData);
     }
 

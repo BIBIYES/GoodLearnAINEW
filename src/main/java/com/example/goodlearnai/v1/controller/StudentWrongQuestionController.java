@@ -9,7 +9,9 @@ import com.example.goodlearnai.v1.service.IStudentWrongQuestionService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * <p>
@@ -77,16 +79,39 @@ public class StudentWrongQuestionController {
     }
     
     /**
-     * 根据错题ID生成类似的题目 - 使用AI技术
+     * 根据错题ID生成类似的题目 - 使用AI技术（流式接口）
      * 学生可以查看自己的错题生成的类似题目，教师可以查看所有学生的错题生成的类似题目
      * 
      * @param wrongQuestionId 错题ID
-     * @return 生成的类似题目列表(JSON格式)
+     * @return 生成的类似题目列表(流式响应)
+     */
+    @GetMapping(value = "/generate-similar-stream/{wrongQuestionId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter generateSimilarWrongQuestionsStream(@PathVariable Long wrongQuestionId) {
+        try {
+            log.info("开始流式生成类似错题: wrongQuestionId={}", wrongQuestionId);
+            return studentWrongQuestionService.generateSimilarWrongQuestionsStream(wrongQuestionId);
+        } catch (Exception e) {
+            log.error("流式生成类似错题异常: wrongQuestionId={}, error={}", wrongQuestionId, e.getMessage(), e);
+            SseEmitter emitter = new SseEmitter();
+            try {
+                emitter.send(SseEmitter.event().data("生成类似错题异常: " + e.getMessage()));
+                emitter.complete();
+            } catch (Exception ex) {
+                emitter.completeWithError(ex);
+            }
+            return emitter;
+        }
+    }
+
+    /**
+     * 根据错题ID生成类似的题目 - 使用AI技术（非流式接口，保持兼容性）
+     * @deprecated 建议使用流式接口 /generate-similar-stream/{wrongQuestionId}
      */
     @GetMapping("/generate-similar/{wrongQuestionId}")
+    @Deprecated
     public Result<String> generateSimilarWrongQuestions(@PathVariable Long wrongQuestionId) {
         try {
-            log.info("开始生成类似错题: wrongQuestionId={}", wrongQuestionId);
+            log.info("开始生成类似错题（非流式）: wrongQuestionId={}", wrongQuestionId);
             return studentWrongQuestionService.generateSimilarWrongQuestions(wrongQuestionId);
         } catch (Exception e) {
             log.error("生成类似错题异常: wrongQuestionId={}, error={}", wrongQuestionId, e.getMessage(), e);

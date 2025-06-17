@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Question;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -54,5 +55,17 @@ public interface IQuestionService extends IService<Question> {
      */
     Result<IPage<Question>> pageQuestions(long current, long size, Long bankId ,String difficulty, String title);
 
+    /**
+     * 通过AI创建题目（流式响应）
+     * @param question 题目要求描述
+     * @return AI生成的题目列表（流式响应）
+     */
+    SseEmitter createQuestionByAiStream(String question);
+    
+    /**
+     * 通过AI创建题目（非流式响应）
+     * @param question 题目要求描述
+     * @return AI生成的题目列表（JSON格式）
+     */
     Result<String> createQuestionByAi(String question);
 }

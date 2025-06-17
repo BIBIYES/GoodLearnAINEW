@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.WrongQuestionDetailDto;
 import com.example.goodlearnai.v1.entity.StudentWrongQuestion;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * <p>
@@ -26,7 +27,14 @@ public interface IStudentWrongQuestionService extends IService<StudentWrongQuest
     Result<IPage<StudentWrongQuestion>> pageStudentWrongQuestions(Long userId, long current, long size);
     
     /**
-     * 根据错题ID生成类似的错题
+     * 根据错题ID生成类似的错题（流式响应）
+     * @param wrongQuestionId 错题ID
+     * @return 生成的类似题目列表(流式响应)
+     */
+    SseEmitter generateSimilarWrongQuestionsStream(Long wrongQuestionId);
+    
+    /**
+     * 根据错题ID生成类似的错题（非流式响应）
      * @param wrongQuestionId 错题ID
      * @return 生成的类似题目列表(JSON格式)
      */

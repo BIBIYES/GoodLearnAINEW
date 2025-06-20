@@ -14,10 +14,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
@@ -75,93 +78,51 @@ public class StudentWrongQuestionServiceImpl extends ServiceImpl<StudentWrongQue
     }
     
     @Override
-    public SseEmitter generateSimilarWrongQuestionsStream(Long wrongQuestionId) {
+    public Flux<ChatResponse> generateSimilarWrongQuestionsStream(Long wrongQuestionId) {
         Long userId = AuthUtil.getCurrentUserId();
-        SseEmitter emitter = new SseEmitter(300000L); // 5分钟超时
         
         try {
             // 查询错题信息
             StudentWrongQuestion wrongQuestion = getById(wrongQuestionId);
             if (wrongQuestion == null) {
                 log.warn("错题不存在: wrongQuestionId={}, userId={}", wrongQuestionId, userId);
-                emitter.send(SseEmitter.event().data("错题不存在"));
-                emitter.complete();
-                return emitter;
+                return Flux.error(new RuntimeException("错题不存在"));
             }
             
             // 验证用户权限（只能查询自己的错题或教师角色）
             String role = AuthUtil.getCurrentRole();
             if (!wrongQuestion.getUserId().equals(userId) && !"teacher".equals(role)) {
                 log.warn("用户暂无权限查看此错题: userId={}, wrongQuestionId={}", userId, wrongQuestionId);
-                emitter.send(SseEmitter.event().data("暂无权限查看此错题"));
-                emitter.complete();
-                return emitter;
+                return Flux.error(new RuntimeException("暂无权限查看此错题"));
             }
             
-            // 异步处理AI请求
-            CompletableFuture.runAsync(() -> {
-                try {
-                    // 发送开始信息
-                    emitter.send(SseEmitter.event().data("开始生成类似错题..."));
-                    
-                    // 构建提示词
-                    String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求生成多个问题。请根据要求生成五道类似问题，并以 JSON 格式返回，每道问题包含以下字段：questionTitle（题目标题）、questionContent（题目内容）、difficulty（题目难度）。\n" +
-                            "\n" +
-                            "用户提供的格式要求如下：\n" +
-                            "[\n" +
-                            "{\n" +
-                            "  \"questionTitle\": \"题目标题\",\n" +
-                            "  \"questionContent\": \"题目详情\",\n" +
-                            "  \"difficulty\": \"题目难度\"\n" +
-                            "}\n" +
-                            "]\n\n" +
-                            "请根据以下错题生成五道类似的题目，难度相近：\n" +
-                            "题目内容：" + wrongQuestion.getQuestionContent() + "\n" +
-                            "学生错误答案：" + wrongQuestion.getWrongAnswer();
-                    
-                    // 发送处理中信息
-                    emitter.send(SseEmitter.event().data("正在调用AI生成类似错题..."));
-                    
-                    // 调用AI服务
-                    log.info("开始调用AI生成类似错题: userId={}, wrongQuestionId={}", userId, wrongQuestionId);
-                    Object aiResponseObj = openAiChatModel.call(prompt);
-                    String aiResponse = aiResponseObj.toString();
-                    log.debug("AI响应结果: {}", aiResponse);
-                    
-                    // 提取JSON部分
-                    String jsonResponse = extractJsonFromResponse(aiResponse);
-                    
-                    // 发送最终结果
-                    emitter.send(SseEmitter.event().data("生成完成"));
-                    emitter.send(SseEmitter.event().data(jsonResponse));
-                    
-                    log.info("AI流式生成类似错题成功: userId={}, wrongQuestionId={}", userId, wrongQuestionId);
-                    emitter.complete();
-                    
-                } catch (Exception e) {
-                    log.error("流式生成类似错题异常: userId={}, wrongQuestionId={}, error={}", 
-                            userId, wrongQuestionId, e.getMessage(), e);
-                    try {
-                        emitter.send(SseEmitter.event().data("生成类似错题异常: " + e.getMessage()));
-                        emitter.complete();
-                    } catch (IOException ioException) {
-                        emitter.completeWithError(ioException);
-                    }
-                }
-            });
+            // 构建提示词
+            String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求生成多个问题。请根据要求生成五道类似问题，并以 JSON 格式返回，每道问题包含以下字段：questionTitle（题目标题）、questionContent（题目内容）、difficulty（题目难度）。\n" +
+                    "\n" +
+                    "用户提供的格式要求如下：\n" +
+                    "[\n" +
+                    "{\n" +
+                    "  \"questionTitle\": \"题目标题\",\n" +
+                    "  \"questionContent\": \"题目详情\",\n" +
+                    "  \"difficulty\": \"题目难度\"\n" +
+                    "}\n" +
+                    "]\n\n" +
+                    "请根据以下错题生成五道类似的题目，难度相近：\n" +
+                    "题目内容：" + wrongQuestion.getQuestionContent() + "\n" +
+                    "学生错误答案：" + wrongQuestion.getWrongAnswer();
             
+            log.info("AI流式生成类似错题开始: userId={}, wrongQuestionId={}", userId, wrongQuestionId);
+            
+            // 使用Spring AI的流式调用
+            return openAiChatModel.stream(new Prompt(prompt))
+                    .doOnNext(response -> log.debug("AI流式响应: {}", response))
+                    .doOnComplete(() -> log.info("AI流式生成类似错题完成: userId={}, wrongQuestionId={}", userId, wrongQuestionId))
+                    .doOnError(error -> log.error("AI流式生成类似错题失败: userId={}, wrongQuestionId={}", userId, wrongQuestionId, error));
+                    
         } catch (Exception e) {
-            log.error("流式生成类似错题初始化异常: userId={}, wrongQuestionId={}, error={}", 
-                    userId, wrongQuestionId, e.getMessage(), e);
-            try {
-                emitter.send(SseEmitter.event().data("生成类似错题异常: " + e.getMessage()));
-                emitter.complete();
-            } catch (IOException ioException) {
-                emitter.completeWithError(ioException);
-            }
+            log.error("AI流式生成类似错题异常: userId={}, wrongQuestionId={}", userId, wrongQuestionId, e);
+            return Flux.error(new RuntimeException("生成类似错题失败: " + e.getMessage(), e));
         }
-        
-        return emitter;
     }
     
     @Override

@@ -8,10 +8,12 @@ import com.example.goodlearnai.v1.entity.StudentWrongQuestion;
 import com.example.goodlearnai.v1.service.IStudentWrongQuestionService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
 /**
  * <p>
@@ -86,20 +88,13 @@ public class StudentWrongQuestionController {
      * @return 生成的类似题目列表(流式响应)
      */
     @GetMapping(value = "/generate-similar-stream/{wrongQuestionId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter generateSimilarWrongQuestionsStream(@PathVariable Long wrongQuestionId) {
+    public Flux<ChatResponse> generateSimilarWrongQuestionsStream(@PathVariable Long wrongQuestionId) {
         try {
             log.info("开始流式生成类似错题: wrongQuestionId={}", wrongQuestionId);
             return studentWrongQuestionService.generateSimilarWrongQuestionsStream(wrongQuestionId);
         } catch (Exception e) {
             log.error("流式生成类似错题异常: wrongQuestionId={}, error={}", wrongQuestionId, e.getMessage(), e);
-            SseEmitter emitter = new SseEmitter();
-            try {
-                emitter.send(SseEmitter.event().data("生成类似错题异常: " + e.getMessage()));
-                emitter.complete();
-            } catch (Exception ex) {
-                emitter.completeWithError(ex);
-            }
-            return emitter;
+            return Flux.error(new RuntimeException("生成类似错题异常: " + e.getMessage(), e));
         }
     }
 

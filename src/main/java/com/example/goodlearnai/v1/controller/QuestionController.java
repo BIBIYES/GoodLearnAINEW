@@ -8,6 +8,7 @@ import com.example.goodlearnai.v1.service.IQuestionService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -116,7 +117,7 @@ public class QuestionController {
      * @return AI生成的题目列表（流式响应）
      */
     @PostMapping(value = "/ai-create-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter createQuestionByAiStream(@RequestBody String requestData) {
+    public Flux<ChatResponse> createQuestionByAiStream(@RequestBody String requestData) {
         log.info("AI流式创建题目");
         return questionService.createQuestionByAiStream(requestData);
     }

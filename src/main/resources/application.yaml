@@ -41,8 +41,8 @@ spring:
       static-path-pattern: /**
 
     multipart:
-      max-file-size: 15MB
-      max-request-size: 15MB
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 server:
   port: 8080

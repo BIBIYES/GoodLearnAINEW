@@ -77,6 +77,16 @@ public class FileResourceServiceImpl extends ServiceImpl<FileResourceMapper, Fil
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
 
+            //筛选文件类型
+            boolean lastName = switch (extension) {
+                case ".jpg", ".png", ".gif", ".jpeg", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt",
+                     ".rar", ".zip", ".7z", ".tar", ".gz", ".bz2" -> true;
+                default -> false;
+            };
+            if(!lastName) {
+                return Result.error("上传文件格式错误");
+            }
+
             // 文件名 = 哈希值 + 原始扩展名
             String fileName = hashData + extension;
             

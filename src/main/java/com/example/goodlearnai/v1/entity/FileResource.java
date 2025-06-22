@@ -11,7 +11,7 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 图片路径存储
+ * 文件资源存储实体类
  * </p>
  *
  * @since 2025-06-20
@@ -19,31 +19,44 @@ import lombok.experimental.Accessors;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("image_path")
-public class ImagePath implements Serializable {
+@TableName("file_resource")
+public class FileResource implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * 路径id
+     * 主键ID
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 存放哈希值
+     * 文件SHA256哈希值，用于文件去重
      */
     private String hashData;
 
     /**
-     * 图片路径
+     * 文件存储路径
      */
     private String path;
+    
+    /**
+     * 原始文件名
+     */
+    private String originalName;
+    
+    /**
+     * 文件类型
+     */
+    private String fileType;
+    
+    /**
+     * 文件大小（字节）
+     */
+    private Long fileSize;
 
     /**
-     * 上传图片的时间
+     * 上传文件的时间
      */
-    private LocalDateTime imageTime;
-
-
+    private LocalDateTime uploadTime;
 }

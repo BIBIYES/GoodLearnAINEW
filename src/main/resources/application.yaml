@@ -1,4 +1,7 @@
 spring:
+  web:
+      resources:
+        static-locations: classpath:/static/
   application:
     name: GoodLearnAI
   datasource:
@@ -33,6 +36,13 @@ spring:
       port: 6379
       timeout: 5000
       password: zxcvg123
+  servlet:
+    mvc:
+      static-path-pattern: /**
+
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
 
 server:
   port: 8080
@@ -54,3 +64,4 @@ logging:
   level:
     root: info
     com.example.goodlearnai: debug
+

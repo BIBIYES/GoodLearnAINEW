@@ -60,4 +60,14 @@ public class ExamQuestionController {
             @RequestParam Long examId) {
         return examQuestionService.pageUnpublishedExamQuestions(current, size, examId);
     }
+    
+    /**
+     * 删除试卷中的题目
+     * @param eqId 试卷题目ID
+     * @return 删除结果
+     */
+    @DeleteMapping("/delete/{eqId}")
+    public Result<String> deleteExamQuestion(@PathVariable Long eqId) {
+        return examQuestionService.deleteExamQuestion(eqId);
+    }
 }

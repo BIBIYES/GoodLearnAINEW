@@ -37,4 +37,11 @@ public interface IExamQuestionService extends IService<ExamQuestion> {
      * @return 分页结果
      */
     Result<IPage<ExamQuestion>> pageUnpublishedExamQuestions(long current, long size, Long examId);
+    
+    /**
+     * 删除试卷中的题目
+     * @param eqId 试卷题目ID
+     * @return 删除结果
+     */
+    Result<String> deleteExamQuestion(Long eqId);
 }

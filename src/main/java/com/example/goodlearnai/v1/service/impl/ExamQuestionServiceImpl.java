@@ -209,7 +209,63 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
             return Result.success("查询成功", examQuestionPage);
         } catch (Exception e) {
             log.error("分页查询未发布试卷题目失败: examId={}, error={}", examId, e.getMessage());
-            throw new CustomException("分页查询未发布试卷题目时发生未知异常");
-        }
-    }
-}
+             throw new CustomException("分页查询未发布试卷题目时发生未知异常");
+         }
+     }
+     
+     @Override
+     public Result<String> deleteExamQuestion(Long eqId) {
+         Long userId = AuthUtil.getCurrentUserId();
+         String role = AuthUtil.getCurrentRole();
+         
+         // 只有教师可以删除试卷题目
+         if (!"teacher".equals(role)) {
+             log.warn("用户暂无权限删除试卷题目: userId={}", userId);
+             return Result.error("暂无权限删除试卷题目");
+         }
+         
+         try {
+             // 检查试卷题目是否存在
+             ExamQuestion examQuestion = getById(eqId);
+             if (examQuestion == null) {
+                 log.warn("试卷题目不存在: eqId={}", eqId);
+                 return Result.error("试卷题目不存在");
+             }
+             
+             // 检查试卷是否存在
+             Exam exam = examService.getById(examQuestion.getExamId());
+             if (exam == null) {
+                 log.warn("关联的试卷不存在: examId={}", examQuestion.getExamId());
+                 return Result.error("关联的试卷不存在");
+             }
+             
+             // 检查试卷是否为草稿状态（只有草稿状态的试卷才能删除题目）
+             if (!Exam.ExamStatus.DRAFT.equals(exam.getStatus())) {
+                 log.warn("只能删除草稿状态试卷中的题目: examId={}, status={}", exam.getExamId(), exam.getStatus());
+                 return Result.error("只能删除草稿状态试卷中的题目");
+             }
+             
+             // 检查试卷是否属于当前教师
+             if (!exam.getTeacherId().equals(userId)) {
+                 log.warn("无权限删除其他教师试卷中的题目: examId={}, teacherId={}, currentUserId={}", 
+                         exam.getExamId(), exam.getTeacherId(), userId);
+                 return Result.error("无权限删除其他教师试卷中的题目");
+             }
+             
+             // 执行逻辑删除（将status设置为0）
+             examQuestion.setStatus(0);
+             boolean success = updateById(examQuestion);
+             
+             if (success) {
+                 log.info("删除试卷题目成功: eqId={}, examId={}, userId={}", eqId, exam.getExamId(), userId);
+                 return Result.success("删除试卷题目成功");
+             } else {
+                 log.error("删除试卷题目失败: eqId={}", eqId);
+                 return Result.error("删除试卷题目失败");
+             }
+         } catch (Exception e) {
+             log.error("删除试卷题目时发生异常: eqId={}, error={}", eqId, e.getMessage(), e);
+             throw new CustomException("删除试卷题目时发生未知异常");
+         }
+     }
+ }

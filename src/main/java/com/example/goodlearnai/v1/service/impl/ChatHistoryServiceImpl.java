@@ -2,7 +2,6 @@ package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.goodlearnai.v1.common.Result;
-import com.example.goodlearnai.v1.dto.UserChat;
 import com.example.goodlearnai.v1.entity.ChatHistory;
 import com.example.goodlearnai.v1.mapper.ChatHistoryMapper;
 import com.example.goodlearnai.v1.service.IChatHistoryService;

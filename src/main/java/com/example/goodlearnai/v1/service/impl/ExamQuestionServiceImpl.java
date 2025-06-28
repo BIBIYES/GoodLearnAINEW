@@ -152,4 +152,64 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
             throw new CustomException("分页查询已发布试卷题目时发生未知异常");
         }
     }
+    
+    @Override
+    public Result<IPage<ExamQuestion>> pageUnpublishedExamQuestions(long current, long size, Long examId) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        
+        // 只有教师可以查看未发布的试卷题目
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限查看未发布试卷题目: userId={}", userId);
+            return Result.error("暂无权限查看未发布试卷题目");
+        }
+        
+        try {
+            // 检查试卷是否存在
+            Exam exam = examService.getById(examId);
+            if (exam == null) {
+                log.warn("试卷不存在: examId={}", examId);
+                return Result.error("试卷不存在");
+            }
+            
+            // 检查试卷是否为草稿状态（未发布）
+            if (!Exam.ExamStatus.DRAFT.equals(exam.getStatus())) {
+                log.warn("试卷已发布或已关闭，无法查看草稿题目: examId={}, status={}", examId, exam.getStatus());
+                return Result.error("试卷已发布或已关闭，无法查看草稿题目");
+            }
+            
+            // 检查试卷是否属于当前教师
+            if (!exam.getTeacherId().equals(userId)) {
+                log.warn("无权限查看其他教师的试卷: examId={}, teacherId={}, currentUserId={}", 
+                        examId, exam.getTeacherId(), userId);
+                return Result.error("无权限查看其他教师的试卷");
+            }
+            
+            // 创建分页对象
+            Page<ExamQuestion> page = new Page<>(current, size);
+            
+            // 构建查询条件
+            LambdaQueryWrapper<ExamQuestion> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ExamQuestion::getExamId, examId);
+            queryWrapper.eq(ExamQuestion::getStatus, 1);
+            queryWrapper.orderByAsc(ExamQuestion::getCreatedAt);
+            
+            // 执行分页查询
+            IPage<ExamQuestion> examQuestionPage = page(page, queryWrapper);
+            
+            // 如果没有查询到数据，返回空的分页对象
+            if (examQuestionPage == null || examQuestionPage.getRecords().isEmpty()) {
+                log.info("未查询到相关试卷题目数据: examId={}, 当前页={}, 每页大小={}", 
+                        examId, current, size);
+                return Result.success("未查询到相关数据", new Page<>());
+            }
+            
+            log.info("分页查询未发布试卷题目成功: examId={}, 当前页={}, 每页大小={}, 总记录数={}, 总页数={}", 
+                    examId, current, size, examQuestionPage.getTotal(), examQuestionPage.getPages());
+            return Result.success("查询成功", examQuestionPage);
+        } catch (Exception e) {
+            log.error("分页查询未发布试卷题目失败: examId={}, error={}", examId, e.getMessage());
+            throw new CustomException("分页查询未发布试卷题目时发生未知异常");
+        }
+    }
 }

@@ -45,4 +45,19 @@ public class ExamQuestionController {
             @RequestParam Long examId) {
         return examQuestionService.pagePublishedExamQuestions(current, size, examId);
     }
+    
+    /**
+     * 分页查询未发布的试卷题目（草稿状态）
+     * @param current 当前页码
+     * @param size 每页大小
+     * @param examId 试卷ID
+     * @return 分页结果，包含题目内容、参考答案、难度等信息
+     */
+    @GetMapping("/page-unpublished")
+    public Result<IPage<ExamQuestion>> pageUnpublishedExamQuestions(
+            @RequestParam(defaultValue = "1") long current,
+            @RequestParam(defaultValue = "10") long size,
+            @RequestParam Long examId) {
+        return examQuestionService.pageUnpublishedExamQuestions(current, size, examId);
+    }
 }

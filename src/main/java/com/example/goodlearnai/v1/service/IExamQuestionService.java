@@ -28,4 +28,13 @@ public interface IExamQuestionService extends IService<ExamQuestion> {
      * @return 分页结果
      */
     Result<IPage<ExamQuestion>> pagePublishedExamQuestions(long current, long size, Long examId);
+    
+    /**
+     * 分页查询未发布试卷的题目
+     * @param current 当前页码
+     * @param size 每页大小
+     * @param examId 试卷ID
+     * @return 分页结果
+     */
+    Result<IPage<ExamQuestion>> pageUnpublishedExamQuestions(long current, long size, Long examId);
 }

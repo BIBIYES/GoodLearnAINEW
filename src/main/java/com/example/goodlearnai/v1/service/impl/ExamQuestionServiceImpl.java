@@ -79,6 +79,7 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
                     continue; // 跳过不存在的题目
                 }
                 ExamQuestion examQuestionSnap = new ExamQuestion();
+                examQuestionSnap.setQuestionTitle(question.getTitle());
                 examQuestionSnap.setQuestionContent(question.getContent());
                 examQuestionSnap.setReferenceAnswer(question.getAnswer());
                 examQuestionSnap.setDifficulty(question.getDifficulty());

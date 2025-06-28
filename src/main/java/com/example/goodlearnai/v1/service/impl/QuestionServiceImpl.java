@@ -259,18 +259,17 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         
         try {
             // 构建提示词
-            String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求生成多个问题。请根据要求生成5道类似问题，并以 JSON 格式返回，每道问题包含以下字段：title（题目标题）、content（题目内容）、difficulty（题目难度），题目难度用1、2、3来表示。\n" +
-                    "\n" +
-                    "用户提供的格式要求如下：\n" +
-                    "[\n" +
-                    "{\n" +
-                    "  \"title\": \"题目标题\",\n" +
-                    "  \"content\": \"题目详情\",\n" +
-                    "  \"difficulty\": \"题目难度\"\n" +
-                    "}\n" +
-                    "]\n"+
-                    "\n" +
-                    "需求：" + requestData;
+            String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求，生成多个类似的问题。\n" +
+                    "请根据以下用户的需求，生成 **符合要求的相关问题**，并以 **JSON 数组格式** 返回，每道题包含如下字段：\n" +
+                    "- `title`：题目标题\n" +
+                    "- `content`：题目详情，使用 Markdown 格式书写（例如粗体、列表、表格等）\n" +
+                    "- `difficulty`：题目难度，使用整数 1（简单）、2（中等）、3（困难） 表示\n\n" +
+                    "请注意：\n" +
+                    "1. 保证输出格式是合法的 JSON 数组；\n" +
+                    "2. `content` 字段中合理使用 Markdown 语法增强可读性。\n\n" +
+                    "用户提供的需求如下：\n" +
+                    requestData;
+
 
             log.info("AI流式创建题目开始: userId={}", userId);
             
@@ -298,7 +297,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         }
         try {
             // 构建提示词
-            String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求生成多个问题。请根据要求生成5道类似问题，并以 JSON 格式返回，每道问题包含以下字段：title（题目标题）、content（题目内容）、difficulty（题目难度），题目难度用1、2、3来表示。\n" +
+            String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求生成多个问题。请根据要求生成符合要求的题目，并以 JSON 格式返回，每道问题包含以下字段：title（题目标题）、content（题目内容）、difficulty（题目难度），题目难度用1、2、3来表示。\n" +
                     "\n" +
                     "用户提供的格式要求如下：\n" +
                     "[\n" +

@@ -1,4 +1,7 @@
 spring:
+  web:
+    resources:
+      static-locations: classpath:/static/
   application:
     name: GoodLearnAI
   datasource:
@@ -33,18 +36,30 @@ spring:
       port: 6379
       timeout: 5000
       password: zxcvg123
+  servlet:
+    mvc:
+      static-path-pattern: /**
+
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 server:
   port: 8080
 
-
+# 文件上传配置
+file:
+  upload:
+    # 文件上传基本路径
+    base-path: C:/files/
+    # 文件访问URL前缀
+    access-url: /files/
 
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
   mapper-locations: classpath*:mapper/*.xml
-
 
 jwt:
   secret: mouse-mouse

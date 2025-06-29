@@ -5,14 +5,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Question;
 import com.example.goodlearnai.v1.service.IQuestionService;
-import com.example.goodlearnai.v1.utils.AuthUtil;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
 import javax.validation.Valid;
@@ -141,5 +139,19 @@ public class QuestionController {
     public Result<Question> getQuestion(@PathVariable Long questionId) {
         log.info("查看题目: questionId = {}", questionId);
         return Result.success("查看题目成功", questionService.getById(questionId));
+    }
+    
+    /**
+     * 获取题库下所有题目不分页（支持标题、题干搜索）
+     * @param bankId 题库ID
+     * @param keyword 搜索关键词（可选，用于搜索标题和题干）
+     * @return 题目列表
+     */
+    @GetMapping("/all")
+    public Result<List<Question>> getAllQuestionsByBankId(
+            @RequestParam("bankId") Long bankId,
+            @RequestParam(value = "keyword", required = false) String keyword) {
+        log.info("获取题库下所有题目请求: bankId={}, keyword={}", bankId, keyword);
+        return questionService.getAllQuestionsByBankId(bankId, keyword);
     }
 }

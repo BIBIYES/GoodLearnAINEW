@@ -356,4 +356,46 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         // 如果都没找到，返回原始响应
         return response;
     }
+    
+    @Override
+    public Result<List<Question>> getAllQuestionsByBankId(Long bankId, String keyword) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限查询题目: userId={}", userId);
+            return Result.error("暂无权限查询题目");
+        }
+
+        if (bankId == null) {
+            return Result.error("题库ID不能为空");
+        }
+
+        try {
+            // 构建查询条件
+            LambdaQueryWrapper<Question> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Question::getStatus, true)
+                    .eq(Question::getBankId, bankId);
+
+            // 如果提供了关键词，则在标题和题干中搜索
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                queryWrapper.and(wrapper -> wrapper
+                        .like(Question::getTitle, keyword)
+                        .or()
+                        .like(Question::getContent, keyword)
+                );
+            }
+
+            // 按更新时间降序排序
+            queryWrapper.orderByDesc(Question::getUpdatedAt);
+
+            List<Question> questions = list(queryWrapper);
+            
+            log.info("查询题库下所有题目成功: 题库ID={}, 关键词={}, 题目数量={}", bankId, keyword, questions.size());
+            return Result.success("查询成功", questions);
+        } catch (Exception e) {
+            log.error("查询题库下所有题目失败", e);
+            throw new CustomException("查询题库下所有题目时发生未知异常");
+        }
+    }
 }

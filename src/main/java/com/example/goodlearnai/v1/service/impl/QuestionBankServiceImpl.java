@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author DSfeiji
@@ -197,6 +198,33 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
             }
         } catch (CustomException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Result<List<QuestionBank>> getAllQuestionBanks() {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限查询题库: userId={}", userId);
+            return Result.error("暂无权限查询题库");
+        }
+
+        try {
+            // 构建查询条件
+            LambdaQueryWrapper<QuestionBank> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(QuestionBank::getStatus, true)
+                    .eq(QuestionBank::getTeacherId, userId)
+                    .orderByDesc(QuestionBank::getUpdatedAt);
+
+            List<QuestionBank> questionBanks = list(queryWrapper);
+            
+            log.info("查询所有题库成功: 题库数量={}", questionBanks.size());
+            return Result.success("查询成功", questionBanks);
+        } catch (Exception e) {
+            log.error("查询所有题库失败", e);
+            throw new CustomException("查询所有题库时发生未知异常");
         }
     }
 

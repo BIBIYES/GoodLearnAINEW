@@ -70,4 +70,12 @@ public interface IQuestionService extends IService<Question> {
      * @return AI生成的题目列表（JSON格式）
      */
     Result<String> createQuestionByAi(String question);
+    
+    /**
+     * 获取题库下所有题目不分页（支持标题、题干搜索）
+     * @param bankId 题库ID
+     * @param keyword 搜索关键词（可选，用于搜索标题和题干）
+     * @return 题目列表
+     */
+    Result<List<Question>> getAllQuestionsByBankId(Long bankId, String keyword);
 }

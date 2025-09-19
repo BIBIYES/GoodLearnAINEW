@@ -63,7 +63,24 @@ public interface IQuestionService extends IService<Question> {
      * @return AI生成的题目列表（流式响应）
      */
     Flux<ChatResponse> createQuestionByAiStream(String question);
-    
+
+
+    Flux<ChatResponse> createQuestionByPlan(String requestData);
+
+    /**
+     * 上传Word教案文档并AI生成题目
+     * @param file Word文档文件
+     * @return AI生成的题目列表（流式响应）
+     */
+    Flux<ChatResponse> createQuestionByWordPlan(org.springframework.web.multipart.MultipartFile file);
+
+    /**
+     * 上传Word教案文档并AI生成题目（非流式响应）
+     * @param file Word文档文件
+     * @return AI生成的题目列表（JSON格式）
+     */
+    Result<String> createQuestionByWordPlanSync(org.springframework.web.multipart.MultipartFile file);
+
     /**
      * 通过AI创建题目（非流式响应）
      * @param question 题目要求描述

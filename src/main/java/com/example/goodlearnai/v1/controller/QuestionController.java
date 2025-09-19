@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 import javax.validation.Valid;
@@ -153,5 +154,23 @@ public class QuestionController {
             @RequestParam(value = "keyword", required = false) String keyword) {
         log.info("获取题库下所有题目请求: bankId={}, keyword={}", bankId, keyword);
         return questionService.getAllQuestionsByBankId(bankId, keyword);
+    }
+
+    /**
+     * 上传Word教案文档并AI生成题目（流式响应）
+     */
+    @PostMapping(value = "/ai-create-by-word-plan", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ChatResponse> createQuestionByWordPlan(@RequestParam("file") MultipartFile file) {
+        log.info("上传Word教案文档并AI生成题目（流式），文件名: {}", file.getOriginalFilename());
+        return questionService.createQuestionByWordPlan(file);
+    }
+
+    /**
+     * 上传Word教案文档并AI生成题目（非流式响应）
+     */
+    @PostMapping("/ai-create-by-word-plan-sync")
+    public Result<String> createQuestionByWordPlanSync(@RequestParam("file") MultipartFile file) {
+        log.info("上传Word教案文档并AI生成题目（非流式），文件名: {}", file.getOriginalFilename());
+        return questionService.createQuestionByWordPlanSync(file);
     }
 }

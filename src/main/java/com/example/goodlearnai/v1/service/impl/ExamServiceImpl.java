@@ -1,9 +1,11 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.entity.CourseHomework;
 import com.example.goodlearnai.v1.entity.Exam;
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.ExamMapper;
@@ -11,6 +13,7 @@ import com.example.goodlearnai.v1.service.IExamService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -27,6 +30,9 @@ import java.time.LocalDateTime;
 @Service
 @Slf4j
 public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IExamService {
+
+    @Autowired
+    private CourseHomeworkServiceImpl courseHomeworkService;
 
     @Override
     public Result<String> addExam(Exam exam) {
@@ -172,9 +178,9 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
             throw new CustomException("分页查询试卷时发生未知异常");
         }
     }
-    
+
     @Override
-    public Result<String> publishExam(Long examId) {
+    public Result<String> publishExam(Long examId, Long courseId, Long classId) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
 
@@ -201,17 +207,36 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
                 return Result.error("只有草稿状态的试卷可以发布");
             }
 
+            if (courseId == null || classId == null) {
+                log.warn("缺少课程或班级参数: courseId={}, classId={}", courseId, classId);
+                return Result.error("请选择要发布到的课程和班级");
+            }
+
+            //保存信息到course_homework表
+            CourseHomework courseHomework = new CourseHomework();
+            courseHomework.setCourseId(courseId);
+            courseHomework.setExamId(examId);
+            courseHomework.setAssignTime(LocalDateTime.now());
+            courseHomework.setClassId(classId);
+            courseHomework.setDeadline(LocalDateTime.now().plusDays(7));
+
+            boolean saved = courseHomeworkService.save(courseHomework);
+            if (!saved) {
+                log.error("保存CourseHomework失败: {}", courseHomework);
+                return Result.error("发布试卷失败：保存课程作业信息出错");
+            }
+
             exam.setStatus(Exam.ExamStatus.PUBLISHED);
             exam.setUpdatedAt(LocalDateTime.now());
-            
-            if (updateById(exam)) {
-                return Result.success("试卷发布成功");
-            } else {
-                return Result.error("试卷发布失败");
-            }
+            updateById(exam);
+
+            return Result.success("试卷发布成功");
+
         } catch (Exception e) {
             log.error("发布试卷时发生异常: examId={}, error={}", examId, e.getMessage());
             return Result.error("发布试卷时发生未知异常");
         }
     }
+
+
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.ExamQuestionDto;
+import com.example.goodlearnai.v1.entity.CourseHomework;
 import com.example.goodlearnai.v1.entity.ExamQuestion;
 
 import java.util.List;
@@ -44,4 +45,9 @@ public interface IExamQuestionService extends IService<ExamQuestion> {
      * @return 删除结果
      */
     Result<String> deleteExamQuestion(Long eqId);
+
+    /**
+     * 查询每个班级收到的试卷
+     */
+    Result<IPage<CourseHomework>> listByClass(Long current, Long size, Long classId);
 }

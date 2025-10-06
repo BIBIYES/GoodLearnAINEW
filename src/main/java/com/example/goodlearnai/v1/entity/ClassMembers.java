@@ -1,8 +1,9 @@
 package com.example.goodlearnai.v1.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 import java.io.Serializable;
 import lombok.Data;
@@ -36,6 +37,7 @@ public class ClassMembers implements Serializable {
 
     private Boolean status;
 
+    @TableField(exist = false)
     private String joinCode;
 
 

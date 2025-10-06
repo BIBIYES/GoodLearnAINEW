@@ -2,6 +2,7 @@ package com.example.goodlearnai.v1.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.entity.CourseHomework;
 import com.example.goodlearnai.v1.entity.Exam;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -34,5 +35,6 @@ public interface IExamService extends IService<Exam> {
      * @param examId 试卷ID
      * @return 发布结果
      */
-    Result<String> publishExam(Long examId);
+    Result<String> publishExam(Long examId, Long courseId, Long classId);
+
 }

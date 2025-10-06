@@ -4,6 +4,7 @@ package com.example.goodlearnai.v1.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.ExamQuestionDto;
+import com.example.goodlearnai.v1.entity.CourseHomework;
 import com.example.goodlearnai.v1.entity.ExamQuestion;
 import com.example.goodlearnai.v1.service.IExamQuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,5 +70,16 @@ public class ExamQuestionController {
     @DeleteMapping("/delete/{eqId}")
     public Result<String> deleteExamQuestion(@PathVariable Long eqId) {
         return examQuestionService.deleteExamQuestion(eqId);
+    }
+
+    /**
+     * 查询班级收到的试卷
+     */
+    @GetMapping("/listby-class/{classId}")
+    public Result<IPage<CourseHomework>> listByClass(
+            @RequestParam(defaultValue = "1") long current,
+            @RequestParam(defaultValue = "10") long size,
+            @PathVariable Long classId) {
+        return examQuestionService.listByClass(current,size,classId);
     }
 }

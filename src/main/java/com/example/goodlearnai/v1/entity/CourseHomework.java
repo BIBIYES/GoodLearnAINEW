@@ -32,6 +32,8 @@ public class CourseHomework implements Serializable {
 
     private Long courseId;
 
+    private Long classId;
+
     private Long examId;
 
     private LocalDateTime assignTime;
@@ -39,7 +41,5 @@ public class CourseHomework implements Serializable {
     private LocalDateTime deadline;
 
     private Integer status;
-
-
 
 }

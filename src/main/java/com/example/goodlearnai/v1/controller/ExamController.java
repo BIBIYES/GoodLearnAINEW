@@ -3,6 +3,7 @@ package com.example.goodlearnai.v1.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.entity.CourseHomework;
 import com.example.goodlearnai.v1.entity.Exam;
 import com.example.goodlearnai.v1.service.IExamService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,11 +57,12 @@ public class ExamController {
     
     /**
      * 发布试卷
-     * @param examId 试卷ID
+     * @param examId 试卷ID  courseId 课程ID  classId 班级ID
      * @return 发布结果
      */
     @PutMapping("/publish-exam/{examId}")
-    public Result<String> publishExam(@PathVariable Long examId) {
-        return examService.publishExam(examId);
+    public Result<String> publishExam(@PathVariable Long examId, Long courseId, Long classId) {
+        return examService.publishExam(examId, courseId, classId);
     }
+
 }

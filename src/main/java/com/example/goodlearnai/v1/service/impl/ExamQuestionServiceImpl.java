@@ -1,10 +1,12 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.ExamQuestionDto;
+import com.example.goodlearnai.v1.entity.CourseHomework;
 import com.example.goodlearnai.v1.entity.Exam;
 import com.example.goodlearnai.v1.entity.ExamQuestion;
 import com.example.goodlearnai.v1.entity.Question;
@@ -33,6 +35,9 @@ import java.util.List;
 @Service
 @Slf4j
 public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, ExamQuestion> implements IExamQuestionService {
+
+    @Autowired
+    private CourseHomeworkServiceImpl courseHomeworkService;
 
     @Autowired
     private QuestionMapper questionMapper;
@@ -269,4 +274,23 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
              throw new CustomException("删除试卷题目时发生未知异常");
          }
      }
- }
+
+    @Override
+    public Result<IPage<CourseHomework>> listByClass(Long current, Long size, Long classId) {
+        //查询班级id是否传入
+        if (classId == null) {
+            return Result.error("班级ID不能为空");
+        }
+        try {
+            Page<CourseHomework> page = new Page<>(current, size);
+            QueryWrapper<CourseHomework> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("class_id", classId);
+            IPage<CourseHomework> courseHomeworkPage = courseHomeworkService.page(page, queryWrapper);
+            return Result.success("查询成功", courseHomeworkPage);
+        } catch (Exception e)
+        {
+            log.error("查询班级收到的试卷时发生异常: classId={}, error={}", classId, e.getMessage(), e);
+            return Result.error("查询班级收到的试卷时发生未知异常");
+        }
+    }
+}

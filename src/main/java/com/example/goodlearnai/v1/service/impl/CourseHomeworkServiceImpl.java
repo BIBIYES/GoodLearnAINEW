@@ -3,17 +3,18 @@ package com.example.goodlearnai.v1.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.CourseHomework;
 import com.example.goodlearnai.v1.exception.CustomException;
 import com.example.goodlearnai.v1.mapper.CourseHomeworkMapper;
 import com.example.goodlearnai.v1.service.ICourseHomeworkService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -114,6 +115,26 @@ public class CourseHomeworkServiceImpl extends ServiceImpl<CourseHomeworkMapper,
         } catch (Exception e) {
             log.error("分页查询试卷失败", e);
             throw new CustomException("分页查询试卷时发生未知异常");
+        }
+    }
+    
+    @Override
+    public Result<List<CourseHomework>> getHomeworksByClassId(Long classId) {
+        try {
+            // 构建查询条件
+            LambdaQueryWrapper<CourseHomework> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(CourseHomework::getClassId, classId);
+            queryWrapper.eq(CourseHomework::getStatus, 1);
+            
+            // 按发布时间降序排序
+            queryWrapper.orderByDesc(CourseHomework::getAssignTime);
+            
+            List<CourseHomework> courseHomeworkList = list(queryWrapper);
+            
+            return Result.success("查询成功", courseHomeworkList);
+        } catch (Exception e) {
+            log.error("根据班级ID查询试卷失败: classId={}, error={}", classId, e.getMessage());
+            return Result.error("查询试卷时发生未知异常");
         }
     }
 }

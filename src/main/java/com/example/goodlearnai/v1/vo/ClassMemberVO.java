@@ -4,16 +4,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
-import java.time.LocalDateTime;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
- * <p>
- * 班级成员视图对象，包含学生基本信息
- * </p>
- *
- * @author author
- * @since 2025-01-17
+ * 班级成员视图对象
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -22,44 +17,53 @@ public class ClassMemberVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 记录ID
-     */
     private Long id;
 
-    /**
-     * 班级ID
-     */
     private Long classId;
 
-    /**
-     * 学生用户名
-     */
+    /** 学生用户名 */
     private String username;
 
-    /**
-     * 学生邮箱
-     */
+    /** 学生邮箱 */
     private String email;
 
-    /**
-     * 学号
-     */
+    /** 学号 */
     private Long schoolNumber;
 
-    /**
-     * 头像
-     */
+    /** 教师邮箱 */
+    private String teacherEmail;
+
+    /** 教师头像 */
+    private String teacherAvatar;
+
+    /** 默认头像（教师） */
     private String avatar;
 
-    /**
-     * 加入时间
-     */
+    /** 班级名称 */
+    private String className;
+
+    /** 班级描述 */
+    private String description;
+
+    /** 所属课程ID */
+    private Long courseId;
+
+    /** 班级加入码 */
+    private String joinCode;
+
+    /** 班级状态 */
+    private Boolean classStatus;
+
+    /** 班级教师名称 */
+    private String teacherName;
+
+    /** 学生成员名称 */
+    private String studentName;
+
+    /** 学生成员头像 */
+    private String studentAvatar;
+
     private LocalDateTime joinTime;
 
-    /**
-     * 状态
-     */
     private Boolean status;
-
 }

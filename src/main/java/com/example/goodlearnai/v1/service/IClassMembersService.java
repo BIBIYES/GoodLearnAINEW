@@ -1,7 +1,8 @@
 package com.example.goodlearnai.v1.service;
 
-import com.example.goodlearnai.v1.entity.ClassMembers;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.ClassJoinRequest;
+import com.example.goodlearnai.v1.entity.ClassMembers;
 import com.example.goodlearnai.v1.vo.ClassMemberVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -22,7 +23,7 @@ public interface IClassMembersService extends IService<ClassMembers> {
      * @param classMembers 班级成员对象
      * @return 加入结果
      */
-    Result<String> intoClass(ClassMembers classMembers);
+    Result<String> intoClass(ClassJoinRequest request);
 
     /**
      * 获取班级成员列表

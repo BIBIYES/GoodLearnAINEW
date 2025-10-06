@@ -42,4 +42,6 @@ public class ClassVO implements Serializable {
 
     private Boolean status;
 
+    private String joinCode;
+
 }

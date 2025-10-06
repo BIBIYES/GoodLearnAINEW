@@ -2,7 +2,7 @@ package com.example.goodlearnai.v1.controller;
 
 
 import com.example.goodlearnai.v1.common.Result;
-import com.example.goodlearnai.v1.entity.ClassMembers;
+import com.example.goodlearnai.v1.dto.ClassJoinRequest;
 import com.example.goodlearnai.v1.service.impl.ClassMembersServiceImpl;
 import com.example.goodlearnai.v1.vo.ClassMemberVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +29,8 @@ public class ClassMembersController {
      * @return 加入结果
      */
     @PostMapping("/into-class")
-    public Result<String> intoClass(@RequestBody ClassMembers classMembers){
-        return classMembersService.intoClass(classMembers);
+    public Result<String> intoClass(@RequestBody ClassJoinRequest request){
+        return classMembersService.intoClass(request);
     }
 
     /**

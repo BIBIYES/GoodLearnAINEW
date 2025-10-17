@@ -1,10 +1,13 @@
 spring:
+  web:
+    resources:
+      static-locations: classpath:/static/
   application:
     name: GoodLearnAI
   datasource:
-    url: jdbc:mysql://198.23.201.122:3306/good_learn_ai_NEW?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://127.0.0.1:3306/good_learn_ai_NEW?useSSL=false&serverTimezone=UTC
     username: root
-    password: zzx
+    password: 544262
     driver-class-name: com.mysql.cj.jdbc.Driver
   devtools:
     restart:
@@ -29,22 +32,32 @@ spring:
       path: /api
   data:
     redis:
-      host: 198.23.201.122
+      host: 127.0.0.1
       port: 6379
       timeout: 5000
-      password: zxcvg123
+      #      本地密码留空
+      password:
+
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 server:
   port: 8080
 
-
+# 文件上传配置
+file:
+  upload:
+    # 文件上传基本路径
+    base-path: C:/files/
+    # 文件访问URL前缀
+    access-url: /files/
 
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
   mapper-locations: classpath*:mapper/*.xml
-
 
 jwt:
   secret: mouse-mouse

@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * <p>
@@ -67,5 +68,15 @@ public class QuestionBankController {
             @RequestParam(required = false) String bankName) {
         log.info("分页查询题库请求: current={}, size={}, bankName={}", current, size, bankName);
         return questionBankService.pageQuestionBanks(current, size, bankName);
+    }
+    
+    /**
+     * 获取所有题库不分页
+     * @return 所有题库列表
+     */
+    @GetMapping("/all")
+    public Result<List<QuestionBank>> getAllQuestionBanks() {
+        log.info("获取所有题库请求");
+        return questionBankService.getAllQuestionBanks();
     }
 }

@@ -5,6 +5,8 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.QuestionBank;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * <p>
  * 老师创建的题库表 服务类
@@ -28,5 +30,11 @@ public interface IQuestionBankService extends IService<QuestionBank> {
      * @return 分页结果
      */
     Result<IPage<QuestionBank>> pageQuestionBanks(long current, long size, String bankName);
+    
+    /**
+     * 获取所有题库不分页
+     * @return 所有题库列表
+     */
+    Result<List<QuestionBank>> getAllQuestionBanks();
 
 }

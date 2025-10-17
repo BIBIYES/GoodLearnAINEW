@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Question;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -54,5 +57,42 @@ public interface IQuestionService extends IService<Question> {
      */
     Result<IPage<Question>> pageQuestions(long current, long size, Long bankId ,String difficulty, String title);
 
+    /**
+     * 通过AI创建题目（流式响应）
+     * @param question 题目要求描述
+     * @return AI生成的题目列表（流式响应）
+     */
+    Flux<ChatResponse> createQuestionByAiStream(String question);
+
+
+    Flux<ChatResponse> createQuestionByPlan(String requestData);
+
+    /**
+     * 上传Word教案文档并AI生成题目
+     * @param file Word文档文件
+     * @return AI生成的题目列表（流式响应）
+     */
+    Flux<ChatResponse> createQuestionByWordPlan(org.springframework.web.multipart.MultipartFile file);
+
+    /**
+     * 上传Word教案文档并AI生成题目（非流式响应）
+     * @param file Word文档文件
+     * @return AI生成的题目列表（JSON格式）
+     */
+    Result<String> createQuestionByWordPlanSync(org.springframework.web.multipart.MultipartFile file);
+
+    /**
+     * 通过AI创建题目（非流式响应）
+     * @param question 题目要求描述
+     * @return AI生成的题目列表（JSON格式）
+     */
     Result<String> createQuestionByAi(String question);
+    
+    /**
+     * 获取题库下所有题目不分页（支持标题、题干搜索）
+     * @param bankId 题库ID
+     * @param keyword 搜索关键词（可选，用于搜索标题和题干）
+     * @return 题目列表
+     */
+    Result<List<Question>> getAllQuestionsByBankId(Long bankId, String keyword);
 }

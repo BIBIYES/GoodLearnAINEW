@@ -116,20 +116,20 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     }
     
     @Override
-    public Result<List<ExamQuestionAnswerDto>> getExamQuestionsWithAnswers(Long examId) {
+    public Result<List<ExamQuestionAnswerDto>> getExamQuestionsWithAnswers(Long classExamId) {
         Long userId = AuthUtil.getCurrentUserId();
         try {
-            // 1. 查询试卷中的所有题目
+            // 1. 查询班级试卷副本中的所有题目
             LambdaQueryWrapper<ExamQuestion> questionQueryWrapper = new LambdaQueryWrapper<>();
-            questionQueryWrapper.eq(ExamQuestion::getExamId, examId)
+            questionQueryWrapper.eq(ExamQuestion::getClassExamId, classExamId)
                     .eq(ExamQuestion::getStatus, 1)
                     .orderByAsc(ExamQuestion::getEqId);
             
             List<ExamQuestion> examQuestions = examQuestionMapper.selectList(questionQueryWrapper);
             
             if (examQuestions == null || examQuestions.isEmpty()) {
-                log.warn("未找到试卷题目: examId={}", examId);
-                return Result.error("未找到试卷题目");
+                log.warn("未找到班级试卷题目: classExamId={}", classExamId);
+                return Result.error("未找到班级试卷题目");
             }
             
             // 2. 查询用户对这些题目的作答记录
@@ -174,13 +174,13 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
                 resultList.add(dto);
             }
             
-            log.info("查询试卷题目及作答情况成功: userId={}, examId={}, 题目数量={}, 已作答数量={}", 
-                    userId, examId, examQuestions.size(), answerMap.size());
+            log.info("查询班级试卷题目及作答情况成功: userId={}, classExamId={}, 题目数量={}, 已作答数量={}", 
+                    userId, classExamId, examQuestions.size(), answerMap.size());
             return Result.success("查询成功", resultList);
             
         } catch (Exception e) {
-            log.error("查询试卷题目及作答情况异常: userId={}, examId={}, error={}", userId, examId, e.getMessage(), e);
-            return Result.error("查询试卷题目及作答情况异常: " + e.getMessage());
+            log.error("查询班级试卷题目及作答情况异常: userId={}, classExamId={}, error={}", userId, classExamId, e.getMessage(), e);
+            return Result.error("查询班级试卷题目及作答情况异常: " + e.getMessage());
         }
     }
     
@@ -219,11 +219,11 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     }
 
     @Override
-    public Result<String> summarizeExamWithAI(Long examId) {
+    public Result<String> summarizeExamWithAI(Long classExamId) {
         try {
-            // 根据id查找试卷中的所有题目
+            // 根据id查找班级试卷副本中的所有题目
             LambdaQueryWrapper<ExamQuestion> examQuestions = new LambdaQueryWrapper<>();
-            examQuestions.eq(ExamQuestion::getExamId, examId)
+            examQuestions.eq(ExamQuestion::getClassExamId, classExamId)
                     .eq(ExamQuestion::getStatus, 1)
                     .orderByAsc(ExamQuestion::getEqId);
             List<ExamQuestion> questionList = examQuestionMapper.selectList(examQuestions);

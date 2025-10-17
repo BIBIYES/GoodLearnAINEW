@@ -5,11 +5,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Question;
 import com.example.goodlearnai.v1.service.IQuestionService;
-import com.example.goodlearnai.v1.utils.AuthUtil;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -100,7 +103,7 @@ public class QuestionController {
     }
 
     /**
-     * 通过AI创建题目 - 仅生成题目，不保存到数据库
+     * 通过AI创建题目 - 仅生成题目，不保存到数据库（流式接口）
      * 创建流程：
      * 1. 调用此接口生成题目
      * 2. 前端接收返回的题目列表，展示给用户选择
@@ -110,11 +113,22 @@ public class QuestionController {
      *                   - bankId: 题库ID
      *                   - question: 题目要求描述
      *                   - count: 生成题目数量(可选，默认5，最大10)
-     * @return AI生成的题目列表（JSON格式）
+     * @return AI生成的题目列表（流式响应）
+     */
+    @PostMapping(value = "/ai-create-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ChatResponse> createQuestionByAiStream(@RequestBody String requestData) {
+        log.info("AI流式创建题目");
+        return questionService.createQuestionByAiStream(requestData);
+    }
+
+    /**
+     * 通过AI创建题目 - 仅生成题目，不保存到数据库（非流式接口，保持兼容性）
+     * @deprecated 建议使用流式接口 /ai-create-stream
      */
     @PostMapping("/ai-create")
+    @Deprecated
     public Result<String> createQuestionByAi(@RequestBody String requestData) {
-        log.info("AI创建题目");
+        log.info("AI创建题目（非流式）");
         return questionService.createQuestionByAi(requestData);
     }
 
@@ -126,5 +140,37 @@ public class QuestionController {
     public Result<Question> getQuestion(@PathVariable Long questionId) {
         log.info("查看题目: questionId = {}", questionId);
         return Result.success("查看题目成功", questionService.getById(questionId));
+    }
+    
+    /**
+     * 获取题库下所有题目不分页（支持标题、题干搜索）
+     * @param bankId 题库ID
+     * @param keyword 搜索关键词（可选，用于搜索标题和题干）
+     * @return 题目列表
+     */
+    @GetMapping("/all")
+    public Result<List<Question>> getAllQuestionsByBankId(
+            @RequestParam("bankId") Long bankId,
+            @RequestParam(value = "keyword", required = false) String keyword) {
+        log.info("获取题库下所有题目请求: bankId={}, keyword={}", bankId, keyword);
+        return questionService.getAllQuestionsByBankId(bankId, keyword);
+    }
+
+    /**
+     * 上传Word教案文档并AI生成题目（流式响应）
+     */
+    @PostMapping(value = "/ai-create-by-word-plan", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ChatResponse> createQuestionByWordPlan(@RequestParam("file") MultipartFile file) {
+        log.info("上传Word教案文档并AI生成题目（流式），文件名: {}", file.getOriginalFilename());
+        return questionService.createQuestionByWordPlan(file);
+    }
+
+    /**
+     * 上传Word教案文档并AI生成题目（非流式响应）
+     */
+    @PostMapping("/ai-create-by-word-plan-sync")
+    public Result<String> createQuestionByWordPlanSync(@RequestParam("file") MultipartFile file) {
+        log.info("上传Word教案文档并AI生成题目（非流式），文件名: {}", file.getOriginalFilename());
+        return questionService.createQuestionByWordPlanSync(file);
     }
 }

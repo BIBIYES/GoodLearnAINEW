@@ -223,7 +223,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
     private String buildToolSelectionPrompt(McpSchema.ListToolsResult tools, String question ,McpSchema.CallToolResult list) {
         return tools
                 + "\n这是我现在已有的工具，"+list+"这是我已有的数据库，." +
-                "请你直接输出 JSON 文本（不要包含 ```json，不要mackdown形式，求求你了，如有sql语句，只能使用select）。\n"
+                "请你直接输出 JSON 文本（不要包含 ```json，不要markdown形式，求求你了，如有sql语句，只能使用select）。\n"
                 + "以下是用户的问题：\n" + question + "\n"
                 + "请选择最合适的工具，并给出参数，格式如下：\n"
                 + "{\n"
@@ -299,7 +299,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
                 .append("1. 若已解决，请在开头添加 #valid#，并优化回答后输出答案；\n")
                 .append("2. 若未解决，请在开头添加 #invalid#，并重新给出调用工具，根据之前的信息，直接生成正确的sql语句，让mcp执行")
                 .append(tools)
-                .append("  并输出JSON，不要包含 ```json，不要mackdown形式，求求你了（修改时还是要将完整的json输出出来，如有sql语句，只能使用select）：\n")
+                .append("  并输出JSON，不要包含 ```json，不要markdown形式，求求你了（修改时还是要将完整的json输出出来，如有sql语句，只能使用select）：\n")
                 .append("{\n")
                 .append("  \"Tool_name\": \"\",\n")
                 .append("  \"parameter\": { \"sql\": \"value\" }\n")
@@ -326,7 +326,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
                 .append("在尝试调用工具 `").append(toolName).append("` 时，MCP 返回了如下错误：\n")
                 .append(errorMsg).append("\n\n")
                 .append("请根据这个错误信息，修正或替换工具").append(tools)
-                .append("并直接输出新的 JSON，不要包含 ```json，不要mackdown形式，求求你了（不要包含任何多余文字或代码块标记，修改时还是要将完整的json输出出来，如有sql语句，只能使用select），格式：\n")
+                .append("并直接输出新的 JSON，不要包含 ```json，不要markdown形式，求求你了（不要包含任何多余文字或代码块标记，修改时还是要将完整的json输出出来，如有sql语句，只能使用select），格式：\n")
                 .append("{\n")
                 .append("  \"Tool_name\": \"\",\n")
                 .append("  \"parameter\": { \"sql\": \"value\" }\n")

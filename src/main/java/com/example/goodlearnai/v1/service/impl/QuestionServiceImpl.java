@@ -10,20 +10,22 @@ import com.example.goodlearnai.v1.mapper.QuestionMapper;
 import com.example.goodlearnai.v1.service.IQuestionService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.goodlearnai.v1.utils.WordDocumentParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -248,6 +250,44 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
     }
 
     @Override
+    public Flux<ChatResponse> createQuestionByAiStream(String requestData) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限使用AI创建题目: userId = {}", userId);
+            return Flux.error(new RuntimeException("暂无权限使用AI创建题目"));
+        }
+        
+        try {
+            // 构建提示词
+            String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求，生成多个类似的问题。\n" +
+                    "请根据以下用户的需求，生成 **符合要求的相关问题**，并以 **JSON 数组格式** 返回，每道题包含如下字段：\n" +
+                    "- `title`：题目标题\n" +
+                    "- `content`：题目详情，使用 Markdown 格式书写（例如粗体、列表、表格等）\n" +
+                    "- `difficulty`：题目难度，使用整数 1（简单）、2（中等）、3（困难） 表示\n\n" +
+                    "请注意：\n" +
+                    "1. 保证输出格式是合法的 JSON 数组；\n" +
+                    "2. `content` 字段中合理使用 Markdown 语法增强可读性。\n\n" +
+                    "用户提供的需求如下：\n" +
+                    requestData;
+
+
+            log.info("AI流式创建题目开始: userId={}", userId);
+            
+            // 使用Spring AI的流式调用
+            return openAiChatModel.stream(new Prompt(prompt))
+                    .doOnNext(response -> log.debug("AI流式响应: {}", response))
+                    .doOnComplete(() -> log.info("AI流式创建题目完成: userId={}", userId))
+                    .doOnError(error -> log.error("AI流式创建题目失败: userId={}", userId, error));
+                    
+        } catch (Exception e) {
+            log.error("AI流式创建题目异常: userId={}", userId, e);
+            return Flux.error(new RuntimeException("AI创建题目失败: " + e.getMessage(), e));
+        }
+    }
+    
+    @Override
     @Transactional
     public Result<String> createQuestionByAi(String requestData) {
         Long userId = AuthUtil.getCurrentUserId();
@@ -259,7 +299,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         }
         try {
             // 构建提示词
-            String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求生成多个问题。请根据要求生成5道类似问题，并以 JSON 格式返回，每道问题包含以下字段：title（题目标题）、content（题目内容）、difficulty（题目难度），题目难度用1、2、3来表示。\n" +
+            String prompt = "你是一个教育问答AI，能够根据用户提供的题目要求生成多个问题。请根据要求生成符合要求的题目，并以 JSON 格式返回，每道问题包含以下字段：title（题目标题）、content（题目内容）、difficulty（题目难度），题目难度用1、2、3来表示。\n" +
                     "\n" +
                     "用户提供的格式要求如下：\n" +
                     "[\n" +
@@ -317,5 +357,214 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         
         // 如果都没找到，返回原始响应
         return response;
+    }
+    
+    @Override
+    public Flux<ChatResponse> createQuestionByPlan(String requestData) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限使用AI根据教案创建题目: userId = {}", userId);
+            return Flux.error(new RuntimeException("暂无权限使用AI创建题目"));
+        }
+        
+        try {
+            // 构建针对教案的专用提示词
+            String prompt = "你是一个专业的教育AI助手，擅长分析教案内容并生成高质量的教学题目。\n" +
+                    "请仔细分析以下教案内容，特别注意：\n" +
+                    "- 教案中的表格内容包含了重要的教学信息\n" +
+                    "- 【】标记的内容通常是教学要素的标题或分类\n" +
+                    "- | 分隔的内容是表格中的不同列信息\n" +
+                    "- 重点关注教学目标、教学重点、教学难点、教学方法、教学内容等关键信息\n\n" +
+                    "根据教案的具体内容，生成紧密相关的练习题目：\n" +
+                    "1. **深度分析教案内容**：仔细理解教学目标、知识点、技能要求\n" +
+                    "2. **精准对应知识点**：确保每道题目都直接对应教案中的具体知识点\n" +
+                    "3. **体现教学层次**：根据教案的难度设计不同层次的题目\n" +
+                    "4. **结合教学方法**：参考教案中的教学方法设计题目形式\n" +
+                    "5. **突出重点难点**：重点针对教案标明的教学重点和难点出题\n\n" +
+                    "请以 **JSON 数组格式** 返回生成的题目，每道题包含如下字段：\n" +
+                    "- `title`：题目标题（要体现具体的知识点）\n" +
+                    "- `content`：题目详情，使用 Markdown 格式，包含具体的题目内容、要求和评分标准\n" +
+                    "- `difficulty`：题目难度，使用整数 1（基础理解）、2（应用分析）、3（综合运用） 表示\n\n" +
+                    "输出要求：\n" +
+                    "1. 确保输出格式是合法的 JSON 数组\n" +
+                    "2. 题目内容要具体、明确，避免泛泛而谈\n" +
+                    "3. 生成5-8道题目，覆盖教案的主要知识点\n" +
+                    "4. 题目要有实际教学和考核价值\n" +
+                    "5. 充分利用教案中的具体信息，如课程名称、章节内容、实验步骤等\n\n" +
+                    "教案内容如下：\n" +
+                    requestData;
+
+            log.info("AI流式根据教案创建题目开始: userId={}", userId);
+            
+            // 使用Spring AI的流式调用
+            return openAiChatModel.stream(new Prompt(prompt))
+                    .doOnNext(response -> log.debug("AI流式响应: {}", response))
+                    .doOnComplete(() -> log.info("AI流式根据教案创建题目完成: userId={}", userId))
+                    .doOnError(error -> log.error("AI流式根据教案创建题目失败: userId={}", userId, error));
+                    
+        } catch (Exception e) {
+            log.error("AI流式根据教案创建题目异常: userId={}", userId, e);
+            return Flux.error(new RuntimeException("AI根据教案创建题目失败: " + e.getMessage(), e));
+        }
+    }
+
+    @Override
+    public Flux<ChatResponse> createQuestionByWordPlan(MultipartFile file) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限使用AI根据Word教案创建题目: userId = {}", userId);
+            return Flux.error(new RuntimeException("暂无权限使用AI创建题目"));
+        }
+        
+        try {
+            // 验证文件格式
+            if (!WordDocumentParser.isWordDocument(file)) {
+                log.warn("上传的文件不是Word文档: fileName = {}", file.getOriginalFilename());
+                return Flux.error(new IllegalArgumentException("请上传Word文档(.doc或.docx格式)"));
+            }
+            
+            // 解析Word文档内容
+            String documentContent = WordDocumentParser.parseWordDocument(file);
+            String cleanedContent = WordDocumentParser.cleanContent(documentContent);
+            
+            log.info("成功解析Word教案文档: fileName = {}, contentLength = {}", 
+                    file.getOriginalFilename(), cleanedContent.length());
+            
+            // 验证文档内容不为空
+            if (cleanedContent.trim().isEmpty()) {
+                log.warn("Word文档内容为空: fileName = {}", file.getOriginalFilename());
+                return Flux.error(new IllegalArgumentException("Word文档内容为空，请检查文档内容"));
+            }
+            
+            // 调用已有的根据教案生成题目的方法
+            return createQuestionByPlan(cleanedContent);
+            
+        } catch (Exception e) {
+            log.error("解析Word教案文档失败: fileName = {}, userId = {}", 
+                    file.getOriginalFilename(), userId, e);
+            return Flux.error(new RuntimeException("解析Word文档失败: " + e.getMessage(), e));
+        }
+    }
+
+    @Override
+    public Result<String> createQuestionByWordPlanSync(MultipartFile file) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+        
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限使用AI根据Word教案创建题目: userId = {}", userId);
+            return Result.error("暂无权限使用AI创建题目");
+        }
+        
+        try {
+            // 验证文件格式
+            if (!WordDocumentParser.isWordDocument(file)) {
+                log.warn("上传的文件不是Word文档: fileName = {}", file.getOriginalFilename());
+                return Result.error("请上传Word文档(.doc或.docx格式)");
+            }
+            
+            // 解析Word文档内容
+            String documentContent = WordDocumentParser.parseWordDocument(file);
+            String cleanedContent = WordDocumentParser.cleanContent(documentContent);
+            
+            log.info("成功解析Word教案文档: fileName = {}, contentLength = {}", 
+                    file.getOriginalFilename(), cleanedContent.length());
+            
+            // 验证文档内容不为空
+            if (cleanedContent.trim().isEmpty()) {
+                log.warn("Word文档内容为空: fileName = {}", file.getOriginalFilename());
+                return Result.error("Word文档内容为空，请检查文档内容");
+            }
+            
+            // 构建针对教案的专用提示词
+            String prompt = "你是一个专业的教育AI助手，擅长分析教案内容并生成高质量的教学题目。\n" +
+                    "请仔细分析以下教案内容，特别注意：\n" +
+                    "- 教案中的表格内容包含了重要的教学信息\n" +
+                    "- 【】标记的内容通常是教学要素的标题或分类\n" +
+                    "- | 分隔的内容是表格中的不同列信息\n" +
+                    "- 重点关注教学目标、教学重点、教学难点、教学方法、教学内容等关键信息\n\n" +
+                    "根据教案的具体内容，生成紧密相关的练习题目：\n" +
+                    "1. **深度分析教案内容**：仔细理解教学目标、知识点、技能要求\n" +
+                    "2. **精准对应知识点**：确保每道题目都直接对应教案中的具体知识点\n" +
+                    "3. **体现教学层次**：根据教案的难度设计不同层次的题目\n" +
+                    "4. **结合教学方法**：参考教案中的教学方法设计题目形式\n" +
+                    "5. **突出重点难点**：重点针对教案标明的教学重点和难点出题\n\n" +
+                    "请以 **JSON 数组格式** 返回生成的题目，每道题包含如下字段：\n" +
+                    "- `title`：题目标题（要体现具体的知识点）\n" +
+                    "- `content`：题目详情，使用 Markdown 格式，包含具体的题目内容、要求和评分标准\n" +
+                    "- `difficulty`：题目难度，使用整数 1（基础理解）、2（应用分析）、3（综合运用） 表示\n\n" +
+                    "输出要求：\n" +
+                    "1. 确保输出格式是合法的 JSON 数组\n" +
+                    "2. 题目内容要具体、明确，避免泛泛而谈\n" +
+                    "3. 生成5-8道题目，覆盖教案的主要知识点\n" +
+                    "4. 题目要有实际教学和考核价值\n" +
+                    "5. 充分利用教案中的具体信息，如课程名称、章节内容、实验步骤等\n\n" +
+                    "教案内容如下：\n" +
+                    cleanedContent;
+
+            log.info("AI根据Word教案创建题目开始: userId={}, fileName={}", userId, file.getOriginalFilename());
+            
+            // 调用AI服务
+            Object aiResponseObj = openAiChatModel.call(prompt);
+            String aiResponse = aiResponseObj.toString();
+            log.debug("AI响应结果: {}", aiResponse);
+            
+            // 提取JSON部分，避免AI可能在JSON前后添加的说明文字
+            String jsonResponse = extractJsonFromResponse(aiResponse);
+            
+            log.info("AI根据Word教案创建题目成功: userId={}, fileName={}", userId, file.getOriginalFilename());
+            return Result.success("AI根据Word教案创建题目成功", jsonResponse);
+            
+        } catch (Exception e) {
+            log.error("AI根据Word教案创建题目失败: fileName = {}, userId = {}", 
+                    file.getOriginalFilename(), userId, e);
+            return Result.error("AI根据Word教案创建题目失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<List<Question>> getAllQuestionsByBankId(Long bankId, String keyword) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限查询题目: userId={}", userId);
+            return Result.error("暂无权限查询题目");
+        }
+
+        if (bankId == null) {
+            return Result.error("题库ID不能为空");
+        }
+
+        try {
+            // 构建查询条件
+            LambdaQueryWrapper<Question> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Question::getStatus, true)
+                    .eq(Question::getBankId, bankId);
+
+            // 如果提供了关键词，则在标题和题干中搜索
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                queryWrapper.and(wrapper -> wrapper
+                        .like(Question::getTitle, keyword)
+                        .or()
+                        .like(Question::getContent, keyword)
+                );
+            }
+
+            // 按更新时间降序排序
+            queryWrapper.orderByDesc(Question::getUpdatedAt);
+
+            List<Question> questions = list(queryWrapper);
+            
+            log.info("查询题库下所有题目成功: 题库ID={}, 关键词={}, 题目数量={}", bankId, keyword, questions.size());
+            return Result.success("查询成功", questions);
+        } catch (Exception e) {
+            log.error("查询题库下所有题目失败", e);
+            throw new CustomException("查询题库下所有题目时发生未知异常");
+        }
     }
 }

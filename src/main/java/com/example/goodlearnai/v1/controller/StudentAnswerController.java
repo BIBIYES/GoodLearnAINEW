@@ -43,43 +43,43 @@ public class StudentAnswerController {
     }
 
     /**
-     * 获取学生在某次考试中的所有答题记录
+     * 获取学生在某个班级试卷中的所有答题记录
      *
-     * @param examId 考试ID
+     * @param classExamId 班级试卷副本ID
      * @return 答题记录列表
      */
-    @GetMapping("/exam/{examId}")
-    public Result<List<StudentAnswer>> getStudentAnswersByExam(@PathVariable Long examId) {
+    @GetMapping("/class-exam/{classExamId}")
+    public Result<List<StudentAnswer>> getStudentAnswersByClassExam(@PathVariable Long classExamId) {
         try {
             Long userId = AuthUtil.getCurrentUserId();
             LambdaQueryWrapper<StudentAnswer> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(StudentAnswer::getUserId, userId)
-                    .inSql(StudentAnswer::getEqId, "SELECT eq_id FROM exam_question WHERE exam_id = " + examId)
+                    .inSql(StudentAnswer::getEqId, "SELECT eq_id FROM exam_question WHERE class_exam_id = " + classExamId)
                     .orderByAsc(StudentAnswer::getAnsweredAt);
 
             List<StudentAnswer> answers = studentAnswerService.list(queryWrapper);
             return Result.success("查询成功", answers);
         } catch (Exception e) {
-            log.error("查询学生考试答题记录异常: {}", e.getMessage(), e);
-            return Result.error("查询学生考试答题记录异常: " + e.getMessage());
+            log.error("查询学生班级试卷答题记录异常: {}", e.getMessage(), e);
+            return Result.error("查询学生班级试卷答题记录异常: " + e.getMessage());
         }
     }
 
     /**
-     * 获取试卷中的所有题目及用户作答情况
+     * 获取班级试卷中的所有题目及用户作答情况
      * 如果用户已作答，返回题目信息和用户答案；如果未作答，只返回题目信息
      *
-     * @param examId 试卷ID
+     * @param classExamId 班级试卷副本ID
      * @return 题目及作答情况列表
      */
-    @GetMapping("/exam-questions")
-    public Result<?> getExamQuestionsWithAnswers(
-            @RequestParam Long examId) {
+    @GetMapping("/class-exam-questions")
+    public Result<?> getClassExamQuestionsWithAnswers(
+            @RequestParam Long classExamId) {
         try {
-            return studentAnswerService.getExamQuestionsWithAnswers(examId);
+            return studentAnswerService.getExamQuestionsWithAnswers(classExamId);
         } catch (Exception e) {
-            log.error("获取试卷题目及作答情况异常: {}", e.getMessage(), e);
-            return Result.error("获取试卷题目及作答情况异常: " + e.getMessage());
+            log.error("获取班级试卷题目及作答情况异常: {}", e.getMessage(), e);
+            return Result.error("获取班级试卷题目及作答情况异常: " + e.getMessage());
         }
     }
 
@@ -112,16 +112,19 @@ public class StudentAnswerController {
     }
 
     /**
-     * 使用AI总结试卷完成情况
+     * 使用AI总结班级试卷完成情况
+     *
+     * @param classExamId 班级试卷副本ID
+     * @return AI总结结果
      */
-    @PostMapping("/summarize-exam/{examId}")
-    public Result<String> summarizeExamWithAI(@PathVariable Long examId) {
+    @PostMapping("/summarize-class-exam/{classExamId}")
+    public Result<String> summarizeClassExamWithAI(@PathVariable Long classExamId) {
         try {
-            log.info("收到试卷总结请求");
-            return studentAnswerService.summarizeExamWithAI(examId);
+            log.info("收到班级试卷总结请求");
+            return studentAnswerService.summarizeExamWithAI(classExamId);
         } catch (Exception e) {
-            log.error("试卷总结异常: {}", e.getMessage(), e);
-            return Result.error("试卷总结异常: " + e.getMessage());
+            log.error("班级试卷总结异常: {}", e.getMessage(), e);
+            return Result.error("班级试卷总结异常: " + e.getMessage());
         }
     }
 }

@@ -4,9 +4,6 @@ import com.example.goodlearnai.v1.common.Result;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.dto.StudentIntoCourseDto;
 import com.example.goodlearnai.v1.entity.CourseMembers;
-import com.example.goodlearnai.v1.vo.UserCoursesView;
-
-import java.util.List;
 
 /**
  * <p>
@@ -19,8 +16,6 @@ import java.util.List;
 public interface ICourseMembersService extends IService<CourseMembers> {
 
     Result<String> intoCourse(StudentIntoCourseDto studentIntoCourseDto );
-
-    Result<List<UserCoursesView>> getStudentOwnCourses();
 
     /**
      * 老师为学生增加学分

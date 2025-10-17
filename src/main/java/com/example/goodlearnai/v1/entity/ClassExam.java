@@ -86,19 +86,5 @@ public class ClassExam implements Serializable {
      * 更新时间
      */
     private LocalDateTime updatedAt;
-
-    /**
-     * 考试状态
-     */
-    private ExamStatus status;
-
-    /**
-     * 考试状态枚举
-     */
-    public enum ExamStatus {
-        PENDING,      // 待开始
-        IN_PROGRESS,  // 进行中
-        ENDED         // 已结束
-    }
 }
 

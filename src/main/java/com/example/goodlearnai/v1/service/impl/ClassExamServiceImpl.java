@@ -83,7 +83,6 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
             classExam.setExamName(exam.getExamName());
             classExam.setDescription(exam.getDescription());
             classExam.setTeacherId(userId);
-            classExam.setStatus(ClassExam.ExamStatus.PENDING);
             classExam.setCreatedAt(LocalDateTime.now());
             
             // 保存班级试卷副本

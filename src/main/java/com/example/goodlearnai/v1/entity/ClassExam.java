@@ -67,11 +67,6 @@ public class ClassExam implements Serializable {
     private LocalDateTime endTime;
 
     /**
-     * 考试时长（分钟）
-     */
-    private Integer duration;
-
-    /**
      * 创建时间
      */
     private LocalDateTime createdAt;

@@ -40,7 +40,6 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
         }
         try {
             exam.setCreatedAt(LocalDateTime.now());
-            exam.setStatus(Exam.ExamStatus.DRAFT);
             exam.setTeacherId(userId);
             if (save(exam)){
                 return Result.success("试卷创建成功");
@@ -69,10 +68,9 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
                 log.warn("试卷不存在: examId={}", examId);
                 return Result.error("试卷不存在");
             }
-            exam.setStatus(Exam.ExamStatus.CLOSED);
-            exam.setUpdatedAt(LocalDateTime.now());
-            boolean updated = updateById(exam);
-            if (updated){
+            // 直接删除试卷
+            boolean deleted = removeById(examId);
+            if (deleted){
                 return Result.success("试卷已删除");
             }else {
                 return Result.error("试卷删除失败");
@@ -102,12 +100,6 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
         if (!existingExam.getTeacherId().equals(userId)){
             log.warn("用户无权限更新试卷: userId={}", userId);
             return Result.error("用户无权限更新试卷");
-        }
-        
-        // 检查试卷状态，已发布的试卷不允许编辑
-        if (Exam.ExamStatus.PUBLISHED.equals(existingExam.getStatus())) {
-            log.warn("已发布的试卷不允许编辑: examId={}", exam.getExamId());
-            return Result.error("已发布的试卷不允许编辑");
         }
 
         try {
@@ -139,7 +131,6 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
             
             // 构建查询条件
             LambdaQueryWrapper<Exam> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.ne(Exam::getStatus, Exam.ExamStatus.CLOSED);
             queryWrapper.eq(Exam::getTeacherId, userId);
             
             // 如果指定了试卷名称关键词，则进行模糊查询
@@ -170,48 +161,6 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
         } catch (Exception e) {
             log.error("分页查询试卷失败", e);
             throw new CustomException("分页查询试卷时发生未知异常");
-        }
-    }
-    
-    @Override
-    public Result<String> publishExam(Long examId) {
-        Long userId = AuthUtil.getCurrentUserId();
-        String role = AuthUtil.getCurrentRole();
-
-        if (!"teacher".equals(role)) {
-            log.warn("用户暂无权限发布试卷: userId={}", userId);
-            return Result.error("暂无权限发布试卷");
-        }
-
-        try {
-            Exam exam = getById(examId);
-            if (exam == null) {
-                log.warn("试卷不存在: examId={}", examId);
-                return Result.error("试卷不存在");
-            }
-
-            if (!exam.getTeacherId().equals(userId)) {
-                log.warn("用户无权限发布试卷: userId={}", userId);
-                return Result.error("用户无权限发布试卷");
-            }
-
-            // 只有草稿状态的试卷可以发布
-            if (!Exam.ExamStatus.DRAFT.equals(exam.getStatus())) {
-                log.warn("只有草稿状态的试卷可以发布: examId={}, currentStatus={}", examId, exam.getStatus());
-                return Result.error("只有草稿状态的试卷可以发布");
-            }
-
-            exam.setStatus(Exam.ExamStatus.PUBLISHED);
-            exam.setUpdatedAt(LocalDateTime.now());
-            
-            if (updateById(exam)) {
-                return Result.success("试卷发布成功");
-            } else {
-                return Result.error("试卷发布失败");
-            }
-        } catch (Exception e) {
-            log.error("发布试卷时发生异常: examId={}, error={}", examId, e.getMessage());
-            return Result.error("发布试卷时发生未知异常");
         }
     }
 }

@@ -29,11 +29,11 @@ public interface IStudentAnswerService extends IService<StudentAnswer> {
     Result<String> createStudentAnswer(StudentAnswer studentAnswer);
     
     /**
-     * 获取试卷中的所有题目及用户作答情况
-     * @param examId 试卷ID
+     * 获取班级试卷副本中的所有题目及用户作答情况
+     * @param classExamId 班级试卷副本ID
      * @return 题目及作答情况列表
      */
-    Result<List<ExamQuestionAnswerDto>> getExamQuestionsWithAnswers(Long examId);
+    Result<List<ExamQuestionAnswerDto>> getExamQuestionsWithAnswers(Long classExamId);
     
     /**
      * 使用AI验证学生答案
@@ -43,7 +43,9 @@ public interface IStudentAnswerService extends IService<StudentAnswer> {
     Result<AnswerValidationResponse> validateAnswerWithAI(AnswerValidationRequest request);
 
     /**
-     * 使用AI总结试卷完成情况
+     * 使用AI总结班级试卷完成情况
+     * @param classExamId 班级试卷副本ID
+     * @return AI总结结果
      */
-    Result<String> summarizeExamWithAI(Long examId);
+    Result<String> summarizeExamWithAI(Long classExamId);
 }

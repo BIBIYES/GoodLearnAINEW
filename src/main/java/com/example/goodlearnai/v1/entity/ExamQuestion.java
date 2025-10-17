@@ -37,6 +37,11 @@ public class ExamQuestion implements Serializable {
     private Long examId;
 
     /**
+     * 关联的班级试卷副本ID（如果为NULL则为原始试卷题目）
+     */
+    private Long classExamId;
+
+    /**
      * 题目标题的快照
      */
     private String questionTitle;

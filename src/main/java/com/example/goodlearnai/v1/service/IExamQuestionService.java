@@ -21,22 +21,22 @@ public interface IExamQuestionService extends IService<ExamQuestion> {
 
     
     /**
-     * 分页查询已发布试卷的题目
+     * 分页查询原始试卷的题目（教师编辑时使用）
      * @param current 当前页码
      * @param size 每页大小
      * @param examId 试卷ID
      * @return 分页结果
      */
-    Result<IPage<ExamQuestion>> pagePublishedExamQuestions(long current, long size, Long examId);
+    Result<IPage<ExamQuestion>> pageOriginalExamQuestions(long current, long size, Long examId);
     
     /**
-     * 分页查询未发布试卷的题目
+     * 分页查询班级试卷副本的题目（学生答题时使用）
      * @param current 当前页码
      * @param size 每页大小
-     * @param examId 试卷ID
+     * @param classExamId 班级试卷副本ID
      * @return 分页结果
      */
-    Result<IPage<ExamQuestion>> pageUnpublishedExamQuestions(long current, long size, Long examId);
+    Result<IPage<ExamQuestion>> pageClassExamQuestions(long current, long size, Long classExamId);
     
     /**
      * 删除试卷中的题目

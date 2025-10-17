@@ -32,33 +32,33 @@ public class ExamQuestionController {
     }
     
     /**
-     * 分页查询已发布的试卷题目
+     * 分页查询原始试卷的题目（教师编辑时使用）
      * @param current 当前页码
      * @param size 每页大小
      * @param examId 试卷ID
      * @return 分页结果
      */
-    @GetMapping("/page-published")
-    public Result<IPage<ExamQuestion>> pagePublishedExamQuestions(
+    @GetMapping("/page-original")
+    public Result<IPage<ExamQuestion>> pageOriginalExamQuestions(
             @RequestParam(defaultValue = "1") long current,
             @RequestParam(defaultValue = "10") long size,
             @RequestParam Long examId) {
-        return examQuestionService.pagePublishedExamQuestions(current, size, examId);
+        return examQuestionService.pageOriginalExamQuestions(current, size, examId);
     }
     
     /**
-     * 分页查询未发布的试卷题目（草稿状态）
+     * 分页查询班级试卷副本的题目（学生答题时使用）
      * @param current 当前页码
      * @param size 每页大小
-     * @param examId 试卷ID
+     * @param classExamId 班级试卷副本ID
      * @return 分页结果，包含题目内容、参考答案、难度等信息
      */
-    @GetMapping("/page-unpublished")
-    public Result<IPage<ExamQuestion>> pageUnpublishedExamQuestions(
+    @GetMapping("/page-class-exam")
+    public Result<IPage<ExamQuestion>> pageClassExamQuestions(
             @RequestParam(defaultValue = "1") long current,
             @RequestParam(defaultValue = "10") long size,
-            @RequestParam Long examId) {
-        return examQuestionService.pageUnpublishedExamQuestions(current, size, examId);
+            @RequestParam Long classExamId) {
+        return examQuestionService.pageClassExamQuestions(current, size, classExamId);
     }
     
     /**

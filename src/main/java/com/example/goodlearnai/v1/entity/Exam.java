@@ -55,18 +55,4 @@ public class Exam implements Serializable {
      * 更新时间
      */
     private LocalDateTime updatedAt;
-
-    /**
-     * 试卷状态：草稿/已发布/已关闭
-     */
-    private ExamStatus status;
-    
-    /**
-     * 试卷状态枚举
-     */
-    public enum ExamStatus {
-        DRAFT,       // 草稿
-        PUBLISHED,   // 已发布
-        CLOSED       // 已关闭
-    }
 }

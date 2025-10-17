@@ -2,6 +2,7 @@ package com.example.goodlearnai.v1.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.ClassExamDto;
 import com.example.goodlearnai.v1.entity.ClassExam;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -17,11 +18,10 @@ public interface IClassExamService extends IService<ClassExam> {
     
     /**
      * 发布试卷到班级（创建试卷副本）
-     * @param examId 原始试卷ID
-     * @param classId 班级ID
+     * @param classExamDto 班级试卷发布请求（包含试卷ID、班级ID、开始时间、结束时间）
      * @return 发布结果
      */
-    Result<String> publishExamToClass(Long examId, Long classId);
+    Result<String> publishExamToClass(ClassExamDto classExamDto);
     
     /**
      * 查询班级的试卷列表

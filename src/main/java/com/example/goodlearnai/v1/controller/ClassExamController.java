@@ -2,8 +2,10 @@ package com.example.goodlearnai.v1.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.ClassExamDto;
 import com.example.goodlearnai.v1.entity.ClassExam;
 import com.example.goodlearnai.v1.service.IClassExamService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/v1/class-exam")
+@Slf4j
 public class ClassExamController {
 
     @Autowired
@@ -24,15 +27,15 @@ public class ClassExamController {
 
     /**
      * 发布试卷到班级（创建试卷副本）
-     * @param examId 原始试卷ID
-     * @param classId 班级ID
+     * @param classExamDto 班级试卷发布请求
      * @return 发布结果
      */
     @PostMapping("/publish")
-    public Result<String> publishExamToClass(
-            @RequestParam Long examId,
-            @RequestParam Long classId) {
-        return classExamService.publishExamToClass(examId, classId);
+    public Result<String> publishExamToClass(@RequestBody ClassExamDto classExamDto) {
+        log.info("Controller接收到发布试卷请求 - examId={}, classId={}, startTime={}, endTime={}", 
+                classExamDto.getExamId(), classExamDto.getClassId(), 
+                classExamDto.getStartTime(), classExamDto.getEndTime());
+        return classExamService.publishExamToClass(classExamDto);
     }
 
     /**

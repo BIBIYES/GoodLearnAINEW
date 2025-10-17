@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.ClassExamDto;
 import com.example.goodlearnai.v1.entity.ClassExam;
 import com.example.goodlearnai.v1.entity.Exam;
 import com.example.goodlearnai.v1.entity.ExamQuestion;
@@ -41,14 +42,22 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result<String> publishExamToClass(Long examId, Long classId) {
+    public Result<String> publishExamToClass(ClassExamDto classExamDto) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
+
+        // 添加调试日志
+        log.info("收到发布试卷请求 - DTO内容: examId={}, classId={}, startTime={}, endTime={}", 
+                classExamDto.getExamId(), classExamDto.getClassId(), 
+                classExamDto.getStartTime(), classExamDto.getEndTime());
 
         if (!"teacher".equals(role)) {
             log.warn("用户暂无权限发布试卷到班级: userId={}", userId);
             return Result.error("暂无权限发布试卷到班级");
         }
+
+        Long examId = classExamDto.getExamId();
+        Long classId = classExamDto.getClassId();
 
         try {
             // 查询原始试卷
@@ -83,9 +92,13 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
             classExam.setExamName(exam.getExamName());
             classExam.setDescription(exam.getDescription());
             classExam.setTeacherId(userId);
-            classExam.setStartTime(exam.getStartTime());
-            classExam.setEndTime(exam.getEndTime());
+            classExam.setStartTime(classExamDto.getStartTime());
+            classExam.setEndTime(classExamDto.getEndTime());
             classExam.setCreatedAt(LocalDateTime.now());
+            
+            // 调试日志：保存前检查对象内容
+            log.info("准备保存班级试卷副本 - 对象内容: examName={}, startTime={}, endTime={}", 
+                    classExam.getExamName(), classExam.getStartTime(), classExam.getEndTime());
             
             // 保存班级试卷副本
             if (!save(classExam)) {
@@ -109,8 +122,9 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 examQuestionMapper.insert(copiedQuestion);
             }
 
-            log.info("试卷发布到班级成功: examId={}, classId={}, classExamId={}", 
-                    examId, classId, classExam.getClassExamId());
+            log.info("试卷发布到班级成功: examId={}, classId={}, classExamId={}, startTime={}, endTime={}", 
+                    examId, classId, classExam.getClassExamId(), 
+                    classExamDto.getStartTime(), classExamDto.getEndTime());
             return Result.success("试卷发布成功");
 
         } catch (Exception e) {

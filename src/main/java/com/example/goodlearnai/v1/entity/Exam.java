@@ -47,16 +47,6 @@ public class Exam implements Serializable {
     private String description;
 
     /**
-     * 考试开始时间
-     */
-    private LocalDateTime startTime;
-
-    /**
-     * 考试结束时间
-     */
-    private LocalDateTime endTime;
-
-    /**
      * 创建时间
      */
     private LocalDateTime createdAt;

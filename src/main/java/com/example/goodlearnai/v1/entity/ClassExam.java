@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.time.LocalDateTime;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -71,11 +70,6 @@ public class ClassExam implements Serializable {
      * 考试时长（分钟）
      */
     private Integer duration;
-
-    /**
-     * 总分
-     */
-    private BigDecimal totalScore;
 
     /**
      * 创建时间

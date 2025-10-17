@@ -13,15 +13,12 @@ import com.example.goodlearnai.v1.mapper.CourseMembersMapper;
 import com.example.goodlearnai.v1.service.ICourseMembersService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
-import com.example.goodlearnai.v1.vo.UserCoursesView;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * <p>
@@ -58,20 +55,6 @@ public class CourseMembersServiceImpl extends ServiceImpl<CourseMembersMapper, C
             courseMembers.setUserId(userId);
             courseMembers.setCourseId(studentIntoCourseDto.getCourseId());
 
-            //根据学生输入的课程id查找到对应课程的密码
-            int coursePasswd = studentIntoCourseDto.getCoursePasswd();
-            QueryWrapper<Course> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("course_id", studentIntoCourseDto.getCourseId());
-            queryWrapper.select("course_password");
-            Course course = courseMapper.selectOne(queryWrapper);
-            int password =course.getCoursePassword();
-
-            // 判断输入的密码是否正确
-            if (coursePasswd!=(password)) {
-                log.warn("userId={}, inputPassword={}, password={}", userId, studentIntoCourseDto.getCoursePasswd(), password);
-                return Result.error("密码错误,请重新输入");
-                }
-
             boolean flag = save(courseMembers);
             if (!flag) {
                 return Result.error("加入班级失败");
@@ -86,23 +69,6 @@ public class CourseMembersServiceImpl extends ServiceImpl<CourseMembersMapper, C
         } catch (Exception e) {
             log.error("加入班级发生未知异常", e);
             throw new CustomException("加入班级未知异常");
-        }
-    }
-
-    /**
-     * 学生获取加入的课程
-     */
-    @Override
-    public Result<List<UserCoursesView>> getStudentOwnCourses() {
-        Long userId = AuthUtil.getCurrentUserId();
-
-        // 从 Mapper 中获取数据
-        List<UserCoursesView> list = courseMembersMapper.getStudentCourses(userId);
-
-        if (list != null && !list.isEmpty()) {
-            return Result.success("获取课程成功！", list);
-        } else {
-            return Result.error("暂无加入的课程");
         }
     }
 

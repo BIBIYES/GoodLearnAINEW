@@ -18,8 +18,6 @@ import com.example.goodlearnai.v1.service.ICourseService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 
-import com.example.goodlearnai.v1.vo.CourseDetailVO;
-import com.example.goodlearnai.v1.vo.StudentCourseVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -164,115 +162,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
             return Result.success("课程编辑成功");
         } else {
             return Result.error("课程编辑失败");
-        }
-    }
-
-    
-    @Override
-    public Result<List<StudentCourseVO>> getStudents(Long courseId,  String username) {
-        String role = AuthUtil.getCurrentRole();
-        if (!"teacher".equals(role)) {
-            return Result.error("暂无权限");
-        }
-        
-        // 验证课程是否存在且当前用户是否为该课程的教师
-        Course course = getById(courseId);
-        if (course == null) {
-            return Result.error("课程不存在");
-        }
-        
-        Long currentUserId = AuthUtil.getCurrentUserId();
-        if (!currentUserId.equals(course.getTeacherId())) {
-            return Result.error("您不是该课程的教师，无法查看学生信息");
-        }
-
-        // 查询该课程的学生列表（包含学分信息）
-        QueryWrapper<CourseMembers> wrapper = new QueryWrapper<>();
-        wrapper.eq("course_id", courseId)
-               .eq("status", true)  // 只查询状态正常的学生
-                .orderByDesc("credits");
-        
-        List<CourseMembers> courseMembers = courseMembersMapper.selectList(wrapper);
-        
-        if (courseMembers.isEmpty()) {
-            return Result.success("该课程暂无学生", List.of());
-        }
-        
-        // 获取学生详细信息并封装到StudentCourseVO
-        List<StudentCourseVO> students = courseMembers.stream()
-            .map(member -> {
-                StudentCourseVO studentVO = new StudentCourseVO();
-                
-                // 查询用户详细信息
-                Users userDetails = userMapper.selectById(member.getUserId());
-                if (userDetails != null) {
-                    studentVO.setUserId(userDetails.getUserId());
-                    studentVO.setUsername(userDetails.getUsername());
-                    studentVO.setEmail(userDetails.getEmail());
-                    studentVO.setSchoolNumber(userDetails.getSchoolNumber());
-                }
-                
-                // 设置课程相关信息
-                studentVO.setCredits(member.getCredits());
-                studentVO.setJoinTime(member.getJoinTime());
-                studentVO.setStatus(member.getStatus());
-
-                return studentVO;
-            })
-            .filter(student -> {
-                if (username != null && !username.isEmpty()) {
-                    return student.getUsername() != null && student.getUsername().contains(username);
-                }
-                return true;
-            })
-            .collect(Collectors.toList());
-            
-        if(students.isEmpty()){
-            return Result.error("获取失败没有这个学生");
-        }
-        else {
-            return Result.success("获取学生列表成功", students);
-        }
-    }
-
-    // 在CourseServiceImpl类末尾添加以下方法
-    
-    @Override
-    public Result<List<CourseDetailVO>> getCourseDetailById(Course course) {
-        try {
-            // 根据课程ID查询课程信息
-            LambdaQueryWrapper<Course> courseWrapper = new LambdaQueryWrapper<>();
-            courseWrapper.eq(Course::getCourseId, course.getCourseId());
-            List<Course> courses = list(courseWrapper);
-            
-            if (courses.isEmpty()) {
-                return Result.error("课程不存在");
-            }
-            
-            List<CourseDetailVO> courseDetailList = new ArrayList<>();
-            
-            for (Course courseInfo : courses) {
-                CourseDetailVO courseDetail = new CourseDetailVO();
-                
-                // 复制基本课程信息
-                BeanUtil.copyProperties(courseInfo, courseDetail);
-                
-                // 查询班级总人数
-                QueryWrapper<CourseMembers> memberWrapper = new QueryWrapper<>();
-                memberWrapper.eq("course_id", courseInfo.getCourseId())
-                            .eq("status", true); // 只统计状态正常的学生
-                Long totalStudents = courseMembersMapper.selectCount(memberWrapper);
-                
-                courseDetail.setTotalStudents(totalStudents.intValue());
-                
-                courseDetailList.add(courseDetail);
-            }
-            
-            return Result.success("获取成功", courseDetailList);
-            
-        } catch (Exception e) {
-            log.error("获取课程详情失败: {}", e.getMessage(), e);
-            return Result.error("获取课程详情失败: " + e.getMessage());
         }
     }
 }

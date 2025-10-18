@@ -9,8 +9,6 @@ import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.service.ICourseService;
 
 
-import com.example.goodlearnai.v1.vo.CourseDetailVO;
-import com.example.goodlearnai.v1.vo.StudentCourseVO;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -73,20 +71,5 @@ private ICourseService iCourseService;
     @PutMapping("/compile-course")
     public Result<String> compileCourse(@RequestBody Course course) {
         return iCourseService.compileCourse(course);
-    }
-
-
-    /**
-     * 根据ID获取课程详细信息（包含班级人数）
-     */
-    @PostMapping("/get-coursems")
-    public Result<List<CourseDetailVO>> getCourseById(@RequestBody Course course) {
-        return iCourseService.getCourseDetailById(course);
-    }
-
-    @GetMapping("/get-students/{courseId}")
-    public Result<List<StudentCourseVO>> getStudentsByCourseId(@PathVariable Long courseId,
-                                                     @RequestParam(value="username",  required=false)String username){
-        return iCourseService.getStudents(courseId,username);
     }
 }

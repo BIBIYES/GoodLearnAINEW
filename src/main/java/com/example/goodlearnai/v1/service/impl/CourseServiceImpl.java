@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -170,7 +171,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
      * 根据课程ID获取课程详细信息（包含学生人数）
      */
     @Override
-    public Result<List<CourseDetailVO>> getCourseDetailById(Course course) {
+    public Result<List<Course>> getCourseDetailById(Course course) {
         try {
             // 根据课程ID查询课程信息
             LambdaQueryWrapper<Course> courseWrapper = new LambdaQueryWrapper<>();
@@ -181,26 +182,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                 return Result.error("课程不存在");
             }
             
-            List<CourseDetailVO> courseDetailList = new ArrayList<>();
-            
-            for (Course courseInfo : courses) {
-                CourseDetailVO courseDetail = new CourseDetailVO();
-                
-                // 复制基本课程信息
-                BeanUtil.copyProperties(courseInfo, courseDetail);
-                
-                // 查询班级总人数
-                QueryWrapper<CourseMembers> memberWrapper = new QueryWrapper<>();
-                memberWrapper.eq("course_id", courseInfo.getCourseId())
-                            .eq("status", true); // 只统计状态正常的学生
-                Long totalStudents = courseMembersMapper.selectCount(memberWrapper);
-                
-                courseDetail.setTotalStudents(totalStudents.intValue());
-                
-                courseDetailList.add(courseDetail);
-            }
-            
-            return Result.success("获取成功", courseDetailList);
+            return Result.success("获取成功", courses);
             
         } catch (Exception e) {
             log.error("获取课程详情失败: {}", e.getMessage(), e);

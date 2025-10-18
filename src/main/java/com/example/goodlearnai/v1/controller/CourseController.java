@@ -7,6 +7,7 @@ import com.example.goodlearnai.v1.entity.Course;
 
 import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.service.ICourseService;
+import com.example.goodlearnai.v1.vo.CourseDetailVO;
 
 
 import jakarta.annotation.Resource;
@@ -71,5 +72,13 @@ private ICourseService iCourseService;
     @PutMapping("/compile-course")
     public Result<String> compileCourse(@RequestBody Course course) {
         return iCourseService.compileCourse(course);
+    }
+
+    /**
+     * 根据ID获取课程详细信息（包含班级人数）
+     */
+    @PostMapping("/get-coursems")
+    public Result<List<CourseDetailVO>> getCourseById(@RequestBody Course course) {
+        return iCourseService.getCourseDetailById(course);
     }
 }

@@ -2,10 +2,8 @@ package com.example.goodlearnai.v1.service.impl;
 
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Class;
-import com.example.goodlearnai.v1.entity.Course;
 import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.mapper.ClassMapper;
-import com.example.goodlearnai.v1.mapper.CourseMapper;
 import com.example.goodlearnai.v1.mapper.UserMapper;
 import com.example.goodlearnai.v1.service.IClassService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
@@ -29,9 +27,6 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
 
     @Autowired
     private UserMapper userMapper;
-
-    @Autowired
-    private CourseMapper courseMapper;
 
     @Override
     public Result<String> createClass(Class classEntity) {
@@ -130,20 +125,10 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                         ClassVO classVO = new ClassVO();
                         BeanUtils.copyProperties(classEntity, classVO);
 
-                        // 查询并设置教师姓名
                         Users teacher = userMapper.selectById(classEntity.getTeacherId());
                         if (teacher != null) {
                             classVO.setTeacherName(teacher.getUsername());
                         }
-
-                        // 查询并设置课程名称
-                        if (classEntity.getCourseId() != null) {
-                            Course course = courseMapper.selectById(classEntity.getCourseId());
-                            if (course != null) {
-                                classVO.setCourseName(course.getClassName());
-                            }
-                        }
-
                         classVO.setJoinCode(classEntity.getJoinCode());
 
                         return classVO;

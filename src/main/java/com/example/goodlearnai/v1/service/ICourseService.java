@@ -5,6 +5,7 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Course;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.entity.Users;
+import com.example.goodlearnai.v1.vo.CourseDetailVO;
 
 import java.util.List;
 
@@ -31,4 +32,6 @@ public interface ICourseService extends IService<Course> {
     Result<IPage<Course>> getCourse(Course course ,long current, long size);
 
     Result<String> compileCourse(Course course);
+
+    Result<List<CourseDetailVO>> getCourseDetailById(Course course);
 }

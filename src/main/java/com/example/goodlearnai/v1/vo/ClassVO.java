@@ -25,11 +25,6 @@ public class ClassVO implements Serializable {
 
     private Long courseId;
 
-    /**
-     * 课程名称
-     */
-    private String courseName;
-
     private String className;
 
     private Long teacherId;

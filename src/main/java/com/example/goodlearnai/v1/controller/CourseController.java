@@ -77,7 +77,7 @@ private ICourseService iCourseService;
     /**
      * 根据ID获取课程详细信息（包含班级人数）
      */
-    @PostMapping("/get-coursems/{courseId}")
+    @GetMapping("/get-coursems/{courseId}")
     public Result<List<Course>> getCourseById(@PathVariable Long courseId) {
         Course course = new Course();
         course.setCourseId(courseId);

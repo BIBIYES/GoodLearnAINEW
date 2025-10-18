@@ -28,16 +28,6 @@ public interface ICourseService extends IService<Course> {
      */
     Result<String> createClass(Course course);
 
-
-    /**
-     * 为班级设计一个学委
-     *
-     * @param course 班级对象
-     * @param monitor 学委的id
-     * @return 返回成功或者失败
-     */
-    Result<String> setMonitor(Course course, Long monitor);
-
     Result<String> stopCourse(Course course);
 
     Result<IPage<Course>> getCourse(Course course ,long current, long size);

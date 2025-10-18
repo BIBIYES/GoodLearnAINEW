@@ -49,19 +49,6 @@ private ICourseService iCourseService;
 
     }
 
-
-    /**
-     * Sets monitor. 为老师的课程添加学委
-     *
-     * @param monitor the 学委的id
-     * @param course  the 课程的id
-     * @return the monitor
-     */
-    @PostMapping("/set-monitor")
-    public Result<String> setMonitor(@RequestParam Long monitor,@RequestBody Course course) {
-        return iCourseService.setMonitor(course,monitor);
-    }
-
     /**
      * 老师停止课程
      */
@@ -90,11 +77,7 @@ private ICourseService iCourseService;
 
 
     /**
-     * 根据ID获取课程信息（包含学委信息和班级人数）
-     */
-    // 修改原来的getCourseById方法
-    /**
-     * 根据ID获取课程详细信息（包含学委信息和班级人数）
+     * 根据ID获取课程详细信息（包含班级人数）
      */
     @PostMapping("/get-coursems")
     public Result<List<CourseDetailVO>> getCourseById(@RequestBody Course course) {

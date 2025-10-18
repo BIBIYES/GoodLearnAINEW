@@ -30,21 +30,6 @@ public class CourseDetailVO {
     private Long teacherId;
     
     /**
-     * 学委ID
-     */
-    private Long monitorId;
-    
-    /**
-     * 学委姓名
-     */
-    private String monitorName;
-    
-    /**
-     * 学委邮箱
-     */
-    private String monitorEmail;
-    
-    /**
      * 班级总人数
      */
     private Integer totalStudents;

@@ -48,6 +48,9 @@ public class ClassMemberVO implements Serializable {
     /** 所属课程ID */
     private Long courseId;
 
+    /** 课程名称 */
+    private String courseName;
+
     /** 班级加入码 */
     private String joinCode;
 

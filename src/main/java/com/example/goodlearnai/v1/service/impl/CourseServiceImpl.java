@@ -74,30 +74,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     }
 
-    /**
-     * 老师设置学委
-     */
-
-    @Override
-    public Result<String> setMonitor(Course course, Long monitor) {
-        Long userId = AuthUtil.getCurrentUserId();
-        String role = AuthUtil.getCurrentRole();
-        log.info(role);
-
-        if (!"teacher".equals(role)) {
-            log.warn("用户暂无权限");
-            return Result.error("暂无权限");
-        }
-        // 使用LambdaUpdateWrapper进行条件更新
-        boolean updated = update(new LambdaUpdateWrapper<Course>().eq(Course::getTeacherId, userId).eq(Course::getCourseId, course.getCourseId()).set(Course::getMonitorId, monitor));
-
-        if (updated) {
-            return Result.success("学委设置成功");
-        } else {
-            return Result.error("学委设置失败，可能是权限不足或班级不存在");
-        }
-
-    }
 
     /**
      * 老师结束课程
@@ -281,25 +257,11 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                 // 复制基本课程信息
                 BeanUtil.copyProperties(courseInfo, courseDetail);
                 
-                // 查询学委信息
-                if (courseInfo.getMonitorId() != null) {
-                    Users monitor = userMapper.selectById(courseInfo.getMonitorId());
-                    if (monitor != null) {
-                        courseDetail.setMonitorName(monitor.getUsername());
-                        courseDetail.setMonitorEmail(monitor.getEmail());
-                    }
-                }
-                
                 // 查询班级总人数
                 QueryWrapper<CourseMembers> memberWrapper = new QueryWrapper<>();
                 memberWrapper.eq("course_id", courseInfo.getCourseId())
                             .eq("status", true); // 只统计状态正常的学生
                 Long totalStudents = courseMembersMapper.selectCount(memberWrapper);
-                
-                // 如果存在学委，学委也应该算作学生，所以总数加1
-                if (courseInfo.getMonitorId() != null) {
-                    totalStudents += 1;
-                }
                 
                 courseDetail.setTotalStudents(totalStudents.intValue());
                 

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.goodlearnai.v1.mapper.ClassExamQuestionMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.goodlearnai.v1.entity.ClassExamQuestion">
+        <id column="ceq_id" property="ceqId" />
+        <result column="class_exam_id" property="classExamId" />
+        <result column="question_title" property="questionTitle" />
+        <result column="question_content" property="questionContent" />
+        <result column="reference_answer" property="referenceAnswer" />
+        <result column="difficulty" property="difficulty" />
+        <result column="original_question_id" property="originalQuestionId" />
+        <result column="created_at" property="createdAt" />
+        <result column="status" property="status" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ceq_id, class_exam_id, question_title, question_content, reference_answer, 
+        difficulty, original_question_id, created_at, status
+    </sql>
+
+</mapper>
+

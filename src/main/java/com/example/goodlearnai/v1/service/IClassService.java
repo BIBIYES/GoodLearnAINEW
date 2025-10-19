@@ -3,6 +3,7 @@ package com.example.goodlearnai.v1.service;
 import com.example.goodlearnai.v1.entity.Class;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.vo.ClassVO;
+import com.example.goodlearnai.v1.vo.ClassDetailVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -48,5 +49,12 @@ public interface IClassService extends IService<Class> {
      * @return 删除结果
      */
     Result<String> deleteClass(Long classId);
+
+    /**
+     * 获取班级详细信息（包含教师姓名、课程名、课程描述、课程创建时间）
+     * @param classId 班级ID
+     * @return 班级详细信息
+     */
+    Result<ClassDetailVO> getClassDetail(Long classId);
 
 }

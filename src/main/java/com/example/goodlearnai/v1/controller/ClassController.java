@@ -5,6 +5,7 @@ import com.example.goodlearnai.v1.entity.Class;
 import com.example.goodlearnai.v1.entity.ClassMembers;
 import com.example.goodlearnai.v1.service.IClassService;
 import com.example.goodlearnai.v1.vo.ClassVO;
+import com.example.goodlearnai.v1.vo.ClassDetailVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,6 +58,16 @@ public class ClassController {
     @PutMapping("/delete/{classId}")
     public Result<String> deleteClass(@PathVariable Long classId){
         return classService.deleteClass(classId);
+    }
+
+    /**
+     * 获取班级详细信息（包含教师姓名、课程名、课程描述、课程创建时间）
+     * @param classId 班级ID
+     * @return 班级详细信息
+     */
+    @GetMapping("/detail/{classId}")
+    public Result<ClassDetailVO> getClassDetail(@PathVariable Long classId){
+        return classService.getClassDetail(classId);
     }
 
 }

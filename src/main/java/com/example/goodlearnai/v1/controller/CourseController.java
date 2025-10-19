@@ -75,7 +75,7 @@ private ICourseService iCourseService;
     }
 
     /**
-     * 根据ID获取课程详细信息（包含班级人数）
+     * 根据ID获取课程详细信息
      */
     @GetMapping("/get-coursems/{courseId}")
     public Result<List<Course>> getCourseById(@PathVariable Long courseId) {

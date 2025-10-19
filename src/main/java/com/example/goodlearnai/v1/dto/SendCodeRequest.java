@@ -4,22 +4,22 @@ import lombok.Data;
 import lombok.ToString;
 
 /**
- * 用户登录表单
+ * 发送邮箱验证码请求
  * 
  * @author Mouse
  */
 @ToString
 @Data
-public class UserLogin {
+public class SendCodeRequest {
     /**
-     * 邮箱
+     * 邮箱地址
      */
     private String email;
     
     /**
-     * 密码
+     * 验证码用途（注册、登录、重置密码）
      */
-    private String password;
+    private String purpose;
     
     /**
      * 图形验证码key（从Redis获取）
@@ -31,3 +31,4 @@ public class UserLogin {
      */
     private String captchaCode;
 }
+

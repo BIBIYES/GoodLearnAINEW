@@ -53,6 +53,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/v1/users/forgot-password",
                         // 验证码相关接口
                         "/v1/verification-codes/**",
+                        "/v1/captcha/generate",
                         // 学校信息查询接口
                         "/v1/schools/get-schools",
                         // 静态资源文件访问路径

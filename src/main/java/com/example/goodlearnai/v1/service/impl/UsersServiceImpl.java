@@ -33,6 +33,9 @@ import org.springframework.stereotype.Service;
 public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements IUsersService {
     @Resource
     private IVerificationCodesService iverificationCodesService;
+    
+    @Resource
+    private com.example.goodlearnai.v1.controller.CaptchaController captchaController;
 
     @Override
     /*
@@ -75,6 +78,14 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
      */
     @Override
     public Result<UserInfo> login(UserLogin user) {
+        // 1. 验证图形验证码
+        if (!captchaController.verifyCaptchaFromRedis(user.getCaptchaKey(), user.getCaptchaCode())) {
+            log.warn("图形验证码验证失败: email={}, captchaKey={}", user.getEmail(), user.getCaptchaKey());
+            return Result.error("图形验证码错误或已过期");
+        }
+        log.info("图形验证码验证成功: email={}", user.getEmail());
+        
+        // 2. 验证用户名密码
         LambdaQueryWrapper<Users> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Users::getEmail, user.getEmail());
         Users one = getOne(queryWrapper);
@@ -85,11 +96,13 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
                 BeanUtil.copyProperties(one, userInfo);
                 // 添加token
                 userInfo.setJwtToken(JwtUtils.generateToken(one.getUserId(), one.getRole()));
+                log.info("用户登录成功: email={}, userId={}", user.getEmail(), one.getUserId());
                 return Result.success("用户登录成功", userInfo);
             }
-            log.warn("密码验证错误");
+            log.warn("密码验证错误: email={}", user.getEmail());
+        } else {
+            log.warn("用户不存在: email={}", user.getEmail());
         }
-        log.warn("用户不存在");
         return Result.error("用户名或密码错误");
     }
 

@@ -4,63 +4,32 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 课程详情视图对象
- * @author Mouse
+ * 课程详细信息VO
  */
 @Data
 public class CourseDetailVO {
-    /**
-     * 班级ID
-     */
+    /** 课程ID */
     private Long courseId;
     
-    /**
-     * 班级名称
-     */
+    /** 课程名称 */
     private String className;
     
-    /**
-     * 班级描述
-     */
+    /** 课程描述 */
     private String description;
     
-    /**
-     * 老师ID
-     */
+    /** 教师ID */
     private Long teacherId;
     
-    /**
-     * 学委ID
-     */
-    private Long monitorId;
-    
-    /**
-     * 学委姓名
-     */
-    private String monitorName;
-    
-    /**
-     * 学委邮箱
-     */
-    private String monitorEmail;
-    
-    /**
-     * 班级总人数
-     */
+    /** 学生总数 */
     private Integer totalStudents;
     
-    /**
-     * 创建时间
-     */
+    /** 创建时间 */
     private LocalDateTime createdAt;
     
-    /**
-     * 更新时间
-     */
+    /** 更新时间 */
     private LocalDateTime updatedAt;
     
-    /**
-     * 状态：1-正常，0-禁用
-     */
+    /** 状态 */
     private Boolean status;
 }
+

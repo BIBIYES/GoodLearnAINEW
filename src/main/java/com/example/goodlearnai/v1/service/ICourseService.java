@@ -6,7 +6,6 @@ import com.example.goodlearnai.v1.entity.Course;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.vo.CourseDetailVO;
-import com.example.goodlearnai.v1.vo.StudentCourseVO;
 
 import java.util.List;
 
@@ -28,24 +27,11 @@ public interface ICourseService extends IService<Course> {
      */
     Result<String> createClass(Course course);
 
-
-    /**
-     * 为班级设计一个学委
-     *
-     * @param course 班级对象
-     * @param monitor 学委的id
-     * @return 返回成功或者失败
-     */
-    Result<String> setMonitor(Course course, Long monitor);
-
     Result<String> stopCourse(Course course);
 
     Result<IPage<Course>> getCourse(Course course ,long current, long size);
 
     Result<String> compileCourse(Course course);
 
-    Result<List<StudentCourseVO>> getStudents(Long courseId,  String username);
-
-    // 在ICourseService接口中添加新方法，替换原来的getCourseById
-    Result<List<CourseDetailVO>> getCourseDetailById(Course course);
+    Result<List<Course>> getCourseDetailById(Course course);
 }

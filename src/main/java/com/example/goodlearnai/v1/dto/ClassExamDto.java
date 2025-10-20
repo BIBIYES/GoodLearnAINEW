@@ -23,12 +23,14 @@ public class ClassExamDto {
     /**
      * 考试开始时间（支持 startTime 或 start_time）
      */
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonProperty("start_time")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime startTime;
     
     /**
      * 考试结束时间（支持 endTime 或 end_time）
      */
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonProperty("end_time")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime endTime;
 }

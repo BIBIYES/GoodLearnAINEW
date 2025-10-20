@@ -6,9 +6,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.ClassExamDto;
 import com.example.goodlearnai.v1.entity.ClassExam;
+import com.example.goodlearnai.v1.entity.ClassExamQuestion;
 import com.example.goodlearnai.v1.entity.Exam;
 import com.example.goodlearnai.v1.entity.ExamQuestion;
 import com.example.goodlearnai.v1.mapper.ClassExamMapper;
+import com.example.goodlearnai.v1.mapper.ClassExamQuestionMapper;
 import com.example.goodlearnai.v1.mapper.ExamMapper;
 import com.example.goodlearnai.v1.mapper.ExamQuestionMapper;
 import com.example.goodlearnai.v1.service.IClassExamService;
@@ -39,6 +41,9 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
     
     @Autowired
     private ExamQuestionMapper examQuestionMapper;
+    
+    @Autowired
+    private ClassExamQuestionMapper classExamQuestionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -106,10 +111,9 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 return Result.error("创建班级试卷副本失败");
             }
 
-            // 复制题目到副本
+            // 复制题目到副本（使用新的class_exam_question表）
             for (ExamQuestion originalQuestion : originalQuestions) {
-                ExamQuestion copiedQuestion = new ExamQuestion();
-                copiedQuestion.setExamId(examId);
+                ClassExamQuestion copiedQuestion = new ClassExamQuestion();
                 copiedQuestion.setClassExamId(classExam.getClassExamId());
                 copiedQuestion.setQuestionTitle(originalQuestion.getQuestionTitle());
                 copiedQuestion.setQuestionContent(originalQuestion.getQuestionContent());
@@ -119,8 +123,10 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 copiedQuestion.setCreatedAt(LocalDateTime.now());
                 copiedQuestion.setStatus(1);
                 
-                examQuestionMapper.insert(copiedQuestion);
+                classExamQuestionMapper.insert(copiedQuestion);
             }
+            
+            log.info("成功复制{}道题目到副本题目表", originalQuestions.size());
 
             log.info("试卷发布到班级成功: examId={}, classId={}, classExamId={}, startTime={}, endTime={}", 
                     examId, classId, classExam.getClassExamId(), 
@@ -177,10 +183,11 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 return Result.error("用户无权限删除此班级试卷");
             }
 
-            // 删除班级试卷副本的所有题目
-            LambdaQueryWrapper<ExamQuestion> questionWrapper = new LambdaQueryWrapper<>();
-            questionWrapper.eq(ExamQuestion::getClassExamId, classExamId);
-            examQuestionMapper.delete(questionWrapper);
+            // 删除班级试卷副本的所有题目（从新的class_exam_question表中删除）
+            LambdaQueryWrapper<ClassExamQuestion> questionWrapper = new LambdaQueryWrapper<>();
+            questionWrapper.eq(ClassExamQuestion::getClassExamId, classExamId);
+            int deletedCount = classExamQuestionMapper.delete(questionWrapper);
+            log.info("删除班级试卷副本题目: classExamId={}, 删除题目数={}", classExamId, deletedCount);
 
             // 删除班级试卷副本
             if (removeById(classExamId)) {

@@ -2,12 +2,15 @@ package com.example.goodlearnai.v1.service.impl;
 
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.Class;
+import com.example.goodlearnai.v1.entity.Course;
 import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.mapper.ClassMapper;
+import com.example.goodlearnai.v1.mapper.CourseMapper;
 import com.example.goodlearnai.v1.mapper.UserMapper;
 import com.example.goodlearnai.v1.service.IClassService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import com.example.goodlearnai.v1.vo.ClassVO;
+import com.example.goodlearnai.v1.vo.ClassDetailVO;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -27,6 +30,9 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private CourseMapper courseMapper;
 
     @Override
     public Result<String> createClass(Class classEntity) {
@@ -225,6 +231,60 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             log.error("班级删除失败: userId={}, classId={}, error={}",
                     userId, classId, e.getMessage());
             return Result.error("班级删除失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<ClassDetailVO> getClassDetail(Long classId) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+
+        try {
+            // 查询班级信息
+            Class classEntity = getById(classId);
+            if (classEntity == null) {
+                log.warn("班级不存在: classId={}", classId);
+                return Result.error("班级不存在");
+            }
+
+            // 权限验证
+            if ("teacher".equals(role)) {
+                if (!userId.equals(classEntity.getTeacherId())) {
+                    log.warn("教师无权限查看班级详细信息: userId={}, classId={}", userId, classId);
+                    return Result.error("您不是该班级的负责教师，无法查看班级详细信息");
+                }
+            } else if (!"student".equals(role)) {
+                log.warn("用户角色无权限查看班级详细信息: userId={}, role={}", userId, role);
+                return Result.error("暂无权限查看班级详细信息");
+            }
+
+            // 创建详细信息VO
+            ClassDetailVO classDetailVO = new ClassDetailVO();
+            BeanUtils.copyProperties(classEntity, classDetailVO);
+
+            // 查询教师信息
+            Users teacher = userMapper.selectById(classEntity.getTeacherId());
+            if (teacher != null) {
+                classDetailVO.setTeacherName(teacher.getUsername());
+            }
+
+            // 查询课程信息
+            if (classEntity.getCourseId() != null) {
+                Course course = courseMapper.selectById(classEntity.getCourseId());
+                if (course != null) {
+                    classDetailVO.setCourseName(course.getClassName());
+                    classDetailVO.setCourseDescription(course.getDescription());
+                    classDetailVO.setCourseCreatedAt(course.getCreatedAt());
+                }
+            }
+
+            log.info("获取班级详细信息成功: userId={}, classId={}, className={}",
+                    userId, classId, classEntity.getClassName());
+            return Result.success("获取班级详细信息成功", classDetailVO);
+        } catch (Exception e) {
+            log.error("获取班级详细信息失败: userId={}, classId={}, error={}",
+                    userId, classId, e.getMessage());
+            return Result.error("获取班级详细信息失败: " + e.getMessage());
         }
     }
 }

@@ -4,9 +4,11 @@ import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.ClassJoinRequest;
 import com.example.goodlearnai.v1.entity.Class;
 import com.example.goodlearnai.v1.entity.ClassMembers;
+import com.example.goodlearnai.v1.entity.Course;
 import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.mapper.ClassMapper;
 import com.example.goodlearnai.v1.mapper.ClassMembersMapper;
+import com.example.goodlearnai.v1.mapper.CourseMapper;
 import com.example.goodlearnai.v1.mapper.UserMapper;
 import com.example.goodlearnai.v1.service.IClassMembersService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
@@ -35,6 +37,9 @@ public class ClassMembersServiceImpl extends ServiceImpl<ClassMembersMapper, Cla
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private CourseMapper courseMapper;
 
     @Override
     public Result<String> intoClass(ClassJoinRequest request) {
@@ -278,6 +283,14 @@ public class ClassMembersServiceImpl extends ServiceImpl<ClassMembersMapper, Cla
             memberVO.setCourseId(classEntity.getCourseId());
             memberVO.setJoinCode(classEntity.getJoinCode());
             memberVO.setClassStatus(classEntity.getStatus());
+            
+            // 查询并设置课程名称
+            if (classEntity.getCourseId() != null) {
+                Course course = courseMapper.selectById(classEntity.getCourseId());
+                if (course != null) {
+                    memberVO.setCourseName(course.getClassName());
+                }
+            }
         }
 
         if (teacher != null) {

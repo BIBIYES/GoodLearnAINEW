@@ -37,9 +37,9 @@ public class StudentAnswer implements Serializable {
     private Long userId;
 
     /**
-     * 试卷题目ID，关联 exam_question.eq_id
+     * 班级试卷题目ID，关联 class_exam_question.ceq_id
      */
-    private Long eqId;
+    private Long ceqId;
 
     /**
      * 学生的回答内容

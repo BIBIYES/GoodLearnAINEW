@@ -45,11 +45,6 @@ public class Course implements Serializable {
     private Long teacherId;
 
     /**
-     * 学委ID
-     */
-    private Long monitorId;
-
-    /**
      * 班级描述
      */
     private String description;

@@ -5,9 +5,9 @@ spring:
   application:
     name: GoodLearnAI
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/good_learn_ai_NEW?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://112.124.40.32:3306/good_learn_ai_NEW?useSSL=false&serverTimezone=UTC
     username: root
-    password: 544262
+    password: zzx
     driver-class-name: com.mysql.cj.jdbc.Driver
   devtools:
     restart:
@@ -32,11 +32,10 @@ spring:
       path: /api
   data:
     redis:
-      host: 127.0.0.1
+      host: 112.124.40.32
       port: 6379
       timeout: 5000
-      #      本地密码留空
-      password:
+      password: zzx
 
     multipart:
       max-file-size: 100MB

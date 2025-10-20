@@ -10,8 +10,14 @@ import com.example.goodlearnai.v1.entity.StudentAnswer;
 import com.example.goodlearnai.v1.service.IStudentAnswerService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -30,6 +36,9 @@ public class StudentAnswerController {
 
     @Autowired
     private IStudentAnswerService studentAnswerService;
+
+    @Autowired
+    private ChatModel chatModel;
 
     /**
      * 创建学生答题记录
@@ -54,7 +63,7 @@ public class StudentAnswerController {
             Long userId = AuthUtil.getCurrentUserId();
             LambdaQueryWrapper<StudentAnswer> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(StudentAnswer::getUserId, userId)
-                    .inSql(StudentAnswer::getEqId, "SELECT eq_id FROM exam_question WHERE class_exam_id = " + classExamId)
+                    .inSql(StudentAnswer::getCeqId, "SELECT ceq_id FROM class_exam_question WHERE class_exam_id = " + classExamId)
                     .orderByAsc(StudentAnswer::getAnsweredAt);
 
             List<StudentAnswer> answers = studentAnswerService.list(queryWrapper);
@@ -89,26 +98,29 @@ public class StudentAnswerController {
      * @param request 包含题目内容、参考答案和学生答案的请求
      * @return AI验证结果，包括是否正确和反馈信息
      */
-    @PostMapping("/validate-answer")
-    public Result<AnswerValidationResponse> validateAnswerWithAI(@RequestBody AnswerValidationRequest request) {
-        try {
-            // 参数校验
-            if (request == null) {
-                return Result.error("请求参数不能为空");
-            }
-            if (request.getQuestionContent() == null || request.getQuestionContent().isEmpty()) {
-                return Result.error("题目内容不能为空");
-            }
-            if (request.getStudentAnswer() == null || request.getStudentAnswer().isEmpty()) {
-                return Result.error("学生答案不能为空");
-            }
-
-            log.info("收到答案验证请求");
-            return studentAnswerService.validateAnswerWithAI(request);
-        } catch (Exception e) {
-            log.error("验证学生答案异常: {}", e.getMessage(), e);
-            return Result.error("验证学生答案异常: " + e.getMessage());
+    @PostMapping(value = "/validate-answer", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ChatResponse> validateAnswerWithAI(@RequestBody AnswerValidationRequest request) {
+        // 参数校验（用错误流返回）
+        if (request == null) {
+            return Flux.error(new IllegalArgumentException("请求参数不能为空"));
         }
+        if (request.getQuestionContent() == null || request.getQuestionContent().isEmpty()) {
+            return Flux.error(new IllegalArgumentException("题目内容不能为空"));
+        }
+        if (request.getStudentAnswer() == null || request.getStudentAnswer().isEmpty()) {
+            return Flux.error(new IllegalArgumentException("学生答案不能为空"));
+        }
+
+        log.info("收到答案验证请求(流式)");
+
+        String prompt = "你将收到一个问题和一个学生的答案。你的任务是验证学生的答案是否完全符合题目的正确答案。(用中文)\n\n" +
+                "如果用户的答案正确输出，表扬用户的一些语句然后输出\n#valid#。\n" +
+                "如果用户的答案错误输出，解析（解释为什么答案错了），然后输出 \n#invalid#。\n\n" +
+                "问题：" + request.getQuestionContent() + "\n" +
+                "参考答案：" + request.getReferenceAnswer() + "\n" +
+                "学生答案：" + request.getStudentAnswer();
+
+        return this.chatModel.stream(new Prompt(new UserMessage(prompt)));
     }
 
     /**

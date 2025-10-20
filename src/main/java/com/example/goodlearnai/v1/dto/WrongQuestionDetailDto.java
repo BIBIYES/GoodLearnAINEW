@@ -25,9 +25,9 @@ public class WrongQuestionDetailDto {
     private Long userId;
 
     /**
-     * 试卷题目ID
+     * 班级试卷题目ID
      */
-    private Long eqId;
+    private Long ceqId;
 
     /**
      * 题目内容

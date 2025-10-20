@@ -75,5 +75,10 @@ public class ClassExam implements Serializable {
      * 更新时间
      */
     private LocalDateTime updatedAt;
+
+    /**
+     * 试卷是否做完：0-未完成，1-已完成
+     */
+    private Boolean isCompleted;
 }
 

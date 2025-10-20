@@ -12,6 +12,7 @@ import com.example.goodlearnai.v1.mapper.ExamQuestionMapper;
 import com.example.goodlearnai.v1.mapper.StudentAnswerMapper;
 import com.example.goodlearnai.v1.service.IStudentAnswerService;
 import com.example.goodlearnai.v1.service.IStudentWrongQuestionService;
+import com.example.goodlearnai.v1.service.IClassExamService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.openai.OpenAiChatModel;
@@ -50,6 +51,9 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     
     @Autowired
     private OpenAiChatModel openAiChatModel;
+    
+    @Autowired
+    private IClassExamService classExamService;
 
     @Override
     @Transactional
@@ -70,6 +74,9 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             if (studentAnswer.getIsCorrect() != null && !studentAnswer.getIsCorrect()) {
                 updateWrongQuestion(studentAnswer);
             }
+
+            // 检查是否完成了该班级试卷的所有题目
+            checkAndUpdateExamCompletion(studentAnswer.getEqId(), userId);
 
             return Result.success("保存学生答题记录成功");
         } catch (Exception e) {
@@ -112,6 +119,64 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             }
         } catch (Exception e) {
             log.error("更新错题记录异常: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 检查并更新班级试卷完成状态
+     * @param eqId 题目ID
+     * @param userId 用户ID
+     */
+    private void checkAndUpdateExamCompletion(Long eqId, Long userId) {
+        try {
+            // 1. 根据题目ID查询题目信息，获取班级试卷ID
+            ExamQuestion examQuestion = examQuestionMapper.selectById(eqId);
+            if (examQuestion == null || examQuestion.getClassExamId() == null) {
+                log.debug("题目不属于班级试卷，无需检查完成状态: eqId={}", eqId);
+                return;
+            }
+            
+            Long classExamId = examQuestion.getClassExamId();
+            
+            // 2. 查询该班级试卷的所有题目数量（状态为1的题目）
+            LambdaQueryWrapper<ExamQuestion> questionWrapper = new LambdaQueryWrapper<>();
+            questionWrapper.eq(ExamQuestion::getClassExamId, classExamId)
+                    .eq(ExamQuestion::getStatus, 1);
+            long totalQuestions = examQuestionMapper.selectCount(questionWrapper);
+            
+            if (totalQuestions == 0) {
+                log.warn("班级试卷没有题目: classExamId={}", classExamId);
+                return;
+            }
+            
+            // 3. 查询该班级试卷的所有题目ID列表
+            List<ExamQuestion> examQuestions = examQuestionMapper.selectList(questionWrapper);
+            List<Long> eqIds = new ArrayList<>();
+            for (ExamQuestion eq : examQuestions) {
+                eqIds.add(eq.getEqId());
+            }
+            
+            // 4. 查询该学生对这些题目的作答数量
+            LambdaQueryWrapper<StudentAnswer> answerWrapper = new LambdaQueryWrapper<>();
+            answerWrapper.eq(StudentAnswer::getUserId, userId)
+                    .in(StudentAnswer::getEqId, eqIds);
+            long answeredQuestions = baseMapper.selectCount(answerWrapper);
+            
+            log.info("检查试卷完成状态: userId={}, classExamId={}, 总题目数={}, 已作答数={}", 
+                    userId, classExamId, totalQuestions, answeredQuestions);
+            
+            // 5. 如果已作答数等于总题目数，则更新试卷完成状态
+            if (answeredQuestions >= totalQuestions) {
+                ClassExam classExam = classExamService.getById(classExamId);
+                if (classExam != null && (classExam.getIsCompleted() == null || !classExam.getIsCompleted())) {
+                    classExam.setIsCompleted(true);
+                    classExamService.updateById(classExam);
+                    log.info("学生已完成班级试卷，更新状态为已完成: userId={}, classExamId={}", userId, classExamId);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("检查并更新试卷完成状态异常: eqId={}, userId={}, error={}", eqId, userId, e.getMessage(), e);
         }
     }
     

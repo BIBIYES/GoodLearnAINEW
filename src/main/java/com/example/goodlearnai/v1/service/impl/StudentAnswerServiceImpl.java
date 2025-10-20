@@ -8,7 +8,7 @@ import com.example.goodlearnai.v1.dto.AnswerValidationRequest;
 import com.example.goodlearnai.v1.dto.AnswerValidationResponse;
 import com.example.goodlearnai.v1.dto.ExamQuestionAnswerDto;
 import com.example.goodlearnai.v1.entity.*;
-import com.example.goodlearnai.v1.mapper.ExamQuestionMapper;
+import com.example.goodlearnai.v1.mapper.ClassExamQuestionMapper;
 import com.example.goodlearnai.v1.mapper.StudentAnswerMapper;
 import com.example.goodlearnai.v1.service.IStudentAnswerService;
 import com.example.goodlearnai.v1.service.IStudentWrongQuestionService;
@@ -47,7 +47,7 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     private StudentAnswerMapper studentAnswerMapper;
 
     @Autowired
-    private ExamQuestionMapper examQuestionMapper;
+    private ClassExamQuestionMapper classExamQuestionMapper;
     
     @Autowired
     private OpenAiChatModel openAiChatModel;
@@ -76,7 +76,7 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             }
 
             // 检查是否完成了该班级试卷的所有题目
-            checkAndUpdateExamCompletion(studentAnswer.getEqId(), userId);
+            checkAndUpdateExamCompletion(studentAnswer.getCeqId(), userId);
 
             return Result.success("保存学生答题记录成功");
         } catch (Exception e) {
@@ -90,14 +90,14 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             // 查询是否已存在该学生该题目的错题记录
             LambdaQueryWrapper<StudentWrongQuestion> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(StudentWrongQuestion::getUserId, studentAnswer.getUserId())
-                    .eq(StudentWrongQuestion::getEqId, studentAnswer.getEqId());
+                    .eq(StudentWrongQuestion::getCeqId, studentAnswer.getCeqId());
 
             StudentWrongQuestion wrongQuestion = studentWrongQuestionService.getOne(queryWrapper);
 
             // 获取题目内容
-            ExamQuestion examQuestion = examQuestionMapper.selectById(studentAnswer.getEqId());
-            if (examQuestion == null) {
-                log.error("未找到对应的试卷题目: eqId={}", studentAnswer.getEqId());
+            ClassExamQuestion classExamQuestion = classExamQuestionMapper.selectById(studentAnswer.getCeqId());
+            if (classExamQuestion == null) {
+                log.error("未找到对应的班级试卷题目: ceqId={}", studentAnswer.getCeqId());
                 return;
             }
 
@@ -106,15 +106,14 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
                 wrongQuestion.setWrongAnswer(studentAnswer.getAnswerText());
                 studentWrongQuestionService.updateById(wrongQuestion);
             } else {
-                ExamQuestion question = examQuestionMapper.selectById(studentAnswer.getEqId());
                 // 创建新的错题记录
                 wrongQuestion = new StudentWrongQuestion();
                 wrongQuestion.setUserId(studentAnswer.getUserId());
-                wrongQuestion.setEqId(studentAnswer.getEqId());
+                wrongQuestion.setCeqId(studentAnswer.getCeqId());
                 // 设置题目内容和学生错误答案
-                wrongQuestion.setQuestionContent(question.getQuestionContent());
+                wrongQuestion.setQuestionContent(classExamQuestion.getQuestionContent());
                 wrongQuestion.setWrongAnswer(studentAnswer.getAnswerText());
-                wrongQuestion.setQuestionAnswer(question.getReferenceAnswer());
+                wrongQuestion.setQuestionAnswer(classExamQuestion.getReferenceAnswer());
                 studentWrongQuestionService.save(wrongQuestion);
             }
         } catch (Exception e) {
@@ -124,25 +123,25 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     
     /**
      * 检查并更新班级试卷完成状态
-     * @param eqId 题目ID
+     * @param ceqId 班级试卷题目ID
      * @param userId 用户ID
      */
-    private void checkAndUpdateExamCompletion(Long eqId, Long userId) {
+    private void checkAndUpdateExamCompletion(Long ceqId, Long userId) {
         try {
             // 1. 根据题目ID查询题目信息，获取班级试卷ID
-            ExamQuestion examQuestion = examQuestionMapper.selectById(eqId);
-            if (examQuestion == null || examQuestion.getClassExamId() == null) {
-                log.debug("题目不属于班级试卷，无需检查完成状态: eqId={}", eqId);
+            ClassExamQuestion classExamQuestion = classExamQuestionMapper.selectById(ceqId);
+            if (classExamQuestion == null || classExamQuestion.getClassExamId() == null) {
+                log.debug("未找到班级试卷题目，无需检查完成状态: ceqId={}", ceqId);
                 return;
             }
             
-            Long classExamId = examQuestion.getClassExamId();
+            Long classExamId = classExamQuestion.getClassExamId();
             
             // 2. 查询该班级试卷的所有题目数量（状态为1的题目）
-            LambdaQueryWrapper<ExamQuestion> questionWrapper = new LambdaQueryWrapper<>();
-            questionWrapper.eq(ExamQuestion::getClassExamId, classExamId)
-                    .eq(ExamQuestion::getStatus, 1);
-            long totalQuestions = examQuestionMapper.selectCount(questionWrapper);
+            LambdaQueryWrapper<ClassExamQuestion> questionWrapper = new LambdaQueryWrapper<>();
+            questionWrapper.eq(ClassExamQuestion::getClassExamId, classExamId)
+                    .eq(ClassExamQuestion::getStatus, 1);
+            long totalQuestions = classExamQuestionMapper.selectCount(questionWrapper);
             
             if (totalQuestions == 0) {
                 log.warn("班级试卷没有题目: classExamId={}", classExamId);
@@ -150,16 +149,16 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             }
             
             // 3. 查询该班级试卷的所有题目ID列表
-            List<ExamQuestion> examQuestions = examQuestionMapper.selectList(questionWrapper);
-            List<Long> eqIds = new ArrayList<>();
-            for (ExamQuestion eq : examQuestions) {
-                eqIds.add(eq.getEqId());
+            List<ClassExamQuestion> classExamQuestions = classExamQuestionMapper.selectList(questionWrapper);
+            List<Long> ceqIds = new ArrayList<>();
+            for (ClassExamQuestion ceq : classExamQuestions) {
+                ceqIds.add(ceq.getCeqId());
             }
             
             // 4. 查询该学生对这些题目的作答数量
             LambdaQueryWrapper<StudentAnswer> answerWrapper = new LambdaQueryWrapper<>();
             answerWrapper.eq(StudentAnswer::getUserId, userId)
-                    .in(StudentAnswer::getEqId, eqIds);
+                    .in(StudentAnswer::getCeqId, ceqIds);
             long answeredQuestions = baseMapper.selectCount(answerWrapper);
             
             log.info("检查试卷完成状态: userId={}, classExamId={}, 总题目数={}, 已作答数={}", 
@@ -176,7 +175,7 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             }
             
         } catch (Exception e) {
-            log.error("检查并更新试卷完成状态异常: eqId={}, userId={}, error={}", eqId, userId, e.getMessage(), e);
+            log.error("检查并更新试卷完成状态异常: ceqId={}, userId={}, error={}", ceqId, userId, e.getMessage(), e);
         }
     }
     
@@ -185,27 +184,27 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
         Long userId = AuthUtil.getCurrentUserId();
         try {
             // 1. 查询班级试卷副本中的所有题目
-            LambdaQueryWrapper<ExamQuestion> questionQueryWrapper = new LambdaQueryWrapper<>();
-            questionQueryWrapper.eq(ExamQuestion::getClassExamId, classExamId)
-                    .eq(ExamQuestion::getStatus, 1)
-                    .orderByAsc(ExamQuestion::getEqId);
+            LambdaQueryWrapper<ClassExamQuestion> questionQueryWrapper = new LambdaQueryWrapper<>();
+            questionQueryWrapper.eq(ClassExamQuestion::getClassExamId, classExamId)
+                    .eq(ClassExamQuestion::getStatus, 1)
+                    .orderByAsc(ClassExamQuestion::getCeqId);
             
-            List<ExamQuestion> examQuestions = examQuestionMapper.selectList(questionQueryWrapper);
+            List<ClassExamQuestion> classExamQuestions = classExamQuestionMapper.selectList(questionQueryWrapper);
             
-            if (examQuestions == null || examQuestions.isEmpty()) {
+            if (classExamQuestions == null || classExamQuestions.isEmpty()) {
                 log.warn("未找到班级试卷题目: classExamId={}", classExamId);
                 return Result.error("未找到班级试卷题目");
             }
             
             // 2. 查询用户对这些题目的作答记录
-            List<Long> eqIds = new ArrayList<>();
-            for (ExamQuestion eq : examQuestions) {
-                eqIds.add(eq.getEqId());
+            List<Long> ceqIds = new ArrayList<>();
+            for (ClassExamQuestion ceq : classExamQuestions) {
+                ceqIds.add(ceq.getCeqId());
             }
             
             LambdaQueryWrapper<StudentAnswer> answerQueryWrapper = new LambdaQueryWrapper<>();
             answerQueryWrapper.eq(StudentAnswer::getUserId, userId)
-                    .in(StudentAnswer::getEqId, eqIds);
+                    .in(StudentAnswer::getCeqId, ceqIds);
             
             List<StudentAnswer> studentAnswers = baseMapper.selectList(answerQueryWrapper);
             
@@ -213,20 +212,20 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             Map<Long, StudentAnswer> answerMap = new HashMap<>();
             if (studentAnswers != null && !studentAnswers.isEmpty()) {
                 for (StudentAnswer answer : studentAnswers) {
-                    answerMap.put(answer.getEqId(), answer);
+                    answerMap.put(answer.getCeqId(), answer);
                 }
             }
             
             // 4. 组装返回结果
             List<ExamQuestionAnswerDto> resultList = new ArrayList<>();
             
-            for (ExamQuestion question : examQuestions) {
+            for (ClassExamQuestion question : classExamQuestions) {
                 ExamQuestionAnswerDto dto = new ExamQuestionAnswerDto();
                 // 复制题目信息
                 BeanUtils.copyProperties(question, dto);
                 
                 // 设置学生答案信息（如果有）
-                StudentAnswer answer = answerMap.get(question.getEqId());
+                StudentAnswer answer = answerMap.get(question.getCeqId());
                 if (answer != null) {
                     dto.setHasAnswered(true);
                     dto.setAnswerText(answer.getAnswerText());
@@ -240,7 +239,7 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             }
             
             log.info("查询班级试卷题目及作答情况成功: userId={}, classExamId={}, 题目数量={}, 已作答数量={}", 
-                    userId, classExamId, examQuestions.size(), answerMap.size());
+                    userId, classExamId, classExamQuestions.size(), answerMap.size());
             return Result.success("查询成功", resultList);
             
         } catch (Exception e) {
@@ -287,27 +286,27 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     public Result<String> summarizeExamWithAI(Long classExamId) {
         try {
             // 根据id查找班级试卷副本中的所有题目
-            LambdaQueryWrapper<ExamQuestion> examQuestions = new LambdaQueryWrapper<>();
-            examQuestions.eq(ExamQuestion::getClassExamId, classExamId)
-                    .eq(ExamQuestion::getStatus, 1)
-                    .orderByAsc(ExamQuestion::getEqId);
-            List<ExamQuestion> questionList = examQuestionMapper.selectList(examQuestions);
+            LambdaQueryWrapper<ClassExamQuestion> classExamQuestions = new LambdaQueryWrapper<>();
+            classExamQuestions.eq(ClassExamQuestion::getClassExamId, classExamId)
+                    .eq(ClassExamQuestion::getStatus, 1)
+                    .orderByAsc(ClassExamQuestion::getCeqId);
+            List<ClassExamQuestion> questionList = classExamQuestionMapper.selectList(classExamQuestions);
 
             // 获取题目id列表
             List<Long> questionIdList = questionList.stream()
-                    .map(ExamQuestion::getEqId)
+                    .map(ClassExamQuestion::getCeqId)
                     .collect(Collectors.toList());
 
             // 查出这些题目的错误记录
             QueryWrapper<StudentAnswer> answerQuery = new QueryWrapper<>();
-            answerQuery.in("eq_id", questionIdList)
+            answerQuery.in("ceq_id", questionIdList)
                     .eq("is_correct", false);
             List<StudentAnswer> studentAnswers = studentAnswerMapper.selectList(answerQuery);
 
             StringBuilder sb = new StringBuilder();
             for (StudentAnswer studentAnswer : studentAnswers) {
                 // 根据题目id查studentanswer中学生的答案
-                ExamQuestion question = examQuestionMapper.selectById(studentAnswer.getEqId());
+                ClassExamQuestion question = classExamQuestionMapper.selectById(studentAnswer.getCeqId());
                 sb.append("题目：").append(question.getQuestionContent()).append("\n");
                 sb.append("参考答案：").append(question.getReferenceAnswer()).append("\n");
                 sb.append("学生答案：").append(studentAnswer.getAnswerText()).append("\n");

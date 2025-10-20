@@ -19,14 +19,14 @@ public class ExamQuestionAnswerDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 试卷题目ID
+     * 班级试卷题目ID
      */
-    private Long eqId;
+    private Long ceqId;
 
     /**
-     * 关联的试卷ID
+     * 关联的班级试卷ID
      */
-    private Long examId;
+    private Long classExamId;
 
     /**
      * 题目内容

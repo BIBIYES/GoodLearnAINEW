@@ -63,7 +63,7 @@ public class StudentAnswerController {
             Long userId = AuthUtil.getCurrentUserId();
             LambdaQueryWrapper<StudentAnswer> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(StudentAnswer::getUserId, userId)
-                    .inSql(StudentAnswer::getEqId, "SELECT eq_id FROM exam_question WHERE class_exam_id = " + classExamId)
+                    .inSql(StudentAnswer::getCeqId, "SELECT ceq_id FROM class_exam_question WHERE class_exam_id = " + classExamId)
                     .orderByAsc(StudentAnswer::getAnsweredAt);
 
             List<StudentAnswer> answers = studentAnswerService.list(queryWrapper);

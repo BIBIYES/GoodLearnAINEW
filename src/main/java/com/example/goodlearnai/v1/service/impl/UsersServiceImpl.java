@@ -74,20 +74,61 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
 
 
     /**
+     * 判断字符串是否为邮箱格式
+     */
+    private boolean isEmail(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            return false;
+        }
+        // 简单的邮箱正则验证
+        String emailPattern = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        return str.matches(emailPattern);
+    }
+
+    /**
      * 用户登陆
      */
     @Override
     public Result<UserInfo> login(UserLogin user) {
+        // 获取账号（优先使用account字段，如果为空则使用email字段保持向后兼容）
+        String account = user.getAccount();
+        if (account == null || account.trim().isEmpty()) {
+            account = user.getEmail();
+        }
+        
+        if (account == null || account.trim().isEmpty()) {
+            return Result.error("账号不能为空");
+        }
+        
         // 1. 验证图形验证码
         if (!captchaController.verifyCaptchaFromRedis(user.getCaptchaKey(), user.getCaptchaCode())) {
-            log.warn("图形验证码验证失败: email={}, captchaKey={}", user.getEmail(), user.getCaptchaKey());
+            log.warn("图形验证码验证失败: account={}, captchaKey={}", account, user.getCaptchaKey());
             return Result.error("图形验证码错误或已过期");
         }
-        log.info("图形验证码验证成功: email={}", user.getEmail());
+        log.info("图形验证码验证成功: account={}", account);
         
-        // 2. 验证用户名密码
+        // 2. 判断账号是邮箱还是工号
+        boolean isEmailLogin = isEmail(account);
+        
+        // 3. 根据账号类型构建查询条件
         LambdaQueryWrapper<Users> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Users::getEmail, user.getEmail());
+        if (isEmailLogin) {
+            // 邮箱登录
+            queryWrapper.eq(Users::getEmail, account);
+            log.info("使用邮箱登录: email={}", account);
+        } else {
+            // 工号登录
+            try {
+                Long schoolNumber = Long.parseLong(account);
+                queryWrapper.eq(Users::getSchoolNumber, schoolNumber);
+                log.info("使用工号登录: schoolNumber={}", schoolNumber);
+            } catch (NumberFormatException e) {
+                log.warn("账号格式错误，既不是有效邮箱也不是有效工号: account={}", account);
+                return Result.error("账号格式错误");
+            }
+        }
+        
+        // 4. 查询用户并验证密码
         Users one = getOne(queryWrapper);
         if (one != null) {
             if (MD5Util.verify(user.getPassword(), one.getPassword())) {
@@ -96,12 +137,13 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
                 BeanUtil.copyProperties(one, userInfo);
                 // 添加token
                 userInfo.setJwtToken(JwtUtils.generateToken(one.getUserId(), one.getRole()));
-                log.info("用户登录成功: email={}, userId={}", user.getEmail(), one.getUserId());
+                log.info("用户登录成功: account={}, userId={}, loginType={}", 
+                        account, one.getUserId(), isEmailLogin ? "邮箱" : "工号");
                 return Result.success("用户登录成功", userInfo);
             }
-            log.warn("密码验证错误: email={}", user.getEmail());
+            log.warn("密码验证错误: account={}", account);
         } else {
-            log.warn("用户不存在: email={}", user.getEmail());
+            log.warn("用户不存在: account={}, loginType={}", account, isEmailLogin ? "邮箱" : "工号");
         }
         return Result.error("用户名或密码错误");
     }

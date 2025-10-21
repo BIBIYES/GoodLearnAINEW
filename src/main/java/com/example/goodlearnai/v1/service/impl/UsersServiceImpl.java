@@ -192,4 +192,102 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         
         return Result.success("获取用户信息成功", userInfo);
     }
+    
+    @Override
+    public Result<String> updateEmail(String newEmail, String code) {
+        try {
+            // 1. 检查用户是否为老师
+            String role = AuthUtil.getCurrentRole();
+            if (!"teacher".equals(role)) {
+                return Result.error("只有老师可以修改邮箱");
+            }
+            
+            // 2. 获取当前用户信息
+            Long userId = AuthUtil.getCurrentUserId();
+            Users currentUser = getById(userId);
+            
+            if (currentUser == null) {
+                return Result.error("用户不存在");
+            }
+            
+            // 3. 检查当前邮箱是否为有效邮箱格式
+            String currentEmail = currentUser.getEmail();
+            if (isValidEmail(currentEmail)) {
+                return Result.error("当前邮箱格式有效，无需修改。如需更换邮箱请联系管理员");
+            }
+            
+            // 4. 验证新邮箱格式
+            if (!isValidEmail(newEmail)) {
+                return Result.error("新邮箱格式不正确");
+            }
+            
+            // 5. 检查新邮箱是否已被其他用户使用
+            LambdaQueryWrapper<Users> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Users::getEmail, newEmail);
+            Users existingUser = getOne(queryWrapper);
+            
+            if (existingUser != null && !existingUser.getUserId().equals(userId)) {
+                return Result.error("该邮箱已被其他用户使用");
+            }
+            
+            // 6. 验证新邮箱的验证码
+            if (!iverificationCodesService.checkVerificationCodes(newEmail, code)) {
+                return Result.error("验证码错误或已过期");
+            }
+            
+            // 7. 更新邮箱
+            currentUser.setEmail(newEmail);
+            boolean updated = updateById(currentUser);
+            
+            if (updated) {
+                log.info("老师邮箱修改成功: userId={}, oldEmail={}, newEmail={}", userId, currentEmail, newEmail);
+                return Result.success("邮箱修改成功");
+            } else {
+                return Result.error("邮箱修改失败");
+            }
+            
+        } catch (Exception e) {
+            log.error("修改邮箱异常: {}", e.getMessage(), e);
+            return Result.error("修改邮箱失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 验证邮箱格式是否有效
+     * @param email 邮箱地址
+     * @return true-有效，false-无效
+     */
+    private boolean isValidEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        // 简单的邮箱格式验证正则表达式
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        return email.matches(emailRegex);
+    }
+    
+    @Override
+    public Result<Boolean> checkEmailValid() {
+        // 检查用户是否为老师
+        String role = AuthUtil.getCurrentRole();
+        if (!"teacher".equals(role)) {
+            return Result.error("只有老师可以检查邮箱状态");
+        }
+        
+        // 获取当前用户信息
+        Long userId = AuthUtil.getCurrentUserId();
+        Users currentUser = getById(userId);
+        
+        if (currentUser == null) {
+            return Result.error("用户不存在");
+        }
+        
+        // 检查邮箱是否为有效格式
+        boolean isValid = isValidEmail(currentUser.getEmail());
+        
+        log.info("检查老师邮箱有效性: userId={}, email={}, isValid={}", 
+                userId, currentUser.getEmail(), isValid);
+        
+        return Result.success("查询成功", isValid);
+    }
 }

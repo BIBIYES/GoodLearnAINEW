@@ -63,4 +63,18 @@ public interface IUsersService extends IService<Users> {
     Result<String> changePassword(String oldPassword, String newPassword);
 
     Result<UserInfo> getUserInfo();
+    
+    /**
+     * 修改邮箱（仅限老师，当当前邮箱不是有效邮箱格式时）
+     * @param newEmail 新邮箱地址
+     * @param code 新邮箱的验证码
+     * @return 修改结果
+     */
+    Result<String> updateEmail(String newEmail, String code);
+    
+    /**
+     * 检查老师邮箱是否有效（仅限老师）
+     * @return true-邮箱有效，false-邮箱无效需要修改
+     */
+    Result<Boolean> checkEmailValid();
 }

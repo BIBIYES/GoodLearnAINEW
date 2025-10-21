@@ -54,6 +54,9 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             if (classEntity.getStatus() == null) {
                 classEntity.setStatus(true);
             }
+            if (classEntity.getAllowJoin() == null) {
+                classEntity.setAllowJoin(true);
+            }
 
             if (save(classEntity)) {
                 log.info("班级创建成功: userId={}, classId={}, className={}",
@@ -285,6 +288,47 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
             log.error("获取班级详细信息失败: userId={}, classId={}, error={}",
                     userId, classId, e.getMessage());
             return Result.error("获取班级详细信息失败: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public Result<String> toggleAllowJoin(Long classId, Boolean allowJoin) {
+        Long userId = AuthUtil.getCurrentUserId();
+        String role = AuthUtil.getCurrentRole();
+
+        if (!"teacher".equals(role)) {
+            log.warn("用户暂无权限修改班级加入权限: userId={}", userId);
+            return Result.error("暂无权限修改班级加入权限");
+        }
+
+        try {
+            Class existingClass = getById(classId);
+            if (existingClass == null) {
+                log.warn("班级不存在: classId={}", classId);
+                return Result.error("班级不存在");
+            }
+
+            if (!userId.equals(existingClass.getTeacherId())) {
+                log.warn("教师无权限修改班级加入权限: userId={}, classId={}", userId, classId);
+                return Result.error("您不是该班级的负责教师，无法修改加入权限");
+            }
+
+            existingClass.setAllowJoin(allowJoin);
+            existingClass.setUpdatedAt(LocalDateTime.now());
+
+            if (updateById(existingClass)) {
+                String action = Boolean.TRUE.equals(allowJoin) ? "开启" : "关闭";
+                log.info("班级加入权限修改成功: userId={}, classId={}, action={}",
+                        userId, classId, action);
+                return Result.success("班级加入权限已" + action);
+            }
+
+            log.error("班级加入权限修改失败: userId={}, classId={}", userId, classId);
+            return Result.error("班级加入权限修改失败");
+        } catch (Exception e) {
+            log.error("班级加入权限修改失败: userId={}, classId={}, error={}",
+                    userId, classId, e.getMessage());
+            return Result.error("班级加入权限修改失败: " + e.getMessage());
         }
     }
 }

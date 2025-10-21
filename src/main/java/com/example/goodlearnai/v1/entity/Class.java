@@ -44,5 +44,10 @@ public class Class implements Serializable {
 
     private String joinCode;
 
+    /**
+     * 是否允许学生加入：1-允许，0-不允许
+     */
+    private Boolean allowJoin;
+
 
 }

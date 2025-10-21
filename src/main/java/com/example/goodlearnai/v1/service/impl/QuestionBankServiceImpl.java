@@ -168,8 +168,8 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
             // 构建查询条件
             Page<QuestionBank> page = new Page<>(current, size);
             LambdaQueryWrapper<QuestionBank> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(QuestionBank::getStatus, true);
-
+            queryWrapper.eq(QuestionBank::getStatus, true)
+                    .eq(QuestionBank::getTeacherId, userId); // 只查询当前老师创建的题库
 
             // 如果指定了题库名称关键词，则进行模糊查询
             if (StringUtils.hasText(bankName)) {

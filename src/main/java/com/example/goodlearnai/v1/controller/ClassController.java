@@ -70,4 +70,15 @@ public class ClassController {
         return classService.getClassDetail(classId);
     }
 
+    /**
+     * 切换班级学生加入权限（仅限班级负责教师）
+     * @param classId 班级ID
+     * @param allowJoin 是否允许学生加入（true-允许，false-不允许）
+     * @return 修改结果
+     */
+    @PutMapping("/toggle-allow-join/{classId}")
+    public Result<String> toggleAllowJoin(@PathVariable Long classId, @RequestParam Boolean allowJoin) {
+        return classService.toggleAllowJoin(classId, allowJoin);
+    }
+
 }

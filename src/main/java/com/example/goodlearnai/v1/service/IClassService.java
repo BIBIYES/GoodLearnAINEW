@@ -57,4 +57,12 @@ public interface IClassService extends IService<Class> {
      */
     Result<ClassDetailVO> getClassDetail(Long classId);
 
+    /**
+     * 切换班级学生加入权限
+     * @param classId 班级ID
+     * @param allowJoin 是否允许加入（true-允许，false-不允许）
+     * @return 修改结果
+     */
+    Result<String> toggleAllowJoin(Long classId, Boolean allowJoin);
+
 }

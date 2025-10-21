@@ -77,6 +77,11 @@ public class ClassMembersServiceImpl extends ServiceImpl<ClassMembersMapper, Cla
             return Result.error("该班级已停用，请联系教师");
         }
 
+        if (!Boolean.TRUE.equals(classEntity.getAllowJoin())) {
+            log.warn("班级已关闭加入: classId={}", classEntity.getClassId());
+            return Result.error("该班级暂不允许加入，请联系教师");
+        }
+
         if (classEntity.getJoinCode() == null
                 || !joinCode.equalsIgnoreCase(classEntity.getJoinCode().trim())) {
             log.warn("加入码不匹配: userId={}, classId={}, inputCode={}",

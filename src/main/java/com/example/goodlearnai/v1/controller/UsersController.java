@@ -112,4 +112,32 @@ public class UsersController {
     public Result<UserInfo> getUserInfo() {
         return iusersService.getUserInfo();
     }
+
+    /**
+     * 修改邮箱（仅限老师，且当前邮箱不是有效邮箱格式时）
+     * 需要先发送验证码到新邮箱
+     * @param params 包含新邮箱和验证码
+     * @return 修改结果
+     */
+    @PostMapping("/update-email")
+    public Result<String> updateEmail(@RequestBody Map<String, String> params) {
+        String newEmail = params.get("newEmail");
+        String code = params.get("code");
+        
+        if (newEmail == null || code == null) {
+            return Result.error("参数不完整");
+        }
+        
+        return iusersService.updateEmail(newEmail, code);
+    }
+
+    /**
+     * 检查老师邮箱是否有效（仅限老师）
+     * 用于登录后判断是否需要修改邮箱
+     * @return true-邮箱有效，false-邮箱无效需要修改
+     */
+    @GetMapping("/check-email-valid")
+    public Result<Boolean> checkEmailValid() {
+        return iusersService.checkEmailValid();
+    }
 }

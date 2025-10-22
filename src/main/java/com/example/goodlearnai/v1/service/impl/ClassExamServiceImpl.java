@@ -5,11 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.ClassExamDto;
+import com.example.goodlearnai.v1.dto.StudentExamCompletionDto;
+import com.example.goodlearnai.v1.dto.StudentExamDetailDto;
+import com.example.goodlearnai.v1.dto.StudentAnswerDetailDto;
 import com.example.goodlearnai.v1.entity.*;
-import com.example.goodlearnai.v1.mapper.ClassExamMapper;
-import com.example.goodlearnai.v1.mapper.ClassExamQuestionMapper;
-import com.example.goodlearnai.v1.mapper.ExamMapper;
-import com.example.goodlearnai.v1.mapper.ExamQuestionMapper;
+import com.example.goodlearnai.v1.mapper.*;
 import com.example.goodlearnai.v1.service.IClassExamService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goodlearnai.v1.utils.AuthUtil;
@@ -19,7 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -41,6 +44,15 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
     
     @Autowired
     private ClassExamQuestionMapper classExamQuestionMapper;
+    
+    @Autowired
+    private ClassMembersMapper classMembersMapper;
+    
+    @Autowired
+    private StudentAnswerMapper studentAnswerMapper;
+    
+    @Autowired
+    private UsersMapper usersMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -245,11 +257,315 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 return Result.success("修改成功");
             } else {
                 log.error("修改班级试卷结束时间失败: classExamId={}", classExamId);
-                return Result.error("修改失败");
+                    return Result.error("修改失败");
             }
         } catch (Exception e) {
             log.error("修改班级试卷结束时间异常: classExamId={}, error={}", classExamId, e.getMessage(), e);
             return Result.error("修改失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<List<StudentExamCompletionDto>> getStudentCompletionStatus(Long classExamId) {
+        try {
+            Long userId = AuthUtil.getCurrentUserId();
+            String role = AuthUtil.getCurrentRole();
+
+            if (!"teacher".equals(role)) {
+                log.warn("用户暂无权限查看学生完成情况: userId={}", userId);
+                return Result.error("暂无权限查看学生完成情况");
+            }
+
+            // 查询班级试卷
+            ClassExam classExam = getById(classExamId);
+            if (classExam == null) {
+                log.warn("班级试卷不存在: classExamId={}", classExamId);
+                return Result.error("班级试卷不存在");
+            }
+
+            // 验证是否为试卷创建者
+            if (!classExam.getTeacherId().equals(userId)) {
+                log.warn("用户不是试卷创建者，无权查看: userId={}, teacherId={}", userId, classExam.getTeacherId());
+                return Result.error("只有试卷创建者才能查看学生完成情况");
+            }
+
+            // 获取班级ID
+            Long classId = classExam.getClassId();
+
+            // 查询班级所有学生
+            LambdaQueryWrapper<ClassMembers> membersWrapper = new LambdaQueryWrapper<>();
+            membersWrapper.eq(ClassMembers::getClassId, classId)
+                    .eq(ClassMembers::getStatus, true);
+            List<ClassMembers> classMembers = classMembersMapper.selectList(membersWrapper);
+
+            if (classMembers.isEmpty()) {
+                log.info("该班级暂无学生: classId={}", classId);
+                return Result.success("该班级暂无学生", new ArrayList<>());
+            }
+
+            // 查询该试卷的所有题目
+            LambdaQueryWrapper<ClassExamQuestion> questionWrapper = new LambdaQueryWrapper<>();
+            questionWrapper.eq(ClassExamQuestion::getClassExamId, classExamId)
+                    .eq(ClassExamQuestion::getStatus, 1);
+            List<ClassExamQuestion> questions = classExamQuestionMapper.selectList(questionWrapper);
+            int totalQuestions = questions.size();
+
+            if (totalQuestions == 0) {
+                log.warn("该试卷暂无题目: classExamId={}", classExamId);
+                return Result.error("该试卷暂无题目");
+            }
+
+            // 获取所有题目ID列表
+            List<Long> questionIds = questions.stream()
+                    .map(ClassExamQuestion::getCeqId)
+                    .collect(Collectors.toList());
+
+            // 查询所有学生的答题记录
+            LambdaQueryWrapper<StudentAnswer> answerWrapper = new LambdaQueryWrapper<>();
+            answerWrapper.in(StudentAnswer::getCeqId, questionIds);
+            List<StudentAnswer> allAnswers = studentAnswerMapper.selectList(answerWrapper);
+
+            // 按学生ID分组答题记录
+            Map<Long, List<StudentAnswer>> answersByStudent = allAnswers.stream()
+                    .collect(Collectors.groupingBy(StudentAnswer::getUserId));
+
+            // 构建学生完成情况列表
+            List<StudentExamCompletionDto> completionList = new ArrayList<>();
+
+            for (ClassMembers member : classMembers) {
+                Long studentId = member.getUserId();
+                
+                // 查询学生信息
+                Users student = usersMapper.selectById(studentId);
+                if (student == null) {
+                    continue;
+                }
+
+                StudentExamCompletionDto dto = new StudentExamCompletionDto();
+                dto.setUserId(studentId);
+                dto.setUsername(student.getUsername());
+                dto.setSchoolNumber(student.getSchoolNumber());
+
+                // 获取该学生的答题记录
+                List<StudentAnswer> studentAnswers = answersByStudent.getOrDefault(studentId, new ArrayList<>());
+                
+                // 按题目分组，每道题只取最后一次答题结果
+                Map<Long, StudentAnswer> latestAnswersByQuestion = studentAnswers.stream()
+                        .collect(Collectors.toMap(
+                                StudentAnswer::getCeqId,
+                                answer -> answer,
+                                (existing, replacement) -> {
+                                    // 如果同一题目有多次答题，保留最后一次
+                                    return replacement.getAnsweredAt().isAfter(existing.getAnsweredAt()) ? replacement : existing;
+                                }
+                        ));
+
+                // 计算正确率：正确题目数 / 总题目数（每道题多次正确只算一次）
+                long correctCount = latestAnswersByQuestion.values().stream()
+                        .filter(answer -> answer.getIsCorrect() != null && answer.getIsCorrect())
+                        .count();
+                
+                double accuracyRate = totalQuestions > 0 ? 
+                        (correctCount * 100.0 / totalQuestions) : 0.0;
+                dto.setAccuracyRate(Math.round(accuracyRate * 100.0) / 100.0);
+
+                // 判断是否完成
+                dto.setIsCompleted(latestAnswersByQuestion.size() >= totalQuestions);
+
+                // 获取最后作答时间
+                LocalDateTime lastAnsweredAt = studentAnswers.stream()
+                        .map(StudentAnswer::getAnsweredAt)
+                        .max(LocalDateTime::compareTo)
+                        .orElse(null);
+                dto.setLastAnsweredAt(lastAnsweredAt);
+
+                // 设置状态描述
+                String statusDesc;
+                if (latestAnswersByQuestion.isEmpty()) {
+                    statusDesc = "未开始";
+                } else if (latestAnswersByQuestion.size() >= totalQuestions) {
+                    statusDesc = "已完成";
+                } else {
+                    statusDesc = "进行中";
+                }
+                dto.setStatusDescription(statusDesc);
+
+                completionList.add(dto);
+            }
+
+            // 按正确率降序排序
+            completionList.sort((a, b) -> {
+                // 先按完成状态排序（已完成 > 进行中 > 未开始）
+                int statusCompare = b.getIsCompleted().compareTo(a.getIsCompleted());
+                if (statusCompare != 0) {
+                    return statusCompare;
+                }
+                // 完成状态相同时，按正确率排序
+                return b.getAccuracyRate().compareTo(a.getAccuracyRate());
+            });
+
+            log.info("成功查询学生完成情况: classExamId={}, 学生数={}", classExamId, completionList.size());
+            return Result.success("查询成功", completionList);
+
+        } catch (Exception e) {
+            log.error("查询学生完成情况异常: classExamId={}, error={}", classExamId, e.getMessage(), e);
+            return Result.error("查询学生完成情况失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Result<StudentExamDetailDto> getStudentExamDetail(Long classExamId, Long userId) {
+        try {
+            Long currentUserId = AuthUtil.getCurrentUserId();
+            String role = AuthUtil.getCurrentRole();
+
+            if (!"teacher".equals(role)) {
+                log.warn("用户暂无权限查看学生答题详情: userId={}", currentUserId);
+                return Result.error("暂无权限查看学生答题详情");
+            }
+
+            // 查询班级试卷
+            ClassExam classExam = getById(classExamId);
+            if (classExam == null) {
+                log.warn("班级试卷不存在: classExamId={}", classExamId);
+                return Result.error("班级试卷不存在");
+            }
+
+            // 验证是否为试卷创建者
+            if (!classExam.getTeacherId().equals(currentUserId)) {
+                log.warn("用户不是试卷创建者，无权查看: userId={}, teacherId={}", currentUserId, classExam.getTeacherId());
+                return Result.error("只有试卷创建者才能查看学生答题详情");
+            }
+
+            // 验证学生是否属于该班级
+            LambdaQueryWrapper<ClassMembers> memberWrapper = new LambdaQueryWrapper<>();
+            memberWrapper.eq(ClassMembers::getClassId, classExam.getClassId())
+                    .eq(ClassMembers::getUserId, userId)
+                    .eq(ClassMembers::getStatus, true);
+            ClassMembers classMember = classMembersMapper.selectOne(memberWrapper);
+            
+            if (classMember == null) {
+                log.warn("学生不属于该班级: userId={}, classId={}", userId, classExam.getClassId());
+                return Result.error("该学生不属于此班级");
+            }
+
+            // 查询学生信息
+            Users student = usersMapper.selectById(userId);
+            if (student == null) {
+                log.warn("学生不存在: userId={}", userId);
+                return Result.error("学生不存在");
+            }
+
+            // 查询该试卷的所有题目
+            LambdaQueryWrapper<ClassExamQuestion> questionWrapper = new LambdaQueryWrapper<>();
+            questionWrapper.eq(ClassExamQuestion::getClassExamId, classExamId)
+                    .eq(ClassExamQuestion::getStatus, 1)
+                    .orderByAsc(ClassExamQuestion::getCeqId);
+            List<ClassExamQuestion> questions = classExamQuestionMapper.selectList(questionWrapper);
+            
+            if (questions.isEmpty()) {
+                log.warn("该试卷暂无题目: classExamId={}", classExamId);
+                return Result.error("该试卷暂无题目");
+            }
+
+            int totalQuestions = questions.size();
+
+            // 获取所有题目ID列表
+            List<Long> questionIds = questions.stream()
+                    .map(ClassExamQuestion::getCeqId)
+                    .collect(Collectors.toList());
+
+            // 查询该学生的所有答题记录
+            LambdaQueryWrapper<StudentAnswer> answerWrapper = new LambdaQueryWrapper<>();
+            answerWrapper.eq(StudentAnswer::getUserId, userId)
+                    .in(StudentAnswer::getCeqId, questionIds)
+                    .orderByAsc(StudentAnswer::getAnsweredAt);
+            List<StudentAnswer> studentAnswers = studentAnswerMapper.selectList(answerWrapper);
+
+            // 构建DTO
+            StudentExamDetailDto detailDto = new StudentExamDetailDto();
+            detailDto.setUserId(userId);
+            detailDto.setUsername(student.getUsername());
+            detailDto.setSchoolNumber(student.getSchoolNumber());
+            detailDto.setEmail(student.getEmail());
+
+            // 按题目分组，每道题只取最后一次答题结果
+            Map<Long, StudentAnswer> latestAnswersByQuestion = studentAnswers.stream()
+                    .collect(Collectors.toMap(
+                            StudentAnswer::getCeqId,
+                            answer -> answer,
+                            (existing, replacement) -> {
+                                // 如果同一题目有多次答题，保留最后一次
+                                return replacement.getAnsweredAt().isAfter(existing.getAnsweredAt()) ? replacement : existing;
+                            }
+                    ));
+
+            // 计算正确率：正确题目数 / 总题目数（每道题多次正确只算一次）
+            long correctCount = latestAnswersByQuestion.values().stream()
+                    .filter(answer -> answer.getIsCorrect() != null && answer.getIsCorrect())
+                    .count();
+            
+            double accuracyRate = totalQuestions > 0 ? 
+                    (correctCount * 100.0 / totalQuestions) : 0.0;
+            detailDto.setAccuracyRate(Math.round(accuracyRate * 100.0) / 100.0);
+
+            // 判断是否完成
+            detailDto.setIsCompleted(latestAnswersByQuestion.size() >= totalQuestions);
+
+            // 获取开始和结束时间
+            LocalDateTime startTime = studentAnswers.stream()
+                    .map(StudentAnswer::getAnsweredAt)
+                    .min(LocalDateTime::compareTo)
+                    .orElse(null);
+            LocalDateTime lastAnsweredAt = studentAnswers.stream()
+                    .map(StudentAnswer::getAnsweredAt)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+            
+            detailDto.setStartTime(startTime);
+            detailDto.setLastAnsweredAt(lastAnsweredAt);
+
+            List<StudentAnswerDetailDto> answerDetails = new ArrayList<>();
+            List<StudentAnswerDetailDto> wrongAnswers = new ArrayList<>();
+
+            for (ClassExamQuestion question : questions) {
+                StudentAnswer answer = latestAnswersByQuestion.get(question.getCeqId());
+                
+                // 只有学生已作答的题目才加入详情列表
+                if (answer != null) {
+                    StudentAnswerDetailDto detailItem = new StudentAnswerDetailDto();
+                    detailItem.setAnswerId(answer.getAnswerId());
+                    detailItem.setCeqId(question.getCeqId());
+                    detailItem.setQuestionTitle(question.getQuestionTitle());
+                    detailItem.setQuestionContent(question.getQuestionContent());
+                    detailItem.setReferenceAnswer(question.getReferenceAnswer());
+                    detailItem.setDifficulty(question.getDifficulty());
+                    detailItem.setStudentAnswer(answer.getAnswerText());
+                    detailItem.setIsCorrect(answer.getIsCorrect());
+                    detailItem.setAnsweredAt(answer.getAnsweredAt());
+                    detailItem.setOriginalQuestionId(question.getOriginalQuestionId());
+
+                    answerDetails.add(detailItem);
+
+                    // 如果答错，加入错题列表
+                    if (answer.getIsCorrect() != null && !answer.getIsCorrect()) {
+                        wrongAnswers.add(detailItem);
+                    }
+                }
+            }
+
+            detailDto.setAnswerDetails(answerDetails);
+            detailDto.setWrongAnswers(wrongAnswers);
+
+            log.info("成功查询学生答题详情: classExamId={}, userId={}, 正确率={}%, 错题数={}", 
+                    classExamId, userId, detailDto.getAccuracyRate(), wrongAnswers.size());
+            
+            return Result.success("查询成功", detailDto);
+
+        } catch (Exception e) {
+            log.error("查询学生答题详情异常: classExamId={}, userId={}, error={}", 
+                    classExamId, userId, e.getMessage(), e);
+            return Result.error("查询学生答题详情失败: " + e.getMessage());
         }
     }
 }

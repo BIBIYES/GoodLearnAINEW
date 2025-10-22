@@ -223,15 +223,17 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 return Result.error("修改失败，结束时间不能早于开始时间");
             } else{
                 UpdateWrapper<ClassExam> updateWrapper = new UpdateWrapper<>();
-                updateWrapper.eq("classExamId", classExamId).set("endTime",endtime);
+                updateWrapper.eq("class_exam_id", classExamId).set("end_time",endtime);
                 boolean result = update(updateWrapper);
                 if(!result){
+                    log.info("修改失败: classExamId={}", classExamId);
                     return Result.error("修改失败");
                 }else {
                     return Result.success("修改成功");
                 }
             }
         }catch(Exception e){
+            log.error("修改结束时间时发生异常: classExamId={}, error={}", classExamId, e.getMessage(), e);
             return Result.error("修改失败");
         }
     }

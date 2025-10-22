@@ -7,6 +7,7 @@ import com.example.goodlearnai.v1.entity.ClassExam;
 import com.example.goodlearnai.v1.service.IClassExamService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -68,7 +69,8 @@ public class ClassExamController {
     /**修改结束时间
      */
     @PutMapping("/update-endtime/{classExamId}")
-    public Result<String> updateEndTime(@PathVariable Long classExamId, @RequestParam LocalDateTime endtime) {
+    public Result<String> updateEndTime(@PathVariable Long classExamId, @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endtime
+    ) {
         return classExamService.updateEndTime(classExamId, endtime);
     }
 }

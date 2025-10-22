@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
 /**
  * <p>
  * 班级试卷副本表 前端控制器
@@ -61,6 +63,13 @@ public class ClassExamController {
     @DeleteMapping("/{classExamId}")
     public Result<String> deleteClassExam(@PathVariable Long classExamId) {
         return classExamService.deleteClassExam(classExamId);
+    }
+
+    /**修改结束时间
+     */
+    @PutMapping("/update-endtime/{classExamId}")
+    public Result<String> updateEndTime(@PathVariable Long classExamId, @RequestParam LocalDateTime endtime) {
+        return classExamService.updateEndTime(classExamId, endtime);
     }
 }
 

@@ -6,6 +6,8 @@ import com.example.goodlearnai.v1.dto.ClassExamDto;
 import com.example.goodlearnai.v1.entity.ClassExam;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.time.LocalDateTime;
+
 /**
  * <p>
  * 班级试卷副本表 服务类
@@ -38,5 +40,10 @@ public interface IClassExamService extends IService<ClassExam> {
      * @return 删除结果
      */
     Result<String> deleteClassExam(Long classExamId);
+
+    /**
+     * 更改结束时间
+     */
+    Result<String> updateEndTime(Long classExamId, LocalDateTime entime);
 }
 

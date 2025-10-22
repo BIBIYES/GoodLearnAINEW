@@ -1,7 +1,6 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
@@ -202,37 +201,55 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
 
     @Override
     public Result<String> updateEndTime(Long classExamId, LocalDateTime endtime) {
-        try{
+        try {
             Long userId = AuthUtil.getCurrentUserId();
             String role = AuthUtil.getCurrentRole();
 
             if (!"teacher".equals(role)) {
-                log.info("用户暂无权修改试卷: userId={}", userId);
+                log.warn("用户暂无权修改试卷结束时间: userId={}", userId);
                 return Result.error("暂无权限修改试卷");
             }
 
+            // 查询班级试卷
             ClassExam classExam = getById(classExamId);
 
             if (classExam == null) {
+                log.warn("班级试卷不存在: classExamId={}", classExamId);
                 return Result.error("试卷不存在");
             }
 
-            LocalDateTime start = classExam.getStartTime();
-
-            if(endtime.isBefore(start)){
-                return Result.error("修改失败，结束时间不能早于开始时间");
-            } else{
-                UpdateWrapper<ClassExam> updateWrapper = new UpdateWrapper<>();
-                updateWrapper.eq("classExamId", classExamId).set("endTime",endtime);
-                boolean result = update(updateWrapper);
-                if(!result){
-                    return Result.error("修改失败");
-                }else {
-                    return Result.success("修改成功");
-                }
+            // 验证是否为试卷创建者
+            if (!classExam.getTeacherId().equals(userId)) {
+                log.warn("用户不是试卷创建者，无权修改: userId={}, teacherId={}", userId, classExam.getTeacherId());
+                return Result.error("只有试卷创建者才能修改结束时间");
             }
-        }catch(Exception e){
-            return Result.error("修改失败");
+
+            // 验证结束时间不能早于开始时间
+            LocalDateTime startTime = classExam.getStartTime();
+            if (endtime.isBefore(startTime)) {
+                log.warn("结束时间早于开始时间: startTime={}, endTime={}", startTime, endtime);
+                return Result.error("结束时间不能早于开始时间");
+            }
+
+            // 使用LambdaUpdateWrapper更新，避免字段名拼写错误
+            LambdaQueryWrapper<ClassExam> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ClassExam::getClassExamId, classExamId);
+            
+            classExam.setEndTime(endtime);
+            classExam.setUpdatedAt(LocalDateTime.now());
+            
+            boolean result = updateById(classExam);
+            
+            if (result) {
+                log.info("修改班级试卷结束时间成功: classExamId={}, newEndTime={}", classExamId, endtime);
+                return Result.success("修改成功");
+            } else {
+                log.error("修改班级试卷结束时间失败: classExamId={}", classExamId);
+                return Result.error("修改失败");
+            }
+        } catch (Exception e) {
+            log.error("修改班级试卷结束时间异常: classExamId={}, error={}", classExamId, e.getMessage(), e);
+            return Result.error("修改失败: " + e.getMessage());
         }
     }
 }

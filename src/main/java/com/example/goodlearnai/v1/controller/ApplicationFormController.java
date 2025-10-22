@@ -51,7 +51,7 @@ public class ApplicationFormController {
         // 发送邮件
         try {
             String emailContent = buildEmailContent(applicationForm);
-            javaMailUtil.sendHtmlMail("2315124408@qq.com", "x camp申请表", emailContent);
+            javaMailUtil.sendHtmlMail("1329987218@qq.com", "x camp申请表", emailContent);
             log.info("申请表单邮件发送成功: name={}, email={}", applicationForm.getName(), applicationForm.getEmail());
             return Result.success("申请提交成功！我们会尽快与您联系。");
         } catch (MessagingException e) {

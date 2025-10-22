@@ -1,14 +1,12 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.ClassExamDto;
-import com.example.goodlearnai.v1.entity.ClassExam;
-import com.example.goodlearnai.v1.entity.ClassExamQuestion;
-import com.example.goodlearnai.v1.entity.Exam;
-import com.example.goodlearnai.v1.entity.ExamQuestion;
+import com.example.goodlearnai.v1.entity.*;
 import com.example.goodlearnai.v1.mapper.ClassExamMapper;
 import com.example.goodlearnai.v1.mapper.ClassExamQuestionMapper;
 import com.example.goodlearnai.v1.mapper.ExamMapper;
@@ -199,6 +197,42 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
         } catch (Exception e) {
             log.error("删除班级试卷副本时发生异常: classExamId={}, error={}", classExamId, e.getMessage(), e);
             return Result.error("删除班级试卷时发生未知异常");
+        }
+    }
+
+    @Override
+    public Result<String> updateEndTime(Long classExamId, LocalDateTime endtime) {
+        try{
+            Long userId = AuthUtil.getCurrentUserId();
+            String role = AuthUtil.getCurrentRole();
+
+            if (!"teacher".equals(role)) {
+                log.info("用户暂无权修改试卷: userId={}", userId);
+                return Result.error("暂无权限修改试卷");
+            }
+
+            ClassExam classExam = getById(classExamId);
+
+            if (classExam == null) {
+                return Result.error("试卷不存在");
+            }
+
+            LocalDateTime start = classExam.getStartTime();
+
+            if(endtime.isBefore(start)){
+                return Result.error("修改失败，结束时间不能早于开始时间");
+            } else{
+                UpdateWrapper<ClassExam> updateWrapper = new UpdateWrapper<>();
+                updateWrapper.eq("classExamId", classExamId).set("endTime",endtime);
+                boolean result = update(updateWrapper);
+                if(!result){
+                    return Result.error("修改失败");
+                }else {
+                    return Result.success("修改成功");
+                }
+            }
+        }catch(Exception e){
+            return Result.error("修改失败");
         }
     }
 }

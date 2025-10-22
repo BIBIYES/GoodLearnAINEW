@@ -12,8 +12,15 @@ import lombok.ToString;
 @Data
 public class UserLogin {
     /**
-     * 邮箱
+     * 账号（可以是邮箱或工号）
      */
+    private String account;
+    
+    /**
+     * 邮箱（已弃用，保留兼容性）
+     * @deprecated 请使用 account 字段
+     */
+    @Deprecated
     private String email;
     
     /**

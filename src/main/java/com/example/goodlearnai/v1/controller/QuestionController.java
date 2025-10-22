@@ -158,19 +158,29 @@ public class QuestionController {
 
     /**
      * 上传Word教案文档并AI生成题目（流式响应）
+     * @param file Word教案文件
+     * @param constraints 题目生成的限制条件（例如：题目数量、难度、重点内容等）
      */
     @PostMapping(value = "/ai-create-by-word-plan", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ChatResponse> createQuestionByWordPlan(@RequestParam("file") MultipartFile file) {
-        log.info("上传Word教案文档并AI生成题目（流式），文件名: {}", file.getOriginalFilename());
-        return questionService.createQuestionByWordPlan(file);
+    public Flux<ChatResponse> createQuestionByWordPlan(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "constraints", required = false) String constraints) {
+        log.info("上传Word教案文档并AI生成题目（流式），文件名: {}, 限制条件: {}", 
+                file.getOriginalFilename(), constraints);
+        return questionService.createQuestionByWordPlan(file, constraints);
     }
 
     /**
      * 上传Word教案文档并AI生成题目（非流式响应）
+     * @param file Word教案文件
+     * @param constraints 题目生成的限制条件（例如：题目数量、难度、重点内容等）
      */
     @PostMapping("/ai-create-by-word-plan-sync")
-    public Result<String> createQuestionByWordPlanSync(@RequestParam("file") MultipartFile file) {
-        log.info("上传Word教案文档并AI生成题目（非流式），文件名: {}", file.getOriginalFilename());
-        return questionService.createQuestionByWordPlanSync(file);
+    public Result<String> createQuestionByWordPlanSync(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "constraints", required = false) String constraints) {
+        log.info("上传Word教案文档并AI生成题目（非流式），文件名: {}, 限制条件: {}", 
+                file.getOriginalFilename(), constraints);
+        return questionService.createQuestionByWordPlanSync(file, constraints);
     }
 }

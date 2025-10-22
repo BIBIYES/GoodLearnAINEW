@@ -360,7 +360,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
     }
     
     @Override
-    public Flux<ChatResponse> createQuestionByPlan(String requestData) {
+    public Flux<ChatResponse> createQuestionByPlan(String requestData, String constraints) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         
@@ -377,6 +377,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
                     "- 【】标记的内容通常是教学要素的标题或分类\n" +
                     "- | 分隔的内容是表格中的不同列信息\n" +
                     "- 重点关注教学目标、教学重点、教学难点、教学方法、教学内容等关键信息\n\n" +
+                    "**生成步骤（重要）：**\n" +
+                    "第一步：先解析教案，提取出所有的知识点，列出知识点清单\n" +
+                    "第二步：根据这些知识点生成对应的练习题目\n\n" +
                     "根据教案的具体内容，生成紧密相关的练习题目：\n" +
                     "1. **深度分析教案内容**：仔细理解教学目标、知识点、技能要求\n" +
                     "2. **精准对应知识点**：确保每道题目都直接对应教案中的具体知识点\n" +
@@ -385,14 +388,15 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
                     "5. **突出重点难点**：重点针对教案标明的教学重点和难点出题\n\n" +
                     "请以 **JSON 数组格式** 返回生成的题目，每道题包含如下字段：\n" +
                     "- `title`：题目标题（要体现具体的知识点）\n" +
-                    "- `content`：题目详情，使用 Markdown 格式，包含具体的题目内容、要求和评分标准\n" +
+                    "- `content`：题目详情，使用 Markdown 格式，包含具体的题目内容和要求，**不需要显示题目的分数**\n" +
                     "- `difficulty`：题目难度，使用整数 1（基础理解）、2（应用分析）、3（综合运用） 表示\n\n" +
                     "输出要求：\n" +
                     "1. 确保输出格式是合法的 JSON 数组\n" +
                     "2. 题目内容要具体、明确，避免泛泛而谈\n" +
-                    "3. 生成5-8道题目，覆盖教案的主要知识点\n" +
-                    "4. 题目要有实际教学和考核价值\n" +
-                    "5. 充分利用教案中的具体信息，如课程名称、章节内容、实验步骤等\n\n" +
+                    "3. 题目要有实际教学和考核价值\n" +
+                    "4. 充分利用教案中的具体信息，如课程名称、章节内容、实验步骤等\n" +
+                    "5. **题目内容中不要包含分数、评分标准等信息**\n\n" +
+                    "6." + constraints + "\n" +
                     "教案内容如下：\n" +
                     requestData;
 
@@ -411,7 +415,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
     }
 
     @Override
-    public Flux<ChatResponse> createQuestionByWordPlan(MultipartFile file) {
+    public Flux<ChatResponse> createQuestionByWordPlan(MultipartFile file, String constraints) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         
@@ -431,8 +435,8 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
             String documentContent = WordDocumentParser.parseWordDocument(file);
             String cleanedContent = WordDocumentParser.cleanContent(documentContent);
             
-            log.info("成功解析Word教案文档: fileName = {}, contentLength = {}", 
-                    file.getOriginalFilename(), cleanedContent.length());
+            log.info("成功解析Word教案文档: fileName = {}, contentLength = {}, constraints = {}", 
+                    file.getOriginalFilename(), cleanedContent.length(), constraints);
             
             // 验证文档内容不为空
             if (cleanedContent.trim().isEmpty()) {
@@ -440,8 +444,10 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
                 return Flux.error(new IllegalArgumentException("Word文档内容为空，请检查文档内容"));
             }
             
+
+            
             // 调用已有的根据教案生成题目的方法
-            return createQuestionByPlan(cleanedContent);
+            return createQuestionByPlan(cleanedContent, constraints);
             
         } catch (Exception e) {
             log.error("解析Word教案文档失败: fileName = {}, userId = {}", 
@@ -451,7 +457,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
     }
 
     @Override
-    public Result<String> createQuestionByWordPlanSync(MultipartFile file) {
+    public Result<String> createQuestionByWordPlanSync(MultipartFile file, String constraints) {
         Long userId = AuthUtil.getCurrentUserId();
         String role = AuthUtil.getCurrentRole();
         
@@ -471,8 +477,8 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
             String documentContent = WordDocumentParser.parseWordDocument(file);
             String cleanedContent = WordDocumentParser.cleanContent(documentContent);
             
-            log.info("成功解析Word教案文档: fileName = {}, contentLength = {}", 
-                    file.getOriginalFilename(), cleanedContent.length());
+            log.info("成功解析Word教案文档: fileName = {}, contentLength = {}, constraints = {}", 
+                    file.getOriginalFilename(), cleanedContent.length(), constraints);
             
             // 验证文档内容不为空
             if (cleanedContent.trim().isEmpty()) {
@@ -481,30 +487,45 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
             }
             
             // 构建针对教案的专用提示词
-            String prompt = "你是一个专业的教育AI助手，擅长分析教案内容并生成高质量的教学题目。\n" +
-                    "请仔细分析以下教案内容，特别注意：\n" +
-                    "- 教案中的表格内容包含了重要的教学信息\n" +
-                    "- 【】标记的内容通常是教学要素的标题或分类\n" +
-                    "- | 分隔的内容是表格中的不同列信息\n" +
-                    "- 重点关注教学目标、教学重点、教学难点、教学方法、教学内容等关键信息\n\n" +
-                    "根据教案的具体内容，生成紧密相关的练习题目：\n" +
-                    "1. **深度分析教案内容**：仔细理解教学目标、知识点、技能要求\n" +
-                    "2. **精准对应知识点**：确保每道题目都直接对应教案中的具体知识点\n" +
-                    "3. **体现教学层次**：根据教案的难度设计不同层次的题目\n" +
-                    "4. **结合教学方法**：参考教案中的教学方法设计题目形式\n" +
-                    "5. **突出重点难点**：重点针对教案标明的教学重点和难点出题\n\n" +
-                    "请以 **JSON 数组格式** 返回生成的题目，每道题包含如下字段：\n" +
-                    "- `title`：题目标题（要体现具体的知识点）\n" +
-                    "- `content`：题目详情，使用 Markdown 格式，包含具体的题目内容、要求和评分标准\n" +
-                    "- `difficulty`：题目难度，使用整数 1（基础理解）、2（应用分析）、3（综合运用） 表示\n\n" +
-                    "输出要求：\n" +
-                    "1. 确保输出格式是合法的 JSON 数组\n" +
-                    "2. 题目内容要具体、明确，避免泛泛而谈\n" +
-                    "3. 生成5-8道题目，覆盖教案的主要知识点\n" +
-                    "4. 题目要有实际教学和考核价值\n" +
-                    "5. 充分利用教案中的具体信息，如课程名称、章节内容、实验步骤等\n\n" +
-                    "教案内容如下：\n" +
-                    cleanedContent;
+            StringBuilder promptBuilder = new StringBuilder();
+            promptBuilder.append("你是一个专业的教育AI助手，擅长分析教案内容并生成高质量的教学题目。\n")
+                    .append("请仔细分析以下教案内容，特别注意：\n")
+                    .append("- 教案中的表格内容包含了重要的教学信息\n")
+                    .append("- 【】标记的内容通常是教学要素的标题或分类\n")
+                    .append("- | 分隔的内容是表格中的不同列信息\n")
+                    .append("- 重点关注教学目标、教学重点、教学难点、教学方法、教学内容等关键信息\n\n")
+                    .append("**生成步骤（重要）：**\n")
+                    .append("第一步：先解析教案，提取出所有的知识点，列出知识点清单\n")
+                    .append("第二步：根据这些知识点生成对应的练习题目\n\n");
+            
+            // 如果有用户限制条件，添加到提示词中
+            if (constraints != null && !constraints.trim().isEmpty()) {
+                promptBuilder.append("**用户的特殊要求和限制条件：**\n")
+                        .append(constraints)
+                        .append("\n\n请严格按照以上用户要求生成题目。\n\n");
+            }
+            
+            promptBuilder.append("根据教案的具体内容，生成紧密相关的练习题目：\n")
+                    .append("1. **深度分析教案内容**：仔细理解教学目标、知识点、技能要求\n")
+                    .append("2. **精准对应知识点**：确保每道题目都直接对应教案中的具体知识点\n")
+                    .append("3. **体现教学层次**：根据教案的难度设计不同层次的题目\n")
+                    .append("4. **结合教学方法**：参考教案中的教学方法设计题目形式\n")
+                    .append("5. **突出重点难点**：重点针对教案标明的教学重点和难点出题\n\n")
+                    .append("请以 **JSON 数组格式** 返回生成的题目，每道题包含如下字段：\n")
+                    .append("- `title`：题目标题（要体现具体的知识点）\n")
+                    .append("- `content`：题目详情，使用 Markdown 格式，包含具体的题目内容和要求，**不需要显示题目的分数**\n")
+                    .append("- `difficulty`：题目难度，使用整数 1（基础理解）、2（应用分析）、3（综合运用） 表示\n\n")
+                    .append("输出要求：\n")
+                    .append("1. 确保输出格式是合法的 JSON 数组\n")
+                    .append("2. 题目内容要具体、明确，避免泛泛而谈\n")
+                    .append("3. 生成5-8道题目，覆盖教案的主要知识点\n")
+                    .append("4. 题目要有实际教学和考核价值\n")
+                    .append("5. 充分利用教案中的具体信息，如课程名称、章节内容、实验步骤等\n")
+                    .append("6. **题目内容中不要包含分数、评分标准等信息**\n\n")
+                    .append("教案内容如下：\n")
+                    .append(cleanedContent);
+            
+            String prompt = promptBuilder.toString();
 
             log.info("AI根据Word教案创建题目开始: userId={}, fileName={}", userId, file.getOriginalFilename());
             

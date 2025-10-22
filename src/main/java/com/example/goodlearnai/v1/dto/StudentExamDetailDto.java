@@ -34,7 +34,10 @@ public class StudentExamDetailDto {
     private String email;
     
     /**
-     * 正确率百分比（基于总题数计算，每道题多次正确只算一次）
+     * 正确率百分比
+     * 计算规则：正确次数 / (正确次数 + 错误次数)
+     * - 正确次数：每道题多次正确只算1次
+     * - 错误次数：所有错误都算（不去重）
      */
     private Double accuracyRate;
     
@@ -54,12 +57,13 @@ public class StudentExamDetailDto {
     private LocalDateTime lastAnsweredAt;
     
     /**
-     * 所有答题详情列表
+     * 所有答题详情列表（每道题只显示最后一次答题结果）
      */
     private List<StudentAnswerDetailDto> answerDetails;
     
     /**
-     * 错题列表（仅包含做错的题目）
+     * 错题列表（包含所有错误的答题记录，不去重）
+     * 如果一道题错了多次，会有多条记录
      */
     private List<StudentAnswerDetailDto> wrongAnswers;
 }

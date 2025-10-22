@@ -360,13 +360,24 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                                 }
                         ));
 
-                // 计算正确率：正确题目数 / 总题目数（每道题多次正确只算一次）
-                long correctCount = latestAnswersByQuestion.values().stream()
+                // 计算正确题目数（每道题多次正确只算一次，通过去重实现）
+                long correctCount = studentAnswers.stream()
                         .filter(answer -> answer.getIsCorrect() != null && answer.getIsCorrect())
+                        .map(StudentAnswer::getCeqId)
+                        .distinct()
                         .count();
                 
-                double accuracyRate = totalQuestions > 0 ? 
-                        (correctCount * 100.0 / totalQuestions) : 0.0;
+                // 计算错误次数（所有错误答案都算，不去重）
+                long wrongCount = studentAnswers.stream()
+                        .filter(answer -> answer.getIsCorrect() != null && !answer.getIsCorrect())
+                        .count();
+                
+                // 计算总完成次数 = 正确次数 + 错误次数
+                long totalAttempts = correctCount + wrongCount;
+                
+                // 计算正确率：正确次数 / 总完成次数
+                double accuracyRate = totalAttempts > 0 ? 
+                        (correctCount * 100.0 / totalAttempts) : 0.0;
                 dto.setAccuracyRate(Math.round(accuracyRate * 100.0) / 100.0);
 
                 // 判断是否完成
@@ -489,7 +500,7 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
             detailDto.setSchoolNumber(student.getSchoolNumber());
             detailDto.setEmail(student.getEmail());
 
-            // 按题目分组，每道题只取最后一次答题结果
+            // 按题目分组，每道题只取最后一次答题结果（用于判断是否完成等）
             Map<Long, StudentAnswer> latestAnswersByQuestion = studentAnswers.stream()
                     .collect(Collectors.toMap(
                             StudentAnswer::getCeqId,
@@ -500,13 +511,24 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                             }
                     ));
 
-            // 计算正确率：正确题目数 / 总题目数（每道题多次正确只算一次）
-            long correctCount = latestAnswersByQuestion.values().stream()
+            // 计算正确题目数（每道题多次正确只算一次，通过去重实现）
+            long correctCount = studentAnswers.stream()
                     .filter(answer -> answer.getIsCorrect() != null && answer.getIsCorrect())
+                    .map(StudentAnswer::getCeqId)
+                    .distinct()
                     .count();
             
-            double accuracyRate = totalQuestions > 0 ? 
-                    (correctCount * 100.0 / totalQuestions) : 0.0;
+            // 计算错误次数（所有错误答案都算，不去重）
+            long wrongCount = studentAnswers.stream()
+                    .filter(answer -> answer.getIsCorrect() != null && !answer.getIsCorrect())
+                    .count();
+            
+            // 计算总完成次数 = 正确次数 + 错误次数
+            long totalAttempts = correctCount + wrongCount;
+            
+            // 计算正确率：正确次数 / 总完成次数
+            double accuracyRate = totalAttempts > 0 ? 
+                    (correctCount * 100.0 / totalAttempts) : 0.0;
             detailDto.setAccuracyRate(Math.round(accuracyRate * 100.0) / 100.0);
 
             // 判断是否完成
@@ -528,6 +550,11 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
             List<StudentAnswerDetailDto> answerDetails = new ArrayList<>();
             List<StudentAnswerDetailDto> wrongAnswers = new ArrayList<>();
 
+            // 构建题目ID到题目对象的映射，方便后续查找
+            Map<Long, ClassExamQuestion> questionMap = questions.stream()
+                    .collect(Collectors.toMap(ClassExamQuestion::getCeqId, q -> q));
+
+            // 1. 构建 answerDetails：每道题只显示最后一次答题结果
             for (ClassExamQuestion question : questions) {
                 StudentAnswer answer = latestAnswersByQuestion.get(question.getCeqId());
                 
@@ -546,10 +573,27 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                     detailItem.setOriginalQuestionId(question.getOriginalQuestionId());
 
                     answerDetails.add(detailItem);
+                }
+            }
 
-                    // 如果答错，加入错题列表
-                    if (answer.getIsCorrect() != null && !answer.getIsCorrect()) {
-                        wrongAnswers.add(detailItem);
+            // 2. 构建 wrongAnswers：包含所有错误的答题记录（不去重）
+            for (StudentAnswer answer : studentAnswers) {
+                if (answer.getIsCorrect() != null && !answer.getIsCorrect()) {
+                    ClassExamQuestion question = questionMap.get(answer.getCeqId());
+                    if (question != null) {
+                        StudentAnswerDetailDto wrongItem = new StudentAnswerDetailDto();
+                        wrongItem.setAnswerId(answer.getAnswerId());
+                        wrongItem.setCeqId(question.getCeqId());
+                        wrongItem.setQuestionTitle(question.getQuestionTitle());
+                        wrongItem.setQuestionContent(question.getQuestionContent());
+                        wrongItem.setReferenceAnswer(question.getReferenceAnswer());
+                        wrongItem.setDifficulty(question.getDifficulty());
+                        wrongItem.setStudentAnswer(answer.getAnswerText());
+                        wrongItem.setIsCorrect(answer.getIsCorrect());
+                        wrongItem.setAnsweredAt(answer.getAnsweredAt());
+                        wrongItem.setOriginalQuestionId(question.getOriginalQuestionId());
+
+                        wrongAnswers.add(wrongItem);
                     }
                 }
             }

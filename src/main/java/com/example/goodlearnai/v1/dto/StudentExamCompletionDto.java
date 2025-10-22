@@ -27,7 +27,10 @@ public class StudentExamCompletionDto {
     private Long schoolNumber;
     
     /**
-     * 正确率百分比（基于总题数计算，每道题多次正确只算一次）
+     * 正确率百分比
+     * 计算规则：正确次数 / (正确次数 + 错误次数)
+     * - 正确次数：每道题多次正确只算1次
+     * - 错误次数：所有错误都算（不去重）
      */
     private Double accuracyRate;
     

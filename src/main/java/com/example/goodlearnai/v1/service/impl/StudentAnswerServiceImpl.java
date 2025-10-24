@@ -155,25 +155,6 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
                 ceqIds.add(ceq.getCeqId());
             }
             
-            // 4. 查询该学生对这些题目的作答数量
-            LambdaQueryWrapper<StudentAnswer> answerWrapper = new LambdaQueryWrapper<>();
-            answerWrapper.eq(StudentAnswer::getUserId, userId)
-                    .in(StudentAnswer::getCeqId, ceqIds);
-            long answeredQuestions = baseMapper.selectCount(answerWrapper);
-            
-            log.info("检查试卷完成状态: userId={}, classExamId={}, 总题目数={}, 已作答数={}", 
-                    userId, classExamId, totalQuestions, answeredQuestions);
-            
-            // 5. 如果已作答数等于总题目数，则更新试卷完成状态
-            if (answeredQuestions >= totalQuestions) {
-                ClassExam classExam = classExamService.getById(classExamId);
-                if (classExam != null && (classExam.getIsCompleted() == null || !classExam.getIsCompleted())) {
-                    classExam.setIsCompleted(true);
-                    classExamService.updateById(classExam);
-                    log.info("学生已完成班级试卷，更新状态为已完成: userId={}, classExamId={}", userId, classExamId);
-                }
-            }
-            
         } catch (Exception e) {
             log.error("检查并更新试卷完成状态异常: ceqId={}, userId={}, error={}", ceqId, userId, e.getMessage(), e);
         }

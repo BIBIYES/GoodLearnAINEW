@@ -53,6 +53,9 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
     
     @Autowired
     private UsersMapper usersMapper;
+    
+    @Autowired
+    private StudentExamCompletionMapper studentExamCompletionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -136,6 +139,33 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
             }
             
             log.info("成功复制{}道题目到副本题目表", originalQuestions.size());
+            
+            // 为班级所有学生创建试卷完成记录
+            try {
+                LambdaQueryWrapper<ClassMembers> memberWrapper = new LambdaQueryWrapper<>();
+                memberWrapper.eq(ClassMembers::getClassId, classId);
+                List<ClassMembers> classMembers = classMembersMapper.selectList(memberWrapper);
+                
+                int createdCount = 0;
+                for (ClassMembers member : classMembers) {
+                    // 检查用户是否为学生
+                    Users user = usersMapper.selectById(member.getUserId());
+                    if (user != null && "student".equals(user.getRole())) {
+                        StudentExamCompletion completion = new StudentExamCompletion();
+                        completion.setUserId(member.getUserId());
+                        completion.setClassExamId(classExam.getClassExamId());
+                        completion.setIsCompleted(false);
+                        completion.setCreatedAt(LocalDateTime.now());
+                        studentExamCompletionMapper.insert(completion);
+                        createdCount++;
+                    }
+                }
+                log.info("为班级{}位学生创建了试卷完成记录，试卷ID={}", createdCount, classExam.getClassExamId());
+            } catch (Exception completionEx) {
+                log.error("创建学生完成记录时发生异常: classExamId={}, error={}", 
+                        classExam.getClassExamId(), completionEx.getMessage(), completionEx);
+                // 不影响主流程，仅记录日志
+            }
 
             log.info("试卷发布到班级成功: examId={}, classId={}, classExamId={}, startTime={}, endTime={}", 
                     examId, classId, classExam.getClassExamId(), 

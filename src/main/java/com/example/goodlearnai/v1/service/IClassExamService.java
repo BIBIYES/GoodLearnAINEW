@@ -45,5 +45,20 @@ public interface IClassExamService extends IService<ClassExam> {
      * 更改结束时间
      */
     Result<String> updateEndTime(Long classExamId, LocalDateTime entime);
+
+    /**
+     * 查看班级试卷的所有学生完成情况
+     * @param classExamId 班级试卷ID
+     * @return 所有学生的完成情况列表
+     */
+    Result<java.util.List<com.example.goodlearnai.v1.dto.StudentExamCompletionDto>> getStudentCompletionStatus(Long classExamId);
+
+    /**
+     * 查看学生试卷答题详情（包括做错的题目）
+     * @param classExamId 班级试卷ID
+     * @param userId 学生用户ID
+     * @return 学生答题详情
+     */
+    Result<com.example.goodlearnai.v1.dto.StudentExamDetailDto> getStudentExamDetail(Long classExamId, Long userId);
 }
 

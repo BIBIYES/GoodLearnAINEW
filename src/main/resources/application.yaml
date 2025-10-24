@@ -26,7 +26,7 @@ spring:
     mcp:
       client:
         stdio:
-          servers-configuration: ./classpath:mcp-servers.json(win配置)
+          servers-configuration: ./classpath:mcp-servers.json
   mvc:
     servlet:
       path: /api

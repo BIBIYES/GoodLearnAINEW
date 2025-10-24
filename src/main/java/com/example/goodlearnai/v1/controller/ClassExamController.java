@@ -3,6 +3,8 @@ package com.example.goodlearnai.v1.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.ClassExamDto;
+import com.example.goodlearnai.v1.dto.StudentExamCompletionDto;
+import com.example.goodlearnai.v1.dto.StudentExamDetailDto;
 import com.example.goodlearnai.v1.entity.ClassExam;
 import com.example.goodlearnai.v1.service.IClassExamService;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -66,12 +69,38 @@ public class ClassExamController {
         return classExamService.deleteClassExam(classExamId);
     }
 
-    /**修改结束时间
+    /**
+     * 修改结束时间
      */
     @PutMapping("/update-endtime/{classExamId}")
     public Result<String> updateEndTime(@PathVariable Long classExamId, @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endtime
     ) {
         return classExamService.updateEndTime(classExamId, endtime);
+    }
+
+    /**
+     * 查看班级试卷的所有学生完成情况
+     * @param classExamId 班级试卷ID
+     * @return 所有学生的完成情况列表
+     */
+    @GetMapping("/student-completion/{classExamId}")
+    public Result<List<StudentExamCompletionDto>> getStudentCompletionStatus(@PathVariable Long classExamId) {
+        log.info("查询学生完成情况: classExamId={}", classExamId);
+        return classExamService.getStudentCompletionStatus(classExamId);
+    }
+
+    /**
+     * 查看学生试卷答题详情（包括做错的题目）
+     * @param classExamId 班级试卷ID
+     * @param userId 学生用户ID
+     * @return 学生答题详情
+     */
+    @GetMapping("/student-detail/{classExamId}/{userId}")
+    public Result<StudentExamDetailDto> getStudentExamDetail(
+            @PathVariable Long classExamId, 
+            @PathVariable Long userId) {
+        log.info("查询学生答题详情: classExamId={}, userId={}", classExamId, userId);
+        return classExamService.getStudentExamDetail(classExamId, userId);
     }
 }
 

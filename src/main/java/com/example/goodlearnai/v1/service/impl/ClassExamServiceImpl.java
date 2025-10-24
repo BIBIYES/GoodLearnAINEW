@@ -12,6 +12,7 @@ import com.example.goodlearnai.v1.entity.*;
 import com.example.goodlearnai.v1.mapper.*;
 import com.example.goodlearnai.v1.service.IClassExamService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.goodlearnai.v1.service.IStudentExamCompletionService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,9 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
     
     @Autowired
     private StudentExamCompletionMapper studentExamCompletionMapper;
+
+    @Autowired
+    private IStudentExamCompletionService studentExamCompletionService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -112,6 +116,7 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
             classExam.setStartTime(classExamDto.getStartTime());
             classExam.setEndTime(classExamDto.getEndTime());
             classExam.setCreatedAt(LocalDateTime.now());
+            classExam.setStatus(1); // 设置状态为正常
             
             // 调试日志：保存前检查对象内容
             log.info("准备保存班级试卷副本 - 对象内容: examName={}, startTime={}, endTime={}", 
@@ -139,13 +144,13 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
             }
             
             log.info("成功复制{}道题目到副本题目表", originalQuestions.size());
-            
+
             // 为班级所有学生创建试卷完成记录
             try {
                 LambdaQueryWrapper<ClassMembers> memberWrapper = new LambdaQueryWrapper<>();
                 memberWrapper.eq(ClassMembers::getClassId, classId);
                 List<ClassMembers> classMembers = classMembersMapper.selectList(memberWrapper);
-                
+
                 int createdCount = 0;
                 for (ClassMembers member : classMembers) {
                     // 检查用户是否为学生
@@ -162,9 +167,42 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 }
                 log.info("为班级{}位学生创建了试卷完成记录，试卷ID={}", createdCount, classExam.getClassExamId());
             } catch (Exception completionEx) {
-                log.error("创建学生完成记录时发生异常: classExamId={}, error={}", 
+                log.error("创建学生完成记录时发生异常: classExamId={}, error={}",
                         classExam.getClassExamId(), completionEx.getMessage(), completionEx);
                 // 不影响主流程，仅记录日志
+            }
+            Long classExamId = null;
+            try {
+                classExamId = classExam.getClassExamId();
+                // 获取班级所有学生
+                LambdaQueryWrapper<ClassMembers> memberWrapper = new LambdaQueryWrapper<>();
+                memberWrapper.eq(ClassMembers::getClassId, classId);
+                List<ClassMembers> classMembers = classMembersMapper.selectList(memberWrapper);
+
+                int createdCount = 0;
+                int existCount = 0;
+
+                for (ClassMembers member : classMembers) {
+                    // 检查用户是否为学生
+                    Users user = usersMapper.selectById(member.getUserId());
+                    if (user != null && "student".equals(user.getRole())) {
+                        // 尝试初始化记录
+                        Result<String> result = studentExamCompletionService.initCompletionRecord(
+                                member.getUserId(), classExamId);
+                        if (result.getMessage().contains("成功")) {
+                            createdCount++;
+                        } else if (result.getMessage().contains("已存在")) {
+                            existCount++;
+                        }
+                    }
+                }
+
+                log.info("批量初始化完成记录：classId={}, classExamId={}, 新建={}, 已存在={}",
+                        classId, classExamId, createdCount, existCount);
+
+            } catch (Exception e) {
+                log.error("批量初始化完成记录失败：classId={}, classExamId={}, error={}",
+                        classId, classExamId, e.getMessage(), e);
             }
 
             log.info("试卷发布到班级成功: examId={}, classId={}, classExamId={}, startTime={}, endTime={}", 
@@ -185,7 +223,8 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
             Page<ClassExam> page = new Page<>(current, size);
             
             LambdaQueryWrapper<ClassExam> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(ClassExam::getClassId, classId);
+            queryWrapper.eq(ClassExam::getClassId, classId)
+                    .eq(ClassExam::getStatus, 1); // 只查询未删除的试卷
             queryWrapper.orderByDesc(ClassExam::getCreatedAt);
             
             IPage<ClassExam> classExamPage = page(page, queryWrapper);
@@ -222,15 +261,12 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 return Result.error("用户无权限删除此班级试卷");
             }
 
-            // 删除班级试卷副本的所有题目（从新的class_exam_question表中删除）
-            LambdaQueryWrapper<ClassExamQuestion> questionWrapper = new LambdaQueryWrapper<>();
-            questionWrapper.eq(ClassExamQuestion::getClassExamId, classExamId);
-            int deletedCount = classExamQuestionMapper.delete(questionWrapper);
-            log.info("删除班级试卷副本题目: classExamId={}, 删除题目数={}", classExamId, deletedCount);
-
-            // 删除班级试卷副本
-            if (removeById(classExamId)) {
-                log.info("删除班级试卷副本成功: classExamId={}", classExamId);
+            // 软删除：更新班级试卷副本状态为0（已删除）
+            classExam.setStatus(0);
+            classExam.setUpdatedAt(LocalDateTime.now());
+            
+            if (updateById(classExam)) {
+                log.info("软删除班级试卷副本成功: classExamId={}", classExamId);
                 return Result.success("删除成功");
             } else {
                 return Result.error("删除失败");
@@ -252,12 +288,15 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 return Result.error("暂无权限修改试卷");
             }
 
-            // 查询班级试卷
-            ClassExam classExam = getById(classExamId);
+            // 查询班级试卷（只查询未删除的）
+            LambdaQueryWrapper<ClassExam> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(ClassExam::getClassExamId, classExamId)
+                    .eq(ClassExam::getStatus, 1);
+            ClassExam classExam = getOne(wrapper);
 
             if (classExam == null) {
-                log.warn("班级试卷不存在: classExamId={}", classExamId);
-                return Result.error("试卷不存在");
+                log.warn("班级试卷不存在或已删除: classExamId={}", classExamId);
+                return Result.error("试卷不存在或已删除");
             }
 
             // 验证是否为试卷创建者
@@ -306,11 +345,15 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 return Result.error("暂无权限查看学生完成情况");
             }
 
-            // 查询班级试卷
-            ClassExam classExam = getById(classExamId);
+            // 查询班级试卷（只查询未删除的）
+            LambdaQueryWrapper<ClassExam> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(ClassExam::getClassExamId, classExamId)
+                    .eq(ClassExam::getStatus, 1);
+            ClassExam classExam = getOne(wrapper);
+            
             if (classExam == null) {
-                log.warn("班级试卷不存在: classExamId={}", classExamId);
-                return Result.error("班级试卷不存在");
+                log.warn("班级试卷不存在或已删除: classExamId={}", classExamId);
+                return Result.error("班级试卷不存在或已删除");
             }
 
             // 验证是否为试卷创建者
@@ -465,11 +508,15 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                 return Result.error("暂无权限查看学生答题详情");
             }
 
-            // 查询班级试卷
-            ClassExam classExam = getById(classExamId);
+            // 查询班级试卷（只查询未删除的）
+            LambdaQueryWrapper<ClassExam> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(ClassExam::getClassExamId, classExamId)
+                    .eq(ClassExam::getStatus, 1);
+            ClassExam classExam = getOne(wrapper);
+            
             if (classExam == null) {
-                log.warn("班级试卷不存在: classExamId={}", classExamId);
-                return Result.error("班级试卷不存在");
+                log.warn("班级试卷不存在或已删除: classExamId={}", classExamId);
+                return Result.error("班级试卷不存在或已删除");
             }
 
             // 验证是否为试卷创建者

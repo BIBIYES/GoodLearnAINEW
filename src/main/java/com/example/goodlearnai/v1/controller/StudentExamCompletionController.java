@@ -1,13 +1,18 @@
 package com.example.goodlearnai.v1.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.entity.ClassExam;
 import com.example.goodlearnai.v1.entity.ClassMembers;
 import com.example.goodlearnai.v1.entity.StudentExamCompletion;
 import com.example.goodlearnai.v1.entity.Users;
 import com.example.goodlearnai.v1.mapper.ClassExamMapper;
+import com.example.goodlearnai.v1.mapper.ClassExamQuestionMapper;
 import com.example.goodlearnai.v1.mapper.ClassMembersMapper;
+import com.example.goodlearnai.v1.mapper.ClassMapper;
+import com.example.goodlearnai.v1.mapper.StudentAnswerMapper;
 import com.example.goodlearnai.v1.mapper.UsersMapper;
 import com.example.goodlearnai.v1.service.IStudentExamCompletionService;
 import com.example.goodlearnai.v1.utils.AuthUtil;
@@ -15,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +49,15 @@ public class StudentExamCompletionController {
     
     @Autowired
     private ClassExamMapper classExamMapper;
+    
+    @Autowired
+    private ClassMapper classMapper;
+    
+    @Autowired
+    private ClassExamQuestionMapper classExamQuestionMapper;
+    
+    @Autowired
+    private StudentAnswerMapper studentAnswerMapper;
 
     /**
      * 检查并更新当前学生的试卷完成状态
@@ -52,8 +65,8 @@ public class StudentExamCompletionController {
      * @param classExamId 班级试卷ID
      * @return 更新结果
      */
-    @PostMapping("/check/{classExamId}")
-    public Result<String> checkMyCompletionStatus(@PathVariable Long classExamId) {
+    @PostMapping("/check")
+    public Result<String> checkMyCompletionStatus(@RequestParam Long classExamId) {
         Long userId = AuthUtil.getCurrentUserId();
         log.info("检查学生试卷完成状态：userId={}, classExamId={}", userId, classExamId);
         return studentExamCompletionService.checkAndUpdateCompletionStatus(userId, classExamId);
@@ -98,10 +111,9 @@ public class StudentExamCompletionController {
      * @param classExamId 班级试卷ID
      * @return 初始化结果
      */
-    @PostMapping("/batch-init/{classId}/{classExamId}")
+    @PostMapping("/batch-init")
     public Result<String> batchInitCompletionRecords(
-            @PathVariable Long classId,
-            @PathVariable Long classExamId) {
+            @RequestBody Long classId, Long classExamId) {
         // 检查权限
         if (!AuthUtil.isTeacher()) {
             return Result.error("权限不足，只有教师可以执行此操作");
@@ -201,14 +213,29 @@ public class StudentExamCompletionController {
         }
         
         try {
-            // 查询该试卷的所有完成记录
+            // 1. 查询该试卷的所有题目ID
+            LambdaQueryWrapper<com.example.goodlearnai.v1.entity.ClassExamQuestion> questionWrapper = new LambdaQueryWrapper<>();
+            questionWrapper.eq(com.example.goodlearnai.v1.entity.ClassExamQuestion::getClassExamId, classExamId)
+                    .eq(com.example.goodlearnai.v1.entity.ClassExamQuestion::getStatus, 1);
+            List<com.example.goodlearnai.v1.entity.ClassExamQuestion> questions = classExamQuestionMapper.selectList(questionWrapper);
+            
+            if (questions == null || questions.isEmpty()) {
+                log.warn("该试卷暂无题目: classExamId={}", classExamId);
+                return Result.error("该试卷暂无题目");
+            }
+            
+            List<Long> questionIds = questions.stream()
+                    .map(com.example.goodlearnai.v1.entity.ClassExamQuestion::getCeqId)
+                    .collect(Collectors.toList());
+            
+            // 2. 查询该试卷的所有完成记录
             LambdaQueryWrapper<StudentExamCompletion> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(StudentExamCompletion::getClassExamId, classExamId)
                     .orderByDesc(StudentExamCompletion::getIsCompleted)
                     .orderByDesc(StudentExamCompletion::getCompletedAt);
             List<StudentExamCompletion> completions = studentExamCompletionService.list(wrapper);
             
-            // 构建返回数据，包含学生信息
+            // 3. 构建返回数据，包含学生信息和正确率
             List<Map<String, Object>> resultList = completions.stream().map(completion -> {
                 Map<String, Object> item = new HashMap<>();
                 item.put("completionId", completion.getCompletionId());
@@ -227,6 +254,36 @@ public class StudentExamCompletionController {
                     item.put("schoolNumber", user.getSchoolNumber());
                 }
                 
+                // 计算该学生的正确率
+                LambdaQueryWrapper<com.example.goodlearnai.v1.entity.StudentAnswer> answerWrapper = new LambdaQueryWrapper<>();
+                answerWrapper.eq(com.example.goodlearnai.v1.entity.StudentAnswer::getUserId, completion.getUserId())
+                        .in(com.example.goodlearnai.v1.entity.StudentAnswer::getCeqId, questionIds);
+                List<com.example.goodlearnai.v1.entity.StudentAnswer> studentAnswers = studentAnswerMapper.selectList(answerWrapper);
+                
+                if (studentAnswers != null && !studentAnswers.isEmpty()) {
+                    // 计算正确题目数（每道题多次正确只算一次，通过去重实现）
+                    long correctCount = studentAnswers.stream()
+                            .filter(answer -> answer.getIsCorrect() != null && answer.getIsCorrect())
+                            .map(com.example.goodlearnai.v1.entity.StudentAnswer::getCeqId)
+                            .distinct()
+                            .count();
+                    
+                    // 计算错误次数（所有错误答案都算，不去重）
+                    long wrongCount = studentAnswers.stream()
+                            .filter(answer -> answer.getIsCorrect() != null && !answer.getIsCorrect())
+                            .count();
+                    
+                    // 计算总完成次数 = 正确次数 + 错误次数
+                    long totalAttempts = correctCount + wrongCount;
+                    
+                    // 计算正确率：正确次数 / 总完成次数
+                    double accuracyRate = totalAttempts > 0 ? 
+                            (correctCount * 100.0 / totalAttempts) : 0.0;
+                    item.put("accuracyRate", Math.round(accuracyRate * 100.0) / 100.0);
+                } else {
+                    item.put("accuracyRate", 0.0);
+                }
+                
                 return item;
             }).toList();
             
@@ -240,23 +297,37 @@ public class StudentExamCompletionController {
     }
     
     /**
-     * 查询当前学生的所有试卷及完成情况
+     * 查询当前学生的所有试卷及完成情况（分页）
      * 
-     * @return 学生所有试卷及完成情况列表
+     * @param classId 班级ID（可选，不传则查询所有班级）
+     * @param current 当前页码，默认1
+     * @param size 每页大小，默认10
+     * @return 学生所有试卷及完成情况列表（分页）
      */
     @GetMapping("/my-exams")
-    public Result<List<Map<String, Object>>> getMyExams() {
+    public Result<IPage<Map<String, Object>>> getMyExams(
+            @RequestParam(required = false) Long classId,
+            @RequestParam(defaultValue = "1") long current,
+            @RequestParam(defaultValue = "10") long size) {
         Long userId = AuthUtil.getCurrentUserId();
         
         try {
             // 1. 查询学生所在的所有班级
             LambdaQueryWrapper<ClassMembers> memberWrapper = new LambdaQueryWrapper<>();
             memberWrapper.eq(ClassMembers::getUserId, userId);
+            
+            // 如果指定了班级ID，只查询该班级
+            if (classId != null) {
+                memberWrapper.eq(ClassMembers::getClassId, classId);
+            }
+            
             List<ClassMembers> myClasses = classMembersMapper.selectList(memberWrapper);
             
             if (myClasses == null || myClasses.isEmpty()) {
-                log.info("学生未加入任何班级：userId={}", userId);
-                return Result.success("暂无试卷", new ArrayList<>());
+                log.info("学生未加入指定班级：userId={}, classId={}", userId, classId);
+                // 返回空的分页结果
+                Page<Map<String, Object>> emptyPage = new Page<>(current, size);
+                return Result.success("暂无试卷", emptyPage);
             }
             
             // 提取班级ID列表
@@ -264,18 +335,25 @@ public class StudentExamCompletionController {
                     .map(ClassMembers::getClassId)
                     .collect(Collectors.toList());
             
-            // 2. 查询这些班级的所有试卷
+            // 2. 先查询所有试卷ID（用于后续查询完成记录）
             LambdaQueryWrapper<ClassExam> examWrapper = new LambdaQueryWrapper<>();
             examWrapper.in(ClassExam::getClassId, classIds)
+                    .eq(ClassExam::getStatus, 1) // 只查询未删除的试卷
                     .orderByDesc(ClassExam::getCreatedAt);
-            List<ClassExam> classExams = classExamMapper.selectList(examWrapper);
             
-            if (classExams == null || classExams.isEmpty()) {
+            // 3. 执行分页查询
+            Page<ClassExam> page = new Page<>(current, size);
+            IPage<ClassExam> classExamPage = classExamMapper.selectPage(page, examWrapper);
+            
+            if (classExamPage == null || classExamPage.getRecords().isEmpty()) {
                 log.info("学生所在班级暂无试卷：userId={}, classIds={}", userId, classIds);
-                return Result.success("暂无试卷", new ArrayList<>());
+                Page<Map<String, Object>> emptyPage = new Page<>(current, size);
+                return Result.success("暂无试卷", emptyPage);
             }
             
-            // 3. 查询学生的所有完成记录
+            List<ClassExam> classExams = classExamPage.getRecords();
+            
+            // 4. 查询学生的所有完成记录
             List<Long> classExamIds = classExams.stream()
                     .map(ClassExam::getClassExamId)
                     .collect(Collectors.toList());
@@ -293,36 +371,61 @@ public class StudentExamCompletionController {
                             (existing, replacement) -> existing
                     ));
             
-            // 4. 组合数据
-            List<Map<String, Object>> resultList = classExams.stream().map(classExam -> {
-                Map<String, Object> item = new HashMap<>();
-                item.put("classExamId", classExam.getClassExamId());
-                item.put("examId", classExam.getExamId());
-                item.put("classId", classExam.getClassId());
-                item.put("examName", classExam.getExamName());
-                item.put("description", classExam.getDescription());
-                item.put("teacherId", classExam.getTeacherId());
-                item.put("startTime", classExam.getStartTime());
-                item.put("endTime", classExam.getEndTime());
-                item.put("createdAt", classExam.getCreatedAt());
-                item.put("updatedAt", classExam.getUpdatedAt());
-                
-                // 添加完成状态
-                StudentExamCompletion completion = completionMap.get(classExam.getClassExamId());
-                if (completion != null) {
-                    item.put("isCompleted", completion.getIsCompleted());
-                    item.put("completedAt", completion.getCompletedAt());
-                } else {
-                    // 如果没有完成记录，默认为未完成
-                    item.put("isCompleted", false);
-                    item.put("completedAt", null);
+            // 5. 构建班级信息映射（用于返回班级名称）
+            Map<Long, String> classNameMap = new HashMap<>();
+            for (ClassMembers member : myClasses) {
+                Long cId = member.getClassId();
+                if (!classNameMap.containsKey(cId)) {
+                    // 查询班级信息
+                    LambdaQueryWrapper<com.example.goodlearnai.v1.entity.Class> classWrapper = new LambdaQueryWrapper<>();
+                    classWrapper.eq(com.example.goodlearnai.v1.entity.Class::getClassId, cId);
+                    com.example.goodlearnai.v1.entity.Class clazz = classMapper.selectOne(classWrapper);
+                    if (clazz != null) {
+                        classNameMap.put(cId, clazz.getClassName());
+                    }
                 }
-                
-                return item;
-            }).collect(Collectors.toList());
+            }
             
-            log.info("查询学生试卷成功：userId={}, 试卷数量={}", userId, resultList.size());
-            return Result.success("查询成功", resultList);
+            // 6. 组合数据（再次过滤确保不包含已删除的试卷）
+            List<Map<String, Object>> resultList = classExams.stream()
+                    .filter(classExam -> classExam.getStatus() != null && classExam.getStatus() == 1) // 确保只返回未删除的试卷
+                    .map(classExam -> {
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("classExamId", classExam.getClassExamId());
+                        item.put("examId", classExam.getExamId());
+                        item.put("classId", classExam.getClassId());
+                        item.put("className", classNameMap.get(classExam.getClassId())); // 添加班级名称
+                        item.put("examName", classExam.getExamName());
+                        item.put("description", classExam.getDescription());
+                        item.put("teacherId", classExam.getTeacherId());
+                        item.put("startTime", classExam.getStartTime());
+                        item.put("endTime", classExam.getEndTime());
+                        item.put("createdAt", classExam.getCreatedAt());
+                        item.put("updatedAt", classExam.getUpdatedAt());
+                        
+                        // 添加完成状态
+                        StudentExamCompletion completion = completionMap.get(classExam.getClassExamId());
+                        if (completion != null) {
+                            item.put("isCompleted", completion.getIsCompleted());
+                            item.put("completedAt", completion.getCompletedAt());
+                        } else {
+                            // 如果没有完成记录，默认为未完成
+                            item.put("isCompleted", false);
+                            item.put("completedAt", null);
+                        }
+                        
+                        return item;
+                    })
+                    .collect(Collectors.toList());
+            
+            // 7. 构建分页结果
+            Page<Map<String, Object>> resultPage = new Page<>(current, size);
+            resultPage.setRecords(resultList);
+            resultPage.setTotal(classExamPage.getTotal());
+            
+            log.info("查询学生试卷成功：userId={}, 当前页={}, 每页大小={}, 总记录数={}", 
+                    userId, current, size, classExamPage.getTotal());
+            return Result.success("查询成功", resultPage);
             
         } catch (Exception e) {
             log.error("查询学生试卷失败：userId={}, error={}", userId, e.getMessage(), e);

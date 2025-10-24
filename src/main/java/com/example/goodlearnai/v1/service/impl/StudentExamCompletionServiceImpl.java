@@ -105,7 +105,7 @@ public class StudentExamCompletionServiceImpl extends ServiceImpl<StudentExamCom
             }
             
             String message = isCompleted ? 
-                    String.format("恭喜！试卷已完成（%d/%d题答对）", correctQuestionIds.size(), questionIds.size()) : 
+                    "恭喜！试卷已完成" :
                     String.format("试卷未完成（%d/%d题答对）", correctQuestionIds.size(), questionIds.size());
             
             return Result.success(message);

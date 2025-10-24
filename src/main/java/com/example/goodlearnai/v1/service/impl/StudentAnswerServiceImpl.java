@@ -9,6 +9,7 @@ import com.example.goodlearnai.v1.dto.AnswerValidationResponse;
 import com.example.goodlearnai.v1.dto.ExamQuestionAnswerDto;
 import com.example.goodlearnai.v1.entity.*;
 import com.example.goodlearnai.v1.mapper.ClassExamQuestionMapper;
+import com.example.goodlearnai.v1.mapper.ClassExamMapper;
 import com.example.goodlearnai.v1.mapper.StudentAnswerMapper;
 import com.example.goodlearnai.v1.service.IStudentAnswerService;
 import com.example.goodlearnai.v1.service.IStudentWrongQuestionService;
@@ -48,6 +49,9 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
 
     @Autowired
     private ClassExamQuestionMapper classExamQuestionMapper;
+    
+    @Autowired
+    private ClassExamMapper classExamMapper;
     
     @Autowired
     private OpenAiChatModel openAiChatModel;
@@ -164,6 +168,17 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
     public Result<List<ExamQuestionAnswerDto>> getExamQuestionsWithAnswers(Long classExamId) {
         Long userId = AuthUtil.getCurrentUserId();
         try {
+            // 0. 先检查试卷是否存在且未删除
+            LambdaQueryWrapper<ClassExam> examWrapper = new LambdaQueryWrapper<>();
+            examWrapper.eq(ClassExam::getClassExamId, classExamId)
+                    .eq(ClassExam::getStatus, 1);
+            ClassExam classExam = classExamMapper.selectOne(examWrapper);
+            
+            if (classExam == null) {
+                log.warn("班级试卷不存在或已删除: classExamId={}", classExamId);
+                return Result.error("试卷不存在或已删除");
+            }
+            
             // 1. 查询班级试卷副本中的所有题目
             LambdaQueryWrapper<ClassExamQuestion> questionQueryWrapper = new LambdaQueryWrapper<>();
             questionQueryWrapper.eq(ClassExamQuestion::getClassExamId, classExamId)

@@ -77,8 +77,8 @@ public class ClassExam implements Serializable {
     private LocalDateTime updatedAt;
 
     /**
-     * 试卷是否做完：0-未完成，1-已完成
+     * 状态：1-正常，0-已删除
      */
-    private Boolean isCompleted;
+    private Integer status;
 }
 

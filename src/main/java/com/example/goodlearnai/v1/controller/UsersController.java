@@ -140,4 +140,6 @@ public class UsersController {
     public Result<Boolean> checkEmailValid() {
         return iusersService.checkEmailValid();
     }
+
+    
 }

@@ -39,16 +39,16 @@ public class CourseHomeworkServiceImpl extends ServiceImpl<CourseHomeworkMapper,
         }
         try {
             courseHomework.setAssignTime(LocalDateTime.now());
-            if (courseHomework.getDeadline() == null){
+            if (courseHomework.getDeadline() == null) {
                 courseHomework.setDeadline(LocalDateTime.now().plusDays(7));
             }
             courseHomework.setStatus(1);
-            if (save(courseHomework)){
+            if (save(courseHomework)) {
                 return Result.success("作业创建成功");
-            }else {
+            } else {
                 return Result.error("作业创建失败");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("作业创建失败: userId={}, courseHomework={}, error={}", userId, courseHomework, e.getMessage());
             return Result.error("作业创建失败");
         }
@@ -69,9 +69,9 @@ public class CourseHomeworkServiceImpl extends ServiceImpl<CourseHomeworkMapper,
         try {
             CourseHomework courseHomework = getById(homeworkId);
             courseHomework.setStatus(0);
-            if (updateById(courseHomework)){
+            if (updateById(courseHomework)) {
                 return Result.success("作业删除成功");
-            }else {
+            } else {
                 return Result.error("作业删除失败");
             }
         } catch (Exception e) {
@@ -96,7 +96,7 @@ public class CourseHomeworkServiceImpl extends ServiceImpl<CourseHomeworkMapper,
 
             try {
                 // 执行分页查询
-                IPage<CourseHomework> courseHomeworkPage =  page(page, queryWrapper);
+                IPage<CourseHomework> courseHomeworkPage = page(page, queryWrapper);
 
                 // 如果没有查询到数据，返回空的分页对象
                 if (courseHomeworkPage == null || courseHomeworkPage.getRecords().isEmpty()) {
@@ -116,4 +116,5 @@ public class CourseHomeworkServiceImpl extends ServiceImpl<CourseHomeworkMapper,
             throw new CustomException("分页查询试卷时发生未知异常");
         }
     }
+
 }

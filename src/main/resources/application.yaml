@@ -35,7 +35,7 @@ spring:
       host: 112.124.40.32
       port: 6379
       timeout: 5000
-      password: zzx
+      password: zxcvg123
 
     multipart:
       max-file-size: 100MB

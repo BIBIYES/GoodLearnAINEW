@@ -11,60 +11,45 @@ import lombok.experimental.Accessors;
 
 /**
  * <p>
- * 班级试卷副本表
+ * 学生试卷完成记录表
  * </p>
  *
  * @author DSfeiji
- * @since 2025-10-17
+ * @since 2025-10-24
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("class_exam")
-public class ClassExam implements Serializable {
+@TableName("student_exam_completion")
+public class StudentExamCompletion implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * 班级试卷副本ID
+     * 完成记录ID
      */
-    @TableId(value = "class_exam_id", type = IdType.AUTO)
+    @TableId(value = "completion_id", type = IdType.AUTO)
+    private Long completionId;
+
+    /**
+     * 学生ID
+     */
+    private Long userId;
+
+    /**
+     * 班级试卷ID
+     */
     private Long classExamId;
 
     /**
-     * 原始试卷ID
+     * 是否完成：0-未完成，1-已完成
      */
-    private Long examId;
+    private Boolean isCompleted;
 
     /**
-     * 班级ID
+     * 完成时间
      */
-    private Long classId;
-
-    /**
-     * 试卷名称（副本）
-     */
-    private String examName;
-
-    /**
-     * 试卷描述（副本）
-     */
-    private String description;
-
-    /**
-     * 创建教师ID
-     */
-    private Long teacherId;
-
-    /**
-     * 考试开始时间
-     */
-    private LocalDateTime startTime;
-
-    /**
-     * 考试结束时间
-     */
-    private LocalDateTime endTime;
+    private LocalDateTime completedAt;
 
     /**
      * 创建时间

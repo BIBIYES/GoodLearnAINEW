@@ -362,7 +362,12 @@ public class StudentExamCompletionController {
             completionWrapper.eq(StudentExamCompletion::getUserId, userId)
                     .in(StudentExamCompletion::getClassExamId, classExamIds);
             List<StudentExamCompletion> completions = studentExamCompletionService.list(completionWrapper);
-            
+
+            //统计未完成试卷个数
+            long unfinishedCount = classExamPage.getTotal() - completions.stream()
+                    .filter(StudentExamCompletion::getIsCompleted)
+                    .count();
+
             // 将完成记录转换为 Map 便于查找
             Map<Long, StudentExamCompletion> completionMap = completions.stream()
                     .collect(Collectors.toMap(
@@ -385,7 +390,7 @@ public class StudentExamCompletionController {
                     }
                 }
             }
-            
+
             // 6. 组合数据（再次过滤确保不包含已删除的试卷）
             List<Map<String, Object>> resultList = classExams.stream()
                     .filter(classExam -> classExam.getStatus() != null && classExam.getStatus() == 1) // 确保只返回未删除的试卷
@@ -402,6 +407,7 @@ public class StudentExamCompletionController {
                         item.put("endTime", classExam.getEndTime());
                         item.put("createdAt", classExam.getCreatedAt());
                         item.put("updatedAt", classExam.getUpdatedAt());
+                        item.put("unfinishedCount", unfinishedCount);
                         
                         // 添加完成状态
                         StudentExamCompletion completion = completionMap.get(classExam.getClassExamId());
@@ -413,7 +419,7 @@ public class StudentExamCompletionController {
                             item.put("isCompleted", false);
                             item.put("completedAt", null);
                         }
-                        
+
                         return item;
                     })
                     .collect(Collectors.toList());
@@ -421,12 +427,13 @@ public class StudentExamCompletionController {
             // 7. 构建分页结果
             Page<Map<String, Object>> resultPage = new Page<>(current, size);
             resultPage.setRecords(resultList);
+
             resultPage.setTotal(classExamPage.getTotal());
-            
-            log.info("查询学生试卷成功：userId={}, 当前页={}, 每页大小={}, 总记录数={}", 
-                    userId, current, size, classExamPage.getTotal());
+
+            log.info("查询学生试卷成功：userId={}, 当前页={}, 每页大小={}, 总记录数={},未完成数={}",
+                    userId, current, size, classExamPage.getTotal(),unfinishedCount);
             return Result.success("查询成功", resultPage);
-            
+
         } catch (Exception e) {
             log.error("查询学生试卷失败：userId={}, error={}", userId, e.getMessage(), e);
             return Result.error("查询失败：" + e.getMessage());

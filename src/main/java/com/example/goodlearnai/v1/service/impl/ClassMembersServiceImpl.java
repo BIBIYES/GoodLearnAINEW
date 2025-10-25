@@ -279,6 +279,7 @@ public class ClassMembersServiceImpl extends ServiceImpl<ClassMembersMapper, Cla
         ClassMemberVO memberVO = new ClassMemberVO();
         memberVO.setId(member.getId());
         memberVO.setClassId(member.getClassId());
+        memberVO.setUserId(member.getUserId()); // 设置学生ID
         memberVO.setJoinTime(member.getJoinTime());
         memberVO.setStatus(member.getStatus());
 

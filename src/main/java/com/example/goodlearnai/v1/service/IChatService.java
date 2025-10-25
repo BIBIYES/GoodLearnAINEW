@@ -5,6 +5,7 @@ import com.example.goodlearnai.v1.dto.UserChat;
 import com.example.goodlearnai.v1.entity.Chat;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 import java.util.Map;
@@ -23,8 +24,10 @@ public interface IChatService extends IService<Chat> {
 
     Result<List<Chat>> getChatHistory();
 
-    Result<String> updateSessionName(Chat chat);
+    Result<String> updateSessionName(String sessionId,String sessionName);
 
     Map<String, Object> McpChat(String message) throws JsonProcessingException;
+
+    Result<String> deleteSession(String sessionId);
 
 }

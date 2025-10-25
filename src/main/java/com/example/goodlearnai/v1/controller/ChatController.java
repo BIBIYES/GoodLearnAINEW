@@ -83,10 +83,17 @@ public class ChatController {
     /**
      *修改AI会话标题
      */
-    @PutMapping("/update-session-name")
-    public Result<String> updateSessionName(@RequestBody Chat chat ){
-        return ichatService.updateSessionName(chat);
+    @PutMapping("/update-session-name/{sessionId}")
+    public Result<String> updateSessionName(@PathVariable String sessionId,@RequestParam String sessionName ){
+        return ichatService.updateSessionName(sessionId,sessionName);
     }
 
+    /**
+     * 删除会话记录
+     */
+    @DeleteMapping("/delete-session/{sessionId}")
+    public Result<String> deleteSession(@PathVariable String sessionId){
+        return ichatService.deleteSession(sessionId);
+    }
 
 }

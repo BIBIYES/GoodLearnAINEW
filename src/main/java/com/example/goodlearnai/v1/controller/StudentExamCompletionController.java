@@ -375,53 +375,7 @@ public class StudentExamCompletionController {
                             completion -> completion,
                             (existing, replacement) -> existing
                     ));
-            
-            // 5. 构建班级信息映射（用于返回班级名称）
-            Map<Long, String> classNameMap = new HashMap<>();
-            for (ClassMembers member : myClasses) {
-                Long cId = member.getClassId();
-                if (!classNameMap.containsKey(cId)) {
-                    // 查询班级信息
-                    LambdaQueryWrapper<com.example.goodlearnai.v1.entity.Class> classWrapper = new LambdaQueryWrapper<>();
-                    classWrapper.eq(com.example.goodlearnai.v1.entity.Class::getClassId, cId);
-                    com.example.goodlearnai.v1.entity.Class clazz = classMapper.selectOne(classWrapper);
-                    if (clazz != null) {
-                        classNameMap.put(cId, clazz.getClassName());
-                    }
-                }
-            }
 
-            // 6. 组合数据（再次过滤确保不包含已删除的试卷）
-            List<Map<String, Object>> resultList = classExams.stream()
-                    .filter(classExam -> classExam.getStatus() != null && classExam.getStatus() == 1) // 确保只返回未删除的试卷
-                    .map(classExam -> {
-                        Map<String, Object> item = new HashMap<>();
-                        item.put("classExamId", classExam.getClassExamId());
-                        item.put("examId", classExam.getExamId());
-                        item.put("classId", classExam.getClassId());
-                        item.put("className", classNameMap.get(classExam.getClassId())); // 添加班级名称
-                        item.put("examName", classExam.getExamName());
-                        item.put("description", classExam.getDescription());
-                        item.put("teacherId", classExam.getTeacherId());
-                        item.put("startTime", classExam.getStartTime());
-                        item.put("endTime", classExam.getEndTime());
-                        item.put("createdAt", classExam.getCreatedAt());
-                        item.put("updatedAt", classExam.getUpdatedAt());
-
-                        // 添加完成状态
-                        StudentExamCompletion completion = completionMap.get(classExam.getClassExamId());
-                        if (completion != null) {
-                            item.put("isCompleted", completion.getIsCompleted());
-                            item.put("completedAt", completion.getCompletedAt());
-                        } else {
-                            // 如果没有完成记录，默认为未完成
-                            item.put("isCompleted", false);
-                            item.put("completedAt", null);
-                        }
-
-                        return item;
-                    })
-                    .collect(Collectors.toList());
             // 5. 构建班级信息映射（用于返回班级名称）
             Map<Long, String> classNameMap = new HashMap<>();
             for (ClassMembers member : myClasses) {

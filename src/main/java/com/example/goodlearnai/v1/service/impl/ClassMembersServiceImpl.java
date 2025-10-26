@@ -106,8 +106,8 @@ public class ClassMembersServiceImpl extends ServiceImpl<ClassMembersMapper, Cla
             LambdaUpdateWrapper<ClassMembers> updateWrapper = new LambdaUpdateWrapper<>();
             updateWrapper.eq(ClassMembers::getClassId, classEntity.getClassId())
                     .eq(ClassMembers::getUserId, userId)
-                    .eq(ClassMembers::getStatus, 0)
-                    .set(ClassMembers::getStatus, 1)
+                    .eq(ClassMembers::getStatus, false)
+                    .set(ClassMembers::getStatus, true)
                     .set(ClassMembers::getJoinTime, LocalDateTime.now());
 
             boolean update = update(updateWrapper);

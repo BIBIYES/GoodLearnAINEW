@@ -267,7 +267,7 @@ public class StudentAnswerServiceImpl extends ServiceImpl<StudentAnswerMapper, S
             // 解析AI响应
             boolean isCorrect = aiResponse.contains("#valid#");
             String feedback = aiResponse.replace("#valid#", "").replace("#invalid#", "").trim();
-            
+
             AnswerValidationResponse validationResponse = new AnswerValidationResponse(isCorrect, feedback);
             log.info("AI验证完成: isCorrect={}", isCorrect);
             

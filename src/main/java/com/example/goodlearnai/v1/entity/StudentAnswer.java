@@ -56,5 +56,10 @@ public class StudentAnswer implements Serializable {
      */
     private LocalDateTime answeredAt;
 
+    /**
+     * AI的评价
+     */
+    private String feedback;
+
 
 }

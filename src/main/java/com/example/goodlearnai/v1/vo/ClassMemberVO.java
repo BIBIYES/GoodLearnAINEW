@@ -21,6 +21,9 @@ public class ClassMemberVO implements Serializable {
 
     private Long classId;
 
+    /** 学生ID */
+    private Long userId;
+
     /** 学生用户名 */
     private String username;
 

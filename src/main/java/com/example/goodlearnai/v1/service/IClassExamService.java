@@ -60,5 +60,7 @@ public interface IClassExamService extends IService<ClassExam> {
      * @return 学生答题详情
      */
     Result<com.example.goodlearnai.v1.dto.StudentExamDetailDto> getStudentExamDetail(Long classExamId, Long userId);
+
+
 }
 

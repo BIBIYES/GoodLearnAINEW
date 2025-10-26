@@ -1,6 +1,7 @@
 package com.example.goodlearnai.v1.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.UserChat;
 import com.example.goodlearnai.v1.entity.Chat;
@@ -104,13 +105,22 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
     }
 
     @Override
-    public Result<String> updateSessionName(Chat chat) {
-        log.debug("修改会话名称{}",chat);
-        boolean flag = updateById(chat);
-        if(flag){
+    public Result<String> updateSessionName(String sessionId,String sessionName) {
+        try{
+            //根据id修改名字
+            LambdaUpdateWrapper<Chat> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Chat::getSessionId, sessionId)
+                    .set(Chat::getSessionName, sessionName);
+            boolean flag =update(updateWrapper);
+
+            if(flag){
+                log.info("会话名称={}",sessionName);
+                return Result.success("修改成功");
+            }
             return Result.success("修改成功");
+        }catch(Exception e){
+            return Result.error("修改失败");
         }
-        return Result.error("修改失败");
     }
     
     /**
@@ -215,6 +225,26 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat> implements IC
         resultMap.put("message", "成功");
         resultMap.put("data", finalAnswer);
         return resultMap;
+    }
+
+    @Override
+    public Result<String> deleteSession(String sessionId) {
+        try{
+            //根据Id删除chathistory中的记录
+            LambdaQueryWrapper<ChatHistory> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ChatHistory::getSessionId, sessionId);
+            chatHistoryMapper.delete(queryWrapper);
+
+            boolean flag =removeById(sessionId);
+            if (flag){
+                return Result.success("删除成功");
+            }else{
+                return Result.error("删除失败");
+            }
+        }catch(Exception e){
+            log.error("删除失败: sessionId={}, error={}", sessionId, e.getMessage(), e);
+            return Result.error("删除失败");
+        }
     }
 
     /**

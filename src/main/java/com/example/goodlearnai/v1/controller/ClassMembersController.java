@@ -36,7 +36,7 @@ public class ClassMembersController {
     /**
      * 获取班级成员列表
      * @param classId
-     * @return 班级成员列表（包含学生基本信息，不包含userId）
+     * @return 班级成员列表（包含学生基本信息，包含userId）
      */
     @GetMapping("/get-class-members/{classId}")
     public Result<List<ClassMemberVO>> getClassMembers(@PathVariable Long classId){

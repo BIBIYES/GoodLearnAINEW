@@ -314,7 +314,8 @@ public class StudentExamCompletionController {
         try {
             // 1. 查询学生所在的所有班级
             LambdaQueryWrapper<ClassMembers> memberWrapper = new LambdaQueryWrapper<>();
-            memberWrapper.eq(ClassMembers::getUserId, userId);
+            memberWrapper.eq(ClassMembers::getUserId, userId)
+                    .eq(ClassMembers::getStatus, 1);
 
             List<Long> allClassIds = classMembersMapper.selectList(memberWrapper)
                     .stream()

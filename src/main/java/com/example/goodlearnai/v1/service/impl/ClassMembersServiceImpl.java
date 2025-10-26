@@ -1,5 +1,6 @@
 package com.example.goodlearnai.v1.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.example.goodlearnai.v1.common.Result;
 import com.example.goodlearnai.v1.dto.ClassJoinRequest;
 import com.example.goodlearnai.v1.entity.Class;
@@ -101,6 +102,21 @@ public class ClassMembersServiceImpl extends ServiceImpl<ClassMembersMapper, Cla
         }
 
         try {
+            // 查找之前是否有退出班级的记录
+            LambdaUpdateWrapper<ClassMembers> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(ClassMembers::getClassId, classEntity.getClassId())
+                    .eq(ClassMembers::getUserId, userId)
+                    .eq(ClassMembers::getStatus, false)
+                    .set(ClassMembers::getStatus, true) ;
+
+            boolean update = update(updateWrapper);
+
+            if (update) {
+                log.info("学生重新加入班级成功: userId={}, classId={}", userId, classEntity.getClassId());
+                return Result.success("加入班级成功");
+            }
+
+            // 如果没有找到需要更新的记录，则插入新记录
             ClassMembers classMember = new ClassMembers();
             classMember.setClassId(classEntity.getClassId());
             classMember.setUserId(userId);

@@ -215,9 +215,8 @@ public class ClassMembersServiceImpl extends ServiceImpl<ClassMembersMapper, Cla
                 return Result.error("用户不在该班级中或已退出");
             }
 
-            classMember.setStatus(false);
-
-            if (updateById(classMember)) {
+            // 硬删除：直接从数据库删除记录
+            if (removeById(classMember.getId())) {
                 String action = "student".equals(role) ? "退出班级" : "移除班级成员";
                 log.info("{}成功: operatorId={}, userId={}, classId={}", action, currentUserId, userId, classId);
                 return Result.success(action + "成功");

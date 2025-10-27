@@ -577,6 +577,7 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
             detailDto.setSchoolNumber(student.getSchoolNumber());
             detailDto.setEmail(student.getEmail());
 
+
             // 按题目分组，每道题只取最后一次答题结果（用于判断是否完成等）
             Map<Long, StudentAnswer> latestAnswersByQuestion = studentAnswers.stream()
                     .collect(Collectors.toMap(
@@ -648,6 +649,7 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
                     detailItem.setIsCorrect(answer.getIsCorrect());
                     detailItem.setAnsweredAt(answer.getAnsweredAt());
                     detailItem.setOriginalQuestionId(question.getOriginalQuestionId());
+                    detailItem.setFeedback(answer.getFeedback());
 
                     answerDetails.add(detailItem);
                 }

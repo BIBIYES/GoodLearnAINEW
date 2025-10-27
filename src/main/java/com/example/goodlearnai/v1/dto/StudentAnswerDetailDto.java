@@ -60,5 +60,10 @@ public class StudentAnswerDetailDto {
      * 原题库题目ID（用于追溯）
      */
     private Long originalQuestionId;
+
+    /**
+     * AI分析
+     */
+    private String feedback;
 }
 

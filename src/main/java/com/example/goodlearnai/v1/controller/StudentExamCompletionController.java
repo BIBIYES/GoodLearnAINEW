@@ -314,7 +314,35 @@ public class StudentExamCompletionController {
         try {
             // 1. 查询学生所在的所有班级
             LambdaQueryWrapper<ClassMembers> memberWrapper = new LambdaQueryWrapper<>();
-            memberWrapper.eq(ClassMembers::getUserId, userId);
+            memberWrapper.eq(ClassMembers::getUserId, userId)
+                    .eq(ClassMembers::getStatus, 1);
+
+            List<Long> allClassIds = classMembersMapper.selectList(memberWrapper)
+                    .stream()
+                    .map(ClassMembers::getClassId)
+                    .collect(Collectors.toList());
+
+            //查询所有班级下所有未删除的试卷（不分页）
+            LambdaQueryWrapper<ClassExam> allExamWrapper = new LambdaQueryWrapper<>();
+            allExamWrapper.in(ClassExam::getClassId, allClassIds)
+                    .eq(ClassExam::getStatus, 1);
+            List<ClassExam> allExams = classExamMapper.selectList(allExamWrapper);
+
+            //提取所有试卷ID
+            List<Long> allExamIds = allExams.stream()
+                    .map(ClassExam::getClassExamId)
+                    .collect(Collectors.toList());
+
+            //查询所有完成记录
+            LambdaQueryWrapper<StudentExamCompletion> allCompletionWrapper = new LambdaQueryWrapper<>();
+            allCompletionWrapper.eq(StudentExamCompletion::getUserId, userId)
+                    .in(StudentExamCompletion::getClassExamId, allExamIds);
+            List<StudentExamCompletion> allCompletions = studentExamCompletionService.list(allCompletionWrapper);
+
+            //计算所有未完成数量
+            long unfinishedCount = allExams.size() - allCompletions.stream()
+                    .filter(StudentExamCompletion::getIsCompleted)
+                    .count();
 
             // 如果指定了班级ID，只查询该班级
             if (classId != null) {
@@ -329,7 +357,7 @@ public class StudentExamCompletionController {
                 Page<Map<String, Object>> emptyPage = new Page<>(current, size);
                 return Result.success("暂无试卷", emptyPage);
             }
-            
+
             // 提取班级ID列表
             List<Long> classIds = myClasses.stream()
                     .map(ClassMembers::getClassId)
@@ -362,11 +390,6 @@ public class StudentExamCompletionController {
             completionWrapper.eq(StudentExamCompletion::getUserId, userId)
                     .in(StudentExamCompletion::getClassExamId, classExamIds);
             List<StudentExamCompletion> completions = studentExamCompletionService.list(completionWrapper);
-
-            //统计未完成试卷个数
-            long unfinishedCount = classExamPage.getTotal() - completions.stream()
-                    .filter(StudentExamCompletion::getIsCompleted)
-                    .count();
 
             // 将完成记录转换为 Map 便于查找
             Map<Long, StudentExamCompletion> completionMap = completions.stream()

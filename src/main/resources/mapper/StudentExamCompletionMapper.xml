@@ -18,5 +18,60 @@
         completion_id, user_id, class_exam_id, is_completed, completed_at, created_at, updated_at
     </sql>
 
+    <!-- 学生试卷及完成情况DTO映射 -->
+    <resultMap id="StudentExamWithCompletionMap" type="com.example.goodlearnai.v1.dto.StudentExamWithCompletionDto">
+        <result column="class_exam_id" property="classExamId"/>
+        <result column="exam_name" property="examName"/>
+        <result column="description" property="description"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="class_id" property="classId"/>
+        <result column="class_name" property="className"/>
+        <result column="is_completed" property="isCompleted"/>
+        <result column="completed_at" property="completedAt"/>
+    </resultMap>
+
+    <!-- 使用JOIN一次查询学生的试卷列表及完成情况 -->
+    <select id="getStudentExamsWithCompletion" resultMap="StudentExamWithCompletionMap">
+        SELECT 
+            ce.class_exam_id,
+            ce.exam_name,
+            ce.description,
+            ce.start_time,
+            ce.end_time,
+            ce.created_at,
+            ce.class_id,
+            c.class_name,
+            COALESCE(sec.is_completed, 0) AS is_completed,
+            sec.completed_at
+        FROM class_exam ce
+        INNER JOIN class c ON ce.class_id = c.class_id
+        INNER JOIN class_members cm ON c.class_id = cm.class_id
+        LEFT JOIN student_exam_completion sec ON ce.class_exam_id = sec.class_exam_id AND sec.user_id = #{userId}
+        WHERE cm.user_id = #{userId}
+          AND cm.status = 1
+          AND ce.status = 1
+          <if test="classId != null">
+              AND ce.class_id = #{classId}
+          </if>
+        ORDER BY ce.created_at DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 统计学生试卷总数 -->
+    <select id="countStudentExams" resultType="long">
+        SELECT COUNT(DISTINCT ce.class_exam_id)
+        FROM class_exam ce
+        INNER JOIN class c ON ce.class_id = c.class_id
+        INNER JOIN class_members cm ON c.class_id = cm.class_id
+        WHERE cm.user_id = #{userId}
+          AND cm.status = 1
+          AND ce.status = 1
+          <if test="classId != null">
+              AND ce.class_id = #{classId}
+          </if>
+    </select>
+
 </mapper>
 

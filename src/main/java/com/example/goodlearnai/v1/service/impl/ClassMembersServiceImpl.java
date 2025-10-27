@@ -42,6 +42,9 @@ public class ClassMembersServiceImpl extends ServiceImpl<ClassMembersMapper, Cla
     @Autowired
     private CourseMapper courseMapper;
 
+    @Autowired
+    private ClassMembersMapper classMembersMapper;
+
     @Override
     public Result<String> intoClass(ClassJoinRequest request) {
         Long userId = AuthUtil.getCurrentUserId();
@@ -170,24 +173,44 @@ public class ClassMembersServiceImpl extends ServiceImpl<ClassMembersMapper, Cla
         }
 
         try {
-            QueryWrapper<ClassMembers> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("class_id", classId)
-                    .eq("status", true)
-                    .orderByAsc("join_time");
-
-            List<ClassMembers> membersList = list(queryWrapper);
-            if (membersList.isEmpty()) {
+            // 使用一条JOIN SQL查询班级成员及用户信息，避免N+1问题
+            List<ClassMemberVO> memberVOList = classMembersMapper.getClassMembersWithUserInfo(classId);
+            
+            if (memberVOList.isEmpty()) {
                 log.info("班级暂无成员: classId={}", classId);
                 return Result.success("班级暂无成员", Collections.emptyList());
             }
 
+            // 只需要查询一次教师和课程信息
             Users teacher = userMapper.selectById(classEntity.getTeacherId());
+            Course course = null;
+            if (classEntity.getCourseId() != null) {
+                course = courseMapper.selectById(classEntity.getCourseId());
+            }
+            
+            // 填充班级、教师和课程信息到每个VO
+            String courseName = course != null ? course.getClassName() : null;
+            for (ClassMemberVO vo : memberVOList) {
+                // 填充班级信息
+                vo.setClassName(classEntity.getClassName());
+                vo.setDescription(classEntity.getDescription());
+                vo.setCourseId(classEntity.getCourseId());
+                vo.setCourseName(courseName);
+                vo.setJoinCode(classEntity.getJoinCode());
+                vo.setClassStatus(classEntity.getStatus());
+                
+                // 填充教师信息
+                if (teacher != null) {
+                    vo.setTeacherName(teacher.getUsername());
+                    vo.setTeacherEmail(teacher.getEmail());
+                    vo.setTeacherAvatar(teacher.getAvatar());
+                    vo.setUsername(teacher.getUsername());
+                    vo.setAvatar(teacher.getAvatar());
+                }
+            }
 
-            List<ClassMemberVO> memberVOList = membersList.stream()
-                    .map(member -> buildMemberVO(member, classEntity, teacher))
-                    .collect(Collectors.toList());
-
-            log.info("获取班级成员列表成功: classId={}, memberCount={}", classId, memberVOList.size());
+            log.info("获取班级成员列表成功（使用JOIN优化）: classId={}, memberCount={}, 数据库查询次数=3", 
+                    classId, memberVOList.size());
             return Result.success("获取班级成员列表成功", memberVOList);
         } catch (Exception e) {
             log.error("获取班级成员列表失败: classId={}, error={}", classId, e.getMessage());

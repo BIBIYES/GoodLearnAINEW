@@ -2,4 +2,36 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.goodlearnai.v1.mapper.ClassMembersMapper">
 
+    <!-- 结果映射：班级成员VO -->
+    <resultMap id="ClassMemberVOMap" type="com.example.goodlearnai.v1.vo.ClassMemberVO">
+        <result column="id" property="id"/>
+        <result column="class_id" property="classId"/>
+        <result column="user_id" property="userId"/>
+        <result column="join_time" property="joinTime"/>
+        <result column="status" property="status"/>
+        <result column="student_name" property="studentName"/>
+        <result column="student_avatar" property="studentAvatar"/>
+        <result column="email" property="email"/>
+        <result column="school_number" property="schoolNumber"/>
+    </resultMap>
+
+    <!-- 使用JOIN查询班级成员及用户信息，避免N+1问题 -->
+    <select id="getClassMembersWithUserInfo" resultMap="ClassMemberVOMap">
+        SELECT 
+            cm.id,
+            cm.class_id,
+            cm.user_id,
+            cm.join_time,
+            cm.status,
+            u.username AS student_name,
+            u.avatar AS student_avatar,
+            u.email,
+            u.school_number
+        FROM class_members cm
+        INNER JOIN users u ON cm.user_id = u.user_id
+        WHERE cm.class_id = #{classId}
+          AND cm.status = 1
+        ORDER BY cm.join_time ASC
+    </select>
+
 </mapper>

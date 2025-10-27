@@ -41,6 +41,7 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
         try {
             exam.setCreatedAt(LocalDateTime.now());
             exam.setTeacherId(userId);
+            exam.setStatus(1); // 设置状态为正常
             if (save(exam)){
                 return Result.success("试卷创建成功");
             } else {
@@ -64,13 +65,16 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
         }
         try {
             Exam exam = getById(examId);
-            if (exam == null) {
-                log.warn("试卷不存在: examId={}", examId);
+            if (exam == null || exam.getStatus() == 0) {
+                log.warn("试卷不存在或已删除: examId={}", examId);
                 return Result.error("试卷不存在");
             }
-            // 直接删除试卷
-            boolean deleted = removeById(examId);
+            // 软删除：设置状态为0
+            exam.setStatus(0);
+            exam.setUpdatedAt(LocalDateTime.now());
+            boolean deleted = updateById(exam);
             if (deleted){
+                log.info("试卷已软删除: examId={}, userId={}", examId, userId);
                 return Result.success("试卷已删除");
             }else {
                 return Result.error("试卷删除失败");
@@ -92,8 +96,8 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
         }
 
         Exam existingExam = getById(exam.getExamId());
-        if (existingExam == null){
-            log.warn("试卷不存在: examId={}", exam.getExamId());
+        if (existingExam == null || existingExam.getStatus() == 0){
+            log.warn("试卷不存在或已删除: examId={}", exam.getExamId());
             return Result.error("试卷不存在");
         }
 
@@ -132,6 +136,7 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements IE
             // 构建查询条件
             LambdaQueryWrapper<Exam> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(Exam::getTeacherId, userId);
+            queryWrapper.eq(Exam::getStatus, 1); // 只查询正常状态的试卷
             
             // 如果指定了试卷名称关键词，则进行模糊查询
             if (StringUtils.hasText(examName)) {

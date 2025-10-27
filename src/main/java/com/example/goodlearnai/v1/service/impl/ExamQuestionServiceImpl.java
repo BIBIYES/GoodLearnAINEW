@@ -55,9 +55,9 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
         
         // 检查试卷状态
         Exam exam = examService.getById(examId);
-        if (exam == null) {
-            log.warn("试卷不存在: examId={}", examId);
-            return Result.error("试卷不存在");
+        if (exam == null || exam.getStatus() == 0) {
+            log.warn("试卷不存在或已删除: examId={}", examId);
+            return Result.error("试卷不存在或已删除");
         }
 
         List<ExamQuestion> examQuestionList = new java.util.ArrayList<>();
@@ -116,9 +116,9 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
         try {
             // 检查试卷是否存在
             Exam exam = examService.getById(examId);
-            if (exam == null) {
-                log.warn("试卷不存在: examId={}", examId);
-                return Result.error("试卷不存在");
+            if (exam == null || exam.getStatus() == 0) {
+                log.warn("试卷不存在或已删除: examId={}", examId);
+                return Result.error("试卷不存在或已删除");
             }
             
             // 检查试卷是否属于当前教师
@@ -213,19 +213,19 @@ public class ExamQuestionServiceImpl extends ServiceImpl<ExamQuestionMapper, Exa
                  return Result.error("班级试卷副本题目不能单独删除");
              }
              
-             // 检查试卷是否存在
-             Exam exam = examService.getById(examQuestion.getExamId());
-             if (exam == null) {
-                 log.warn("关联的试卷不存在: examId={}", examQuestion.getExamId());
-                 return Result.error("关联的试卷不存在");
-             }
-             
-             // 检查试卷是否属于当前教师
-             if (!exam.getTeacherId().equals(userId)) {
-                 log.warn("无权限删除其他教师试卷中的题目: examId={}, teacherId={}, currentUserId={}", 
-                         exam.getExamId(), exam.getTeacherId(), userId);
-                 return Result.error("无权限删除其他教师试卷中的题目");
-             }
+            // 检查试卷是否存在
+            Exam exam = examService.getById(examQuestion.getExamId());
+            if (exam == null || exam.getStatus() == 0) {
+                log.warn("关联的试卷不存在或已删除: examId={}", examQuestion.getExamId());
+                return Result.error("关联的试卷不存在或已删除");
+            }
+            
+            // 检查试卷是否属于当前教师
+            if (!exam.getTeacherId().equals(userId)) {
+                log.warn("无权限删除其他教师试卷中的题目: examId={}, teacherId={}, currentUserId={}", 
+                        exam.getExamId(), exam.getTeacherId(), userId);
+                return Result.error("无权限删除其他教师试卷中的题目");
+            }
              
              // 执行逻辑删除（将status设置为0）
              examQuestion.setStatus(0);

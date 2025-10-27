@@ -55,4 +55,9 @@ public class Exam implements Serializable {
      * 更新时间
      */
     private LocalDateTime updatedAt;
+
+    /**
+     * 状态：1-正常，0-已删除
+     */
+    private Integer status;
 }

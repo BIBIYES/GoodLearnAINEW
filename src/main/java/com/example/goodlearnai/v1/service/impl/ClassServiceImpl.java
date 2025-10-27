@@ -139,6 +139,7 @@ public class ClassServiceImpl extends ServiceImpl<ClassMapper, Class> implements
                             classVO.setTeacherName(teacher.getUsername());
                         }
                         classVO.setJoinCode(classEntity.getJoinCode());
+                        classVO.setAllowJoin(classEntity.getAllowJoin());
 
                         return classVO;
                     })

@@ -44,4 +44,6 @@ public class ClassVO implements Serializable {
 
     private String joinCode;
 
+    private boolean allowJoin;
+
 }

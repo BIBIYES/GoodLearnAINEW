@@ -83,9 +83,9 @@ public class ClassExamServiceImpl extends ServiceImpl<ClassExamMapper, ClassExam
         try {
             // 查询原始试卷
             Exam exam = examMapper.selectById(examId);
-            if (exam == null) {
-                log.warn("试卷不存在: examId={}", examId);
-                return Result.error("试卷不存在");
+            if (exam == null || exam.getStatus() == 0) {
+                log.warn("试卷不存在或已删除: examId={}", examId);
+                return Result.error("试卷不存在或已删除");
             }
 
             // 检查教师是否有权限发布此试卷

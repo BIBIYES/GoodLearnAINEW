@@ -77,4 +77,11 @@ public interface IUsersService extends IService<Users> {
      * @return true-邮箱有效，false-邮箱无效需要修改
      */
     Result<Boolean> checkEmailValid();
+
+    /**
+     * 修改用户名
+     * @param username 新用户名
+     * @return 修改结果
+     */
+    Result<String> updateUsername(String username);
 }

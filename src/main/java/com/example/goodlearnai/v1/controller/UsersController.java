@@ -141,5 +141,17 @@ public class UsersController {
         return iusersService.checkEmailValid();
     }
 
-    
+
+    /**
+     * 修改用户名
+     */
+    @PutMapping("/update-username")
+    public Result<String> updateUsername(@RequestParam String username) {
+        if (username == null) {
+            return Result.error("参数不完整");
+        }
+
+        return iusersService.updateUsername(username);
+    }
+
 }

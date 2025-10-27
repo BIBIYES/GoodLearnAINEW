@@ -332,4 +332,20 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         
         return Result.success("查询成功", isValid);
     }
+
+    @Override
+    public Result<String> updateUsername(String username) {
+        Long userId = AuthUtil.getCurrentUserId();
+        Users user = getById(userId);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+        user.setUsername(username);
+        boolean updated = updateById(user);
+        if (updated) {
+            return Result.success("用户名修改成功");
+        } else {
+            return Result.error("用户名修改失败");
+        }
+    }
 }

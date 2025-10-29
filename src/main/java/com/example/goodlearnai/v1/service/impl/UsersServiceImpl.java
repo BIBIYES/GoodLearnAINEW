@@ -56,6 +56,16 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
             return 0;
         }
 
+        // 判断学号是否已被使用
+        if (user.getSchoolNumber() != null) {
+            LambdaQueryWrapper<Users> schoolNumberWrapper = new LambdaQueryWrapper<>();
+            schoolNumberWrapper.eq(Users::getSchoolNumber, user.getSchoolNumber());
+            if (getOne(schoolNumberWrapper) != null) {
+                log.warn("用户已存在");
+                return 0;
+            }
+        }
+
         // md5加密用户的密码
         user.setPassword(MD5Util.encrypt(user.getPassword()));
         log.info("加密用户密码");

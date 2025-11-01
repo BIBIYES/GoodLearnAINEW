@@ -7,7 +7,7 @@
         "MYSQL_HOST": "112.124.40.32",
         "MYSQL_USER": "root",
         "MYSQL_PASSWORD": "zzx",
-        "MYSQL_DATABASE": "good_learn_ai"
+        "MYSQL_DATABASE": "good_learn_ai_NEW_local"
       }
     }
   }

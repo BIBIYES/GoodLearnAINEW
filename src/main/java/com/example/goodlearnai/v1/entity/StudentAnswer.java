@@ -47,9 +47,19 @@ public class StudentAnswer implements Serializable {
     private String answerText;
 
     /**
+     * 学生选择的选项，多选用逗号分隔，如：A,B,C
+     */
+    private String selectedOptions;
+
+    /**
      * 是否正确：1=正确，0=错误
      */
     private Boolean isCorrect;
+
+    /**
+     * 得分
+     */
+    private java.math.BigDecimal score;
 
     /**
      * 作答时间

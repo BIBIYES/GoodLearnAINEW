@@ -5,7 +5,7 @@ spring:
   application:
     name: GoodLearnAI
   datasource:
-    url: jdbc:mysql://112.124.40.32:3306/good_learn_ai_NEW?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://112.124.40.32:3306/good_learn_ai_NEW_local?useSSL=false&serverTimezone=UTC
     username: root
     password: zzx
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -18,7 +18,7 @@ spring:
       exclude: static/**,public/**,templates/**,log/**
   ai:
     openai:
-      api-key: sk-058644562a714d92b48c41136ca54a74
+      api-key: sk-f8bdafb2d21b4639b7139876ddce109a
       base-url: https://api.deepseek.com
       chat:
         options:
@@ -26,20 +26,22 @@ spring:
     mcp:
       client:
         stdio:
-          servers-configuration: ./classpath:mcp-servers.json(win配置)
+          servers-configuration: ./classpath:mcp-servers.json
   mvc:
     servlet:
       path: /api
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+      file-size-threshold: 2MB
   data:
     redis:
       host: 112.124.40.32
       port: 6379
       timeout: 5000
       password: zxcvg123
-
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
 
 server:
   port: 8080

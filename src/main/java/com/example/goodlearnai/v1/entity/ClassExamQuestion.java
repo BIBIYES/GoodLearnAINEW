@@ -47,6 +47,11 @@ public class ClassExamQuestion implements Serializable {
     private String questionContent;
 
     /**
+     * 题目类型：single_choice-单选题，multiple_choice-多选题，true_false-判断题，fill_blank-填空题，essay-简答题
+     */
+    private String questionType;
+
+    /**
      * 参考答案
      */
     private String referenceAnswer;

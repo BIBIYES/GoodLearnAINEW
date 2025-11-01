@@ -3,6 +3,8 @@ package com.example.goodlearnai.v1.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.goodlearnai.v1.common.Result;
+import com.example.goodlearnai.v1.dto.CreateQuestionWithOptionsDto;
+import com.example.goodlearnai.v1.dto.QuestionWithOptionsDto;
 import com.example.goodlearnai.v1.entity.Question;
 import com.example.goodlearnai.v1.service.IQuestionService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
@@ -103,21 +105,35 @@ public class QuestionController {
     }
 
     /**
-     * 通过AI创建题目 - 仅生成题目，不保存到数据库（流式接口）
+     * 通过AI创建题目 - 仅生成题目，不保存到数据库（流式接口，支持选择题目类型）
      * 创建流程：
      * 1. 调用此接口生成题目
      * 2. 前端接收返回的题目列表，展示给用户选择
-     * 3. 用户选择需要的题目后，调用/batch-create接口批量保存
+     * 3. 用户选择需要的题目后，调用/batch-create或/create-with-options接口保存
      *
      * @param requestData 题目要求，格式为JSON，包含：
      *                   - bankId: 题库ID
      *                   - question: 题目要求描述
      *                   - count: 生成题目数量(可选，默认5，最大10)
+     * @param questionType 题目类型（可选）：essay-简答题（默认），single_choice-单选题，multiple_choice-多选题，true_false-判断题
      * @return AI生成的题目列表（流式响应）
      */
     @PostMapping(value = "/ai-create-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ChatResponse> createQuestionByAiStream(@RequestBody String requestData) {
-        log.info("AI流式创建题目");
+    public Flux<ChatResponse> createQuestionByAiStream(
+            @RequestBody String requestData,
+            @RequestParam(value = "questionType", defaultValue = "essay") String questionType) {
+        log.info("AI流式创建题目，题目类型：{}", questionType);
+        return questionService.createQuestionByAiStreamWithType(requestData, questionType);
+    }
+    
+    /**
+     * 通过AI创建题目 - 仅生成题目，不保存到数据库（流式接口，兼容旧版本）
+     * @deprecated 建议使用带questionType参数的版本
+     */
+    @PostMapping(value = "/ai-create-stream-legacy", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Deprecated
+    public Flux<ChatResponse> createQuestionByAiStreamLegacy(@RequestBody String requestData) {
+        log.info("AI流式创建题目（旧版本）");
         return questionService.createQuestionByAiStream(requestData);
     }
 
@@ -160,27 +176,53 @@ public class QuestionController {
      * 上传Word教案文档并AI生成题目（流式响应）
      * @param file Word教案文件
      * @param constraints 题目生成的限制条件（例如：题目数量、难度、重点内容等）
+     * @param questionType 题目类型（可选）：essay-简答题（默认），single_choice-单选题，multiple_choice-多选题，true_false-判断题
      */
     @PostMapping(value = "/ai-create-by-word-plan", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ChatResponse> createQuestionByWordPlan(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "constraints", required = false) String constraints) {
-        log.info("上传Word教案文档并AI生成题目（流式），文件名: {}, 限制条件: {}", 
-                file.getOriginalFilename(), constraints);
-        return questionService.createQuestionByWordPlan(file, constraints);
+            @RequestParam(value = "constraints", required = false) String constraints,
+            @RequestParam(value = "questionType", defaultValue = "essay") String questionType) {
+        log.info("上传Word教案文档并AI生成题目（流式），文件名: {}, 限制条件: {}, 题目类型: {}", 
+                file.getOriginalFilename(), constraints, questionType);
+        return questionService.createQuestionByWordPlan(file, constraints, questionType);
     }
 
     /**
      * 上传Word教案文档并AI生成题目（非流式响应）
      * @param file Word教案文件
      * @param constraints 题目生成的限制条件（例如：题目数量、难度、重点内容等）
+     * @param questionType 题目类型（可选）：essay-简答题（默认），single_choice-单选题，multiple_choice-多选题，true_false-判断题
      */
     @PostMapping("/ai-create-by-word-plan-sync")
     public Result<String> createQuestionByWordPlanSync(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "constraints", required = false) String constraints) {
-        log.info("上传Word教案文档并AI生成题目（非流式），文件名: {}, 限制条件: {}", 
-                file.getOriginalFilename(), constraints);
-        return questionService.createQuestionByWordPlanSync(file, constraints);
+            @RequestParam(value = "constraints", required = false) String constraints,
+            @RequestParam(value = "questionType", defaultValue = "essay") String questionType) {
+        log.info("上传Word教案文档并AI生成题目（非流式），文件名: {}, 限制条件: {}, 题目类型: {}", 
+                file.getOriginalFilename(), constraints, questionType);
+        return questionService.createQuestionByWordPlanSync(file, constraints, questionType);
+    }
+    
+    /**
+     * 创建带选项的题目（选择题、判断题等）
+     * @param dto 题目和选项信息
+     * @return 创建结果
+     */
+    @PostMapping("/create-with-options")
+    public Result<String> createQuestionWithOptions(@Valid @RequestBody CreateQuestionWithOptionsDto dto) {
+        log.info("创建带选项的题目: questionType = {}, title = {}", dto.getQuestionType(), dto.getTitle());
+        return questionService.createQuestionWithOptions(dto);
+    }
+    
+    /**
+     * 获取带选项的题目详情（包含选项信息）
+     * @param questionId 题目ID
+     * @return 题目和选项信息
+     */
+    @GetMapping("/{questionId}/with-options")
+    public Result<QuestionWithOptionsDto> getQuestionWithOptions(@PathVariable Long questionId) {
+        log.info("查看带选项的题目: questionId = {}", questionId);
+        return questionService.getQuestionWithOptions(questionId);
     }
 }

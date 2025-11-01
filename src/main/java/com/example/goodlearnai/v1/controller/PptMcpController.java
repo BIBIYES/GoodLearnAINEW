@@ -49,7 +49,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/ppt")
+@RequestMapping("/v1/file")
 @RequiredArgsConstructor
 public class PptMcpController {
     

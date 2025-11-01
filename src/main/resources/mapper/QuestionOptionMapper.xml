@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.goodlearnai.v1.mapper.QuestionOptionMapper">
+
+    <!-- 批量插入选项 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO question_option (question_id, option_label, option_content, is_correct, option_order)
+        VALUES
+        <foreach collection="options" item="item" separator=",">
+            (#{item.questionId}, #{item.optionLabel}, #{item.optionContent}, #{item.isCorrect}, #{item.optionOrder})
+        </foreach>
+    </insert>
+
+    <!-- 根据题目ID删除所有选项 -->
+    <delete id="deleteByQuestionId" parameterType="java.lang.Long">
+        DELETE FROM question_option WHERE question_id = #{questionId}
+    </delete>
+
+</mapper>
+
